@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Markdown to PDF Converter</title>
+    <link href="css/tailwind.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal h-full overflow-hidden flex flex-col">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-3xl w-full flex-grow flex flex-col overflow-hidden">
+        <header class="mb-8 text-center flex-shrink-0">
+            <h1 class="text-4xl font-bold text-gray-700">Batch Markdown to PDF Converter</h1>
+        </header>
+
+        <main class="flex-grow flex flex-col overflow-hidden">
+            <!-- Drag and Drop Area -->
+            <section id="drop-area" class="mb-6 border-2 border-dashed border-gray-400 rounded-lg p-12 text-center bg-white hover:border-blue-500 cursor-pointer flex-shrink-0">
+                <input type="file" id="file-input" multiple accept=".md,.markdown" class="hidden">
+                <label for="file-input" class="cursor-pointer">
+                    <p class="text-gray-600 text-lg">Drag & drop your Markdown files here, or click to select files.</p>
+                    <p class="text-sm text-gray-500 mt-2">Supports .md and .markdown files</p>
+                </label>
+            </section>
+
+            <!-- File List Display -->
+            <section id="file-list-section" class="mb-6 hidden flex-grow flex flex-col overflow-hidden">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2 flex-shrink-0">Selected Files:</h2>
+                <ul id="file-list" class="bg-white p-4 rounded-lg shadow-lg overflow-y-auto flex-grow h-64 border border-blue-300">
+                    <!-- File items will be added here by JavaScript -->
+                </ul>
+            </section>
+
+            <!-- Mode Selection -->
+            <section id="mode-selection" class="mb-6 bg-white p-6 rounded-md shadow-lg flex-shrink-0">
+                <h2 class="text-xl font-semibold text-gray-700 mb-3">Conversion Mode:</h2>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-6">
+                    <label class="inline-flex items-center mb-2 sm:mb-0">
+                        <input type="radio" name="conversion-mode" value="normal" class="form-radio text-blue-600" checked>
+                        <span class="ml-2 text-gray-700">Normal (Concurrency: 4)</span>
+                    </label>
+                    <label class="inline-flex items-center mb-2 sm:mb-0">
+                        <input type="radio" name="conversion-mode" value="fast" class="form-radio text-blue-600">
+                        <span class="ml-2 text-gray-700">Fast (Concurrency: 7)</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="conversion-mode" value="max" class="form-radio text-blue-600">
+                        <span class="ml-2 text-gray-700">Max (Concurrency: 10)</span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Convert Button -->
+            <section class="mb-6 text-center flex-shrink-0">
+                <button id="convert-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md disabled:opacity-50 mr-2 transition-colors duration-150 ease-in-out" disabled>
+                    Convert to PDF
+                </button>
+                <button id="reset-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors duration-150 ease-in-out">
+                    Reset UI
+                </button>
+            </section>
+
+            <!-- Progress/Status Area -->
+            <section id="status-area" class="mb-6 text-center hidden flex-shrink-0">
+                <p id="status-message" class="text-gray-700"></p>
+                <div id="progress-bar-container" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </section>
+
+            <!-- Download Area -->
+            <section id="download-area" class="mb-6 text-center hidden flex-shrink-0">
+                <a id="download-link" href="#" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg inline-block shadow-md">
+                    Download Result
+                </a>
+            </section>
+
+            <!-- Error Display Area -->
+            <section id="error-area" class="mb-6 text-red-600 text-center hidden flex-shrink-0">
+                <p id="error-message"></p>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
