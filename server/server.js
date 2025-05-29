@@ -94,7 +94,7 @@ app.post('/api/convert', (req, res, next) => {
     // Generate a unique session ID for this request
     req.sessionId = crypto.randomBytes(16).toString('hex');
     next();
-}, upload.array('markdownFiles', 25), async (req, res) => { // Max 25 files
+}, upload.array('markdownFiles', 100), async (req, res) => { // Max 100 files
     const sessionId = req.sessionId;
     const files = req.files;
     const mode = req.body.mode || 'normal';

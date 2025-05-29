@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('mode', selectedMode);
 
         try {
-            showStatus('Uploading files...', true, 25);
+            showStatus('Uploading files...', true, 100);
             const response = await fetch('/api/convert', {
                 method: 'POST',
                 body: formData,
