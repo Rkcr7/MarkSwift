@@ -10,116 +10,116 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans leading-normal tracking-normal h-full overflow-hidden flex flex-col">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-6xl w-full flex-grow flex flex-col overflow-hidden">
-        <!-- Modern Header -->
-        <header class="mb-8 text-center flex-shrink-0 relative">
+    <div class="container mx-auto p-3 md:p-4 max-w-6xl w-full flex-grow flex flex-col overflow-hidden">
+        <!-- Compact Header -->
+        <header class="mb-3 text-center flex-shrink-0 relative">
             <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                <div class="flex items-center justify-center space-x-4 mb-2">
-                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fas fa-file-pdf text-white text-xl"></i>
+                <div class="flex items-center justify-center space-x-3 mb-1">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                        <i class="fas fa-file-pdf text-white text-sm"></i>
                     </div>
-                    <h1 class="text-4xl md:text-5xl font-bold">Batch Markdown to PDF</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold">Batch Markdown to PDF</h1>
                 </div>
-                <p class="text-slate-600 text-lg font-medium">Convert your Markdown files with style and speed</p>
+                <p class="text-slate-600 text-sm font-medium">Convert your Markdown files with style and speed</p>
             </div>
         </header>
 
-        <main class="flex-grow flex flex-row space-x-8 overflow-hidden">
-            <!-- Left Column -->
-            <div class="w-2/5 flex flex-col space-y-2 py-1">
-                <!-- Enhanced Drag and Drop Area -->
-                <section id="drop-area" class="relative bg-white/70 backdrop-blur-sm border-2 border-dashed border-slate-300 rounded-2xl p-3 text-center hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+        <main class="flex-grow flex flex-row space-x-4 overflow-hidden">
+            <!-- Left Column - Compact -->
+            <div class="w-1/3 flex flex-col space-y-1.5 py-1 min-h-0">
+                <!-- Compact Drag and Drop Area -->
+                <section id="drop-area" class="relative bg-white/70 backdrop-blur-sm border-2 border-dashed border-slate-300 rounded-xl p-2 text-center hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
                     <input type="file" id="file-input" multiple accept=".md,.markdown" class="hidden">
                     <label for="file-input" class="cursor-pointer">
-                        <div class="mb-3">
-                            <div class="w-12 h-12 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                <i class="fas fa-cloud-upload-alt text-white text-2xl"></i>
+                        <div class="mb-1.5">
+                            <div class="w-8 h-8 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-cloud-upload-alt text-white text-sm"></i>
                             </div>
                         </div>
-                        <p class="text-slate-700 text-base font-semibold mb-1">Drop your Markdown files here</p>
-                        <p class="text-slate-500 text-sm">or click to browse • Supports .md and .markdown files</p>
-                        <div class="mt-3 flex justify-center space-x-3">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                <i class="fab fa-markdown mr-1"></i> .md
+                        <p class="text-slate-700 text-sm font-semibold mb-1">Drop files here</p>
+                        <p class="text-slate-500 text-xs">or click to browse</p>
+                        <div class="mt-1.5 flex justify-center space-x-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="fab fa-markdown mr-1 text-xs"></i> .md
                             </span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                <i class="fab fa-markdown mr-1"></i> .markdown
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="fab fa-markdown mr-1 text-xs"></i> .markdown
                             </span>
                         </div>
                     </label>
                 </section>
 
-                <!-- Modern Mode Selection -->
-                <section id="mode-selection" class="bg-white/70 backdrop-blur-sm p-3 rounded-2xl shadow-lg flex-shrink-0">
-                    <h2 class="text-lg font-bold text-slate-700 mb-3 flex items-center">
-                        <i class="fas fa-settings mr-3 text-blue-600"></i>
-                        Conversion Mode
+                <!-- Compact Mode Selection -->
+                <section id="mode-selection" class="bg-white/70 backdrop-blur-sm p-2 rounded-xl shadow-lg flex-shrink-0">
+                    <h2 class="text-sm font-bold text-slate-700 mb-1.5 flex items-center">
+                        <i class="fas fa-settings mr-2 text-blue-600 text-xs"></i>
+                        Mode
                     </h2>
-                    <div class="grid grid-cols-1 gap-2">
+                    <div class="grid grid-cols-1 gap-1.5">
                         <label class="conversion-mode-card relative cursor-pointer group">
                             <input type="radio" name="conversion-mode" value="normal" class="hidden" checked>
-                            <div class="flex items-center p-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl hover:border-green-300 transition-all duration-200 group-hover:shadow-md">
-                                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-4 shadow-md">
-                                    <i class="fas fa-walking text-white"></i>
+                            <div class="flex items-center p-1.5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg hover:border-green-300 transition-all duration-200 group-hover:shadow-md">
+                                <div class="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center mr-2 shadow-md">
+                                    <i class="fas fa-walking text-white text-xs"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="font-semibold text-slate-700">Normal</div>
-                                    <div class="text-sm text-slate-500">Concurrency: 4 • Balanced speed</div>
+                                    <div class="font-semibold text-slate-700 text-sm">Normal</div>
+                                    <div class="text-xs text-slate-500">Concurrency: 4</div>
                                 </div>
-                                <div class="mode-indicator w-5 h-5 border-2 border-green-300 rounded-full flex items-center justify-center">
-                                    <div class="w-3 h-3 bg-green-500 rounded-full opacity-0 transition-opacity duration-200"></div>
+                                <div class="mode-indicator w-4 h-4 border-2 border-green-300 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full opacity-0 transition-opacity duration-200"></div>
                                 </div>
                             </div>
                         </label>
 
                         <label class="conversion-mode-card relative cursor-pointer group">
                             <input type="radio" name="conversion-mode" value="fast" class="hidden">
-                            <div class="flex items-center p-2 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-xl hover:border-orange-300 transition-all duration-200 group-hover:shadow-md">
-                                <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mr-4 shadow-md">
-                                    <i class="fas fa-running text-white"></i>
+                            <div class="flex items-center p-1.5 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg hover:border-orange-300 transition-all duration-200 group-hover:shadow-md">
+                                <div class="w-6 h-6 bg-orange-500 rounded-md flex items-center justify-center mr-2 shadow-md">
+                                    <i class="fas fa-running text-white text-xs"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="font-semibold text-slate-700">Fast</div>
-                                    <div class="text-sm text-slate-500">Concurrency: 7 • Faster processing</div>
+                                    <div class="font-semibold text-slate-700 text-sm">Fast</div>
+                                    <div class="text-xs text-slate-500">Concurrency: 7</div>
                                 </div>
-                                <div class="mode-indicator w-5 h-5 border-2 border-orange-300 rounded-full flex items-center justify-center">
-                                    <div class="w-3 h-3 bg-orange-500 rounded-full opacity-0 transition-opacity duration-200"></div>
+                                <div class="mode-indicator w-4 h-4 border-2 border-orange-300 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-orange-500 rounded-full opacity-0 transition-opacity duration-200"></div>
                                 </div>
                             </div>
                         </label>
 
                         <label class="conversion-mode-card relative cursor-pointer group">
                             <input type="radio" name="conversion-mode" value="max" class="hidden">
-                            <div class="flex items-center p-2 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl hover:border-red-300 transition-all duration-200 group-hover:shadow-md">
-                                <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center mr-4 shadow-md">
-                                    <i class="fas fa-bolt text-white"></i>
+                            <div class="flex items-center p-1.5 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-lg hover:border-red-300 transition-all duration-200 group-hover:shadow-md">
+                                <div class="w-6 h-6 bg-red-500 rounded-md flex items-center justify-center mr-2 shadow-md">
+                                    <i class="fas fa-bolt text-white text-xs"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="font-semibold text-slate-700">Maximum</div>
-                                    <div class="text-sm text-slate-500">Concurrency: 10 • Maximum speed</div>
+                                    <div class="font-semibold text-slate-700 text-sm">Maximum</div>
+                                    <div class="text-xs text-slate-500">Concurrency: 10</div>
                                 </div>
-                                <div class="mode-indicator w-5 h-5 border-2 border-red-300 rounded-full flex items-center justify-center">
-                                    <div class="w-3 h-3 bg-red-500 rounded-full opacity-0 transition-opacity duration-200"></div>
+                                <div class="mode-indicator w-4 h-4 border-2 border-red-300 rounded-full flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-red-500 rounded-full opacity-0 transition-opacity duration-200"></div>
                                 </div>
                             </div>
                         </label>
                     </div>
                 </section>
 
-                <!-- Modern Action Buttons -->
+                <!-- Compact Action Buttons -->
                 <section class="flex-shrink-0">
-                    <div class="grid grid-cols-2 gap-4">
-                        <button id="convert-button" class="relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2 px-3 rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group" disabled>
-                            <span class="relative z-10 flex items-center justify-center">
-                                <i class="fas fa-magic mr-2"></i>
-                                Convert to PDF
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="convert-button" class="relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-1.5 px-2 rounded-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group" disabled>
+                            <span class="relative z-10 flex items-center justify-center text-sm">
+                                <i class="fas fa-magic mr-1.5 text-xs"></i>
+                                Convert
                             </span>
                             <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </button>
                         
-                        <button id="reset-button" class="relative overflow-hidden bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-2 px-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group">
-                            <span class="relative z-10 flex items-center justify-center">
-                                <i class="fas fa-redo mr-2"></i>
+                        <button id="reset-button" class="relative overflow-hidden bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-1.5 px-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group">
+                            <span class="relative z-10 flex items-center justify-center text-sm">
+                                <i class="fas fa-redo mr-1.5 text-xs"></i>
                                 Reset
                             </span>
                             <div class="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -127,58 +127,58 @@
                     </div>
                 </section>
 
-                <!-- Enhanced Progress/Status Area -->
+                <!-- Compact Progress/Status Area -->
                 <section id="status-area" class="hidden flex-shrink-0">
-                    <div class="bg-white/70 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-blue-200">
-                        <div class="flex items-center mb-3">
-                            <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-cog fa-spin text-white"></i>
+                    <div class="bg-white/70 backdrop-blur-sm p-2 rounded-xl shadow-lg border border-blue-200">
+                        <div class="flex items-center mb-2">
+                            <div class="w-6 h-6 bg-blue-500 rounded-md flex items-center justify-center mr-2">
+                                <i class="fas fa-cog fa-spin text-white text-xs"></i>
                             </div>
-                            <p id="status-message" class="text-slate-700 font-medium"></p>
+                            <p id="status-message" class="text-slate-700 font-medium text-sm"></p>
                         </div>
                         <div id="progress-bar-container" class="hidden">
-                            <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                                <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Enhanced Download Area -->
+                <!-- Compact Download Area -->
                 <section id="download-area" class="hidden flex-shrink-0">
-                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-2xl shadow-lg border border-green-200">
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-2 rounded-xl shadow-lg border border-green-200">
                         <div class="text-center">
-                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fas fa-check text-white text-lg"></i>
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-1.5">
+                                <i class="fas fa-check text-white text-sm"></i>
                             </div>
-                            <p class="text-green-800 font-medium mb-4">Conversion complete!</p>
-                            <a id="download-link" href="#" class="inline-flex items-center bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                                <i class="fas fa-download mr-2"></i>
-                                Download Result
+                            <p class="text-green-800 font-medium mb-2 text-sm">Complete!</p>
+                            <a id="download-link" href="#" class="inline-flex items-center bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-2 px-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-sm">
+                                <i class="fas fa-download mr-1.5 text-xs"></i>
+                                Download
                             </a>
                         </div>
                     </div>
                 </section>
 
-                <!-- Enhanced Error Display Area -->
+                <!-- Compact Error Display Area -->
                 <section id="error-area" class="hidden flex-shrink-0">
-                    <div class="bg-gradient-to-r from-red-50 to-pink-50 p-4 rounded-2xl shadow-lg border border-red-200">
+                    <div class="bg-gradient-to-r from-red-50 to-pink-50 p-2 rounded-xl shadow-lg border border-red-200">
                         <div class="flex items-center">
-                            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">
-                                <i class="fas fa-exclamation-triangle text-white"></i>
+                            <div class="w-6 h-6 bg-red-500 rounded-md flex items-center justify-center mr-2">
+                                <i class="fas fa-exclamation-triangle text-white text-xs"></i>
                             </div>
-                            <p id="error-message" class="text-red-700 font-medium"></p>
+                            <p id="error-message" class="text-red-700 font-medium text-sm"></p>
                         </div>
                     </div>
                 </section>
             </div>
 
-            <!-- Right Column (Enhanced File List) -->
-            <div class="w-3/5 flex flex-col overflow-hidden py-4">
-                <section id="file-list-section" class="flex-grow flex flex-col overflow-hidden bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200 p-6">
-                    <div class="flex items-center justify-between mb-4 flex-shrink-0">
-                        <h2 class="text-xl font-bold text-slate-700 flex items-center">
-                            <i class="fas fa-files mr-3 text-blue-600"></i>
+            <!-- Right Column - Expanded -->
+            <div class="w-2/3 flex flex-col overflow-hidden py-1">
+                <section id="file-list-section" class="flex-grow flex flex-col overflow-hidden bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 p-4">
+                    <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                        <h2 class="text-lg font-bold text-slate-700 flex items-center">
+                            <i class="fas fa-files mr-2 text-blue-600"></i>
                             Selected Files
                         </h2>
                         <div id="file-count" class="hidden bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
@@ -187,14 +187,14 @@
                     </div>
                     <div id="empty-state" class="flex-grow flex items-center justify-center text-center">
                         <div class="text-slate-400">
-                            <div class="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-file-upload text-3xl text-slate-300"></i>
+                            <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-file-upload text-2xl text-slate-300"></i>
                             </div>
-                            <p class="text-lg font-medium mb-2">No files selected</p>
+                            <p class="text-base font-medium mb-2">No files selected</p>
                             <p class="text-sm">Upload some Markdown files to get started</p>
                         </div>
                     </div>
-                    <ul id="file-list" class="overflow-y-auto flex-grow space-y-3 hidden custom-scrollbar">
+                    <ul id="file-list" class="overflow-y-auto flex-grow space-y-2 hidden custom-scrollbar">
                         <!-- File items will be added here by JavaScript -->
                     </ul>
                 </section>
