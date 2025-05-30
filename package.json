@@ -4,7 +4,7 @@
   "description": "Backend server for the batch markdown to PDF converter web UI.",
   "main": "server/server.js",
   "scripts": {
-    "start": "node server/server.js",
+    "start": "npm run build:css && node server/server.js",
     "dev": "concurrently \"npm run build:css -- --watch\" \"nodemon server/server.js\"",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.css"
   },
@@ -27,7 +27,8 @@
     "jsdom": "^22.1.0",
     "marked": "^9.1.2",
     "multer": "^1.4.5-lts.1",
-    "puppeteer": "^21.5.2"
+    "puppeteer": "^21.5.2",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",

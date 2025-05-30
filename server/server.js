@@ -4,10 +4,16 @@ const fs = require('fs-extra');
 const multer = require('multer');
 const archiver = require('archiver');
 const crypto = require('crypto');
+const WebSocket = require('ws'); // Added
 const MarkdownToPDFConverter = require('./converter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const server = require('http').createServer(app); // Added for WebSocket
+const wss = new WebSocket.Server({ server }); // Added WebSocket Server
+
+// Store active WebSocket connections, mapping sessionId to ws client
+const activeConnections = new Map(); // Added
 
 // --- Configuration ---
 const UPLOADS_DIR_BASE = path.join(__dirname, 'uploads');
@@ -100,73 +106,111 @@ app.post('/api/convert', (req, res, next) => {
     const mode = req.body.mode || 'normal';
 
     if (!files || files.length === 0) {
+        // No need to cleanup if no files were even processed by multer
         return res.status(400).json({ message: 'No Markdown files uploaded.' });
     }
+    
+    // Immediately respond to client with sessionId
+    res.json({ sessionId, message: "Conversion process started. Awaiting WebSocket connection for progress." });
 
-    const concurrency = getConcurrencyFromMode(mode);
-    const converter = new MarkdownToPDFConverter();
-
-    const sessionUploadPath = path.join(UPLOADS_DIR_BASE, sessionId); // Already created by multer
-    const sessionPdfPath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId);
-    const sessionZipPath = path.join(ZIPS_DIR_BASE, sessionId);
-    await fs.ensureDir(sessionPdfPath);
-    await fs.ensureDir(sessionZipPath);
-
-    // Map multer file objects to what converter expects
-    const uploadedFileObjects = files.map(f => ({
-        path: f.path, // multer provides the full path where the file is saved
-        originalname: f.originalname
-    }));
-
-    try {
-        await converter.init();
-        const results = await converter.processUploadedFiles(uploadedFileObjects, sessionPdfPath, concurrency);
-        await converter.cleanup();
-
-        const successfulPdfs = results.filter(r => r.success && r.output).map(r => r.output);
-
-        if (successfulPdfs.length === 0) {
-            // Cleanup even if no PDFs were made, but some files might have been uploaded
-            // setTimeout(() => cleanupSessionFiles(sessionId), 60 * 1000 * 10); // 10 min
-            return res.status(500).json({ message: 'Conversion failed for all files.', details: results });
-        }
-
-        if (successfulPdfs.length === 1) {
-            const pdfFileName = path.basename(successfulPdfs[0]);
-            // setTimeout(() => cleanupSessionFiles(sessionId), 60 * 1000 * 10); // 10 min
-            res.json({
-                type: 'pdf',
-                downloadUrl: `/api/download/pdf/${sessionId}/${encodeURIComponent(pdfFileName)}`,
-                message: 'Conversion successful.'
-            });
+    // Define sendProgress function for this session
+    const sendProgress = (progressData) => {
+        const ws = activeConnections.get(sessionId);
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(progressData));
         } else {
-            const zipFileName = `converted_markdown_${sessionId}.zip`;
-            const zipFilePath = path.join(sessionZipPath, zipFileName);
-            const output = fs.createWriteStream(zipFilePath);
-            const archive = archiver('zip', { zlib: { level: 9 } });
-
-            output.on('close', () => {
-                console.log(`ZIP created: ${zipFilePath} (${archive.pointer()} total bytes)`);
-                // setTimeout(() => cleanupSessionFiles(sessionId), 60 * 1000 * 10); // 10 min
-                res.json({
-                    type: 'zip',
-                    downloadUrl: `/api/download/zip/${sessionId}/${encodeURIComponent(zipFileName)}`,
-                    message: 'Conversion successful. Files zipped.'
-                });
-            });
-            archive.on('error', err => { throw err; });
-            archive.pipe(output);
-            successfulPdfs.forEach(pdfPath => {
-                archive.file(pdfPath, { name: path.basename(pdfPath) });
-            });
-            await archive.finalize();
+            console.log(`WebSocket not open or not found for session ${sessionId}. Progress not sent.`);
         }
-    } catch (error) {
-        console.error('Conversion process error:', error);
-        await converter.cleanup(); // Ensure browser is closed on error
-        // setTimeout(() => cleanupSessionFiles(sessionId), 60 * 1000 * 10); // 10 min
-        res.status(500).json({ message: error.message || 'An error occurred during conversion.' });
-    }
+    };
+    
+    // Start conversion process asynchronously
+    (async () => {
+        const concurrency = getConcurrencyFromMode(mode);
+        const converter = new MarkdownToPDFConverter(); // Consider passing sendProgress to constructor if needed early
+
+        const sessionUploadPath = path.join(UPLOADS_DIR_BASE, sessionId);
+        const sessionPdfPath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId);
+        const sessionZipPath = path.join(ZIPS_DIR_BASE, sessionId);
+        
+        try {
+            await fs.ensureDir(sessionPdfPath); // ensureDir is fine, it won't throw if exists
+            await fs.ensureDir(sessionZipPath);
+
+            sendProgress({ type: 'status', message: 'Preparing files...', progress: 5 });
+
+            const uploadedFileObjects = files.map(f => ({
+                path: f.path,
+                originalname: f.originalname
+            }));
+
+            await converter.init(sendProgress); // Pass sendProgress to init if it can provide updates
+            sendProgress({ type: 'status', message: 'Converter initialized. Starting file processing...', progress: 10 });
+            
+            const results = await converter.processUploadedFiles(uploadedFileObjects, sessionPdfPath, concurrency, sendProgress); // Pass sendProgress
+            
+            sendProgress({ type: 'status', message: 'File processing complete. Finalizing...', progress: 85 });
+            await converter.cleanup();
+
+            const successfulPdfs = results.filter(r => r.success && r.output).map(r => r.output);
+
+            if (successfulPdfs.length === 0) {
+                sendProgress({ type: 'error', message: 'Conversion failed for all files.', details: results });
+                // No need to call cleanupSessionFiles here yet, let download attempt or timeout handle it
+                return;
+            }
+
+            if (successfulPdfs.length === 1) {
+                const pdfFileName = path.basename(successfulPdfs[0]);
+                sendProgress({
+                    type: 'complete',
+                    downloadType: 'pdf',
+                    downloadUrl: `/api/download/pdf/${sessionId}/${encodeURIComponent(pdfFileName)}`,
+                    message: 'Conversion successful.',
+                    progress: 100
+                });
+            } else {
+                const zipFileName = `converted_markdown_${sessionId}.zip`;
+                const zipFilePath = path.join(sessionZipPath, zipFileName);
+                const output = fs.createWriteStream(zipFilePath);
+                const archive = archiver('zip', { zlib: { level: 9 } });
+
+                archive.on('progress', (progress) => {
+                    // This progress is for zipping, map it to overall progress (e.g., 85-95%)
+                    const overallProgress = 85 + (progress.fs.processedBytes / progress.fs.totalBytes * 10);
+                    sendProgress({ type: 'status', message: `Zipping files: ${Math.round(overallProgress)}%`, progress: Math.round(overallProgress) });
+                });
+
+                output.on('close', () => {
+                    console.log(`ZIP created: ${zipFilePath} (${archive.pointer()} total bytes)`);
+                    sendProgress({
+                        type: 'complete',
+                        downloadType: 'zip',
+                        downloadUrl: `/api/download/zip/${sessionId}/${encodeURIComponent(zipFileName)}`,
+                        message: 'Conversion successful. Files zipped.',
+                        progress: 100
+                    });
+                });
+                archive.on('error', err => { 
+                    console.error('Archiving error:', err);
+                    sendProgress({ type: 'error', message: `Error creating ZIP file: ${err.message}` });
+                    // No cleanup here, let timeout handle
+                });
+                archive.pipe(output);
+                successfulPdfs.forEach(pdfPath => {
+                    archive.file(pdfPath, { name: path.basename(pdfPath) });
+                });
+                await archive.finalize();
+            }
+        } catch (error) {
+            console.error('Conversion process error (async block):', error);
+            if (converter) await converter.cleanup(); // Ensure browser is closed on error
+            sendProgress({ type: 'error', message: error.message || 'An error occurred during conversion.' });
+            // No cleanup here, let timeout handle
+        }
+        // Note: Session cleanup is now primarily handled by download routes or a more robust general cleanup mechanism
+        // For instance, a cron job or on server start for orphaned sessions.
+        // The setTimeout for cleanup after download is still in the download routes.
+    })(); // Self-invoking async function
 });
 
 app.get('/api/download/pdf/:sessionId/:filename', (req, res) => {
@@ -216,10 +260,47 @@ app.use((err, req, res, next) => {
     next();
 });
 
+// --- WebSocket Handling ---
+wss.on('connection', (ws, req) => {
+    // Extract sessionId from query parameter (e.g., ws://localhost:3000?sessionId=xxxx)
+    // req.url will be like '/?sessionId=xxxx'
+    const urlParams = new URLSearchParams(req.url.substring(req.url.indexOf('?')));
+    const sessionId = urlParams.get('sessionId');
+
+    if (!sessionId) {
+        console.log('WebSocket connection attempt without sessionId. Closing.');
+        ws.close();
+        return;
+    }
+
+    console.log(`WebSocket client connected for session: ${sessionId}`);
+    activeConnections.set(sessionId, ws);
+    
+    ws.send(JSON.stringify({ type: 'connection_ack', message: 'WebSocket connection established.' }));
+
+    ws.on('message', (message) => {
+        // Handle messages from client if needed, e.g., cancel request
+        console.log(`Received message from ${sessionId}: ${message}`);
+    });
+
+    ws.on('close', () => {
+        console.log(`WebSocket client disconnected for session: ${sessionId}`);
+        activeConnections.delete(sessionId);
+        // Consider if session cleanup should be triggered here if conversion wasn't finished
+        // For now, cleanup is tied to download or a general timeout/mechanism
+    });
+
+    ws.on('error', (error) => {
+        console.error(`WebSocket error for session ${sessionId}:`, error);
+        activeConnections.delete(sessionId); // Remove on error too
+    });
+});
+
 
 // --- Start Server ---
-app.listen(PORT, () => {
-    console.log(`🚀 Batch Converter Server listening on http://localhost:${PORT}`);
+// app.listen(PORT, () => { // Original app.listen
+server.listen(PORT, () => { // Use server.listen for WebSocket
+    console.log(`🚀 Batch Converter Server (with WebSocket) listening on http://localhost:${PORT}`);
     console.log(`📁 Uploads will be stored temporarily in: ${UPLOADS_DIR_BASE}`);
     console.log(`📄 Converted PDFs will be stored temporarily in: ${CONVERTED_PDFS_DIR_BASE}`);
     console.log(`📦 ZIPs will be stored temporarily in: ${ZIPS_DIR_BASE}`);

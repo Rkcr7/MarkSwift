@@ -119,6 +119,6 @@ dist
 .vscode-test
 
 # Application specific
-server/converted-pdfs/
-server/uploads/
-server/zips/
+server/converted-pdfs/*
+server/uploads/*
+server/zips/*

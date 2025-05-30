@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetButton = document.getElementById('reset-button');
 
     let selectedFiles = [];
+    let progressWebSocket = null; // Added for WebSocket
 
     // Initialize mode selection visual states
     function initializeModeSelection() {
@@ -197,13 +198,25 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMessage.textContent = '';
     }
     
-    function showStatus(message, showProgress = false, progressValue = 0) {
-        clearMessages();
+    function showStatus(message, showProgress = false, progressValue = 0, fileDetails = null) {
+        // Ensure clearMessages is called if this is a new top-level status,
+        // but not for every incremental update of the same status.
+        // For simplicity now, we might clear more often than strictly necessary.
+        // clearMessages(); // Potentially move this to be more selective
+
         statusMessage.textContent = message;
+        if (fileDetails) {
+            statusMessage.textContent += ` (${fileDetails})`;
+        }
         statusArea.classList.remove('hidden');
+
         if (showProgress) {
             progressBarContainer.classList.remove('hidden');
             progressBar.style.width = `${progressValue}%`;
+        } else {
+            // If not showing progress explicitly, but it was visible, hide it.
+            // progressBarContainer.classList.add('hidden');
+            // progressBar.style.width = '0%';
         }
     }
 
@@ -241,65 +254,141 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         clearMessages();
-        showStatus('Preparing to convert...', true, 0);
+        showStatus('Initiating conversion...', true, 0); // Initial message
         convertButton.disabled = true;
-        
-        // Add loading state to button
+
         const buttonContent = convertButton.querySelector('span');
-        const originalContent = buttonContent.innerHTML;
-        buttonContent.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Converting...';
+        const originalButtonContent = buttonContent.innerHTML;
+        buttonContent.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Working...';
 
         const formData = new FormData();
         selectedFiles.forEach(file => {
             formData.append('markdownFiles', file);
         });
-
         const selectedMode = document.querySelector('input[name="conversion-mode"]:checked').value;
         formData.append('mode', selectedMode);
 
         try {
-            showStatus('Uploading files...', true, 100);
-            const response = await fetch('/api/convert', {
+            // Step 1: Initial HTTP request to start conversion and get sessionId
+            const initialResponse = await fetch('/api/convert', {
                 method: 'POST',
                 body: formData,
             });
 
-            // Simulate conversion progress with better timing
-            showStatus('Converting files...', true, 50);
-            await new Promise(resolve => setTimeout(resolve, 800));
-            showStatus('Processing PDFs...', true, 75);
-            await new Promise(resolve => setTimeout(resolve, 600));
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ 
-                    message: 'An unknown error occurred during conversion.' 
-                }));
-                throw new Error(errorData.message || `Server error: ${response.status}`);
+            if (!initialResponse.ok) {
+                const errorData = await initialResponse.json().catch(() => ({ message: 'Failed to initiate conversion process.' }));
+                throw new Error(errorData.message || `Server error: ${initialResponse.status}`);
             }
 
-            const result = await response.json();
-            showStatus('Finalizing...', true, 100);
-            
-            if (result.downloadUrl) {
-                setTimeout(() => {
-                    showDownloadLink(result.downloadUrl, result.type);
-                }, 500);
-            } else {
-                throw new Error('Conversion failed or no download URL provided.');
+            const initialResult = await initialResponse.json();
+            const sessionId = initialResult.sessionId;
+
+            if (!sessionId) {
+                throw new Error('Session ID not received from server.');
             }
+
+            showStatus('Connecting for progress updates...', true, 2); // Update status
+
+            // Step 2: Establish WebSocket connection
+            // Ensure to use wss:// if your site is on https://
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            progressWebSocket = new WebSocket(`${wsProtocol}//${window.location.host}?sessionId=${sessionId}`);
+
+            progressWebSocket.onopen = () => {
+                console.log('WebSocket connection established.');
+                showStatus('Connected. Starting file upload and processing...', true, 5);
+                // Server should start sending progress after this connection
+            };
+
+            progressWebSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Progress update:', data);
+
+                switch (data.type) {
+                    case 'connection_ack':
+                        // Optional: Acknowledge connection if server sends one
+                        showStatus(data.message, true, data.progress !== undefined ? data.progress : progressBar.style.width.replace('%',''));
+                        break;
+                    case 'status':
+                        showStatus(data.message, true, data.progress);
+                        break;
+                    case 'file_status': // Handles per-file progress updates
+                        let fileStatusDisplay = data.message; // e.g., "Processing file"
+                        if (data.totalFiles > 1) {
+                            fileStatusDisplay += ` (${data.currentFile} of ${data.totalFiles})`;
+                        }
+                        showStatus(fileStatusDisplay, true, data.progress);
+                        break;
+                    case 'file_complete': // Handles individual file completion
+                        let fileCompleteDisplay = data.message; // e.g., "File processed"
+                        if (data.totalFiles > 1) {
+                            fileCompleteDisplay += ` (${data.currentFile} of ${data.totalFiles} completed)`;
+                        } else {
+                            fileCompleteDisplay = "File conversion complete."; // Simpler for single file
+                        }
+                        showStatus(fileCompleteDisplay, true, data.progress);
+                        break;
+                    case 'complete':
+                        showStatus(data.message, true, 100);
+                        setTimeout(() => { // Give a moment for the 100% to show
+                            showDownloadLink(data.downloadUrl, data.downloadType);
+                            if (progressWebSocket) progressWebSocket.close();
+                        }, 500);
+                        // Reset button state here as process is complete
+                        convertButton.disabled = false;
+                        buttonContent.innerHTML = originalButtonContent;
+                        updateConvertButtonState();
+                        break;
+                    case 'error':
+                        showError(data.message + (data.details ? ` Details: ${JSON.stringify(data.details)}` : ''));
+                        if (progressWebSocket) progressWebSocket.close();
+                        // Reset button state on error
+                        convertButton.disabled = false;
+                        buttonContent.innerHTML = originalButtonContent;
+                        updateConvertButtonState();
+                        break;
+                    default:
+                        console.warn('Unknown WebSocket message type:', data.type);
+                }
+            };
+
+            progressWebSocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                showError('Error connecting for progress updates. Please try again.');
+                if (progressWebSocket) progressWebSocket.close(); // Clean up
+                // Reset button state on WebSocket error
+                convertButton.disabled = false;
+                buttonContent.innerHTML = originalButtonContent;
+                updateConvertButtonState();
+            };
+
+            progressWebSocket.onclose = () => {
+                console.log('WebSocket connection closed.');
+                // Don't reset button here if close was due to completion.
+                // It's handled in 'complete' or 'error' cases.
+                // If it closes unexpectedly, the error handler or a timeout should manage UI.
+            };
 
         } catch (error) {
-            console.error('Conversion error:', error);
+            console.error('Conversion initiation error:', error);
             showError(`Error: ${error.message}`);
-        } finally {
+            // Reset button state on initial fetch error
             convertButton.disabled = false;
-            buttonContent.innerHTML = originalContent;
+            buttonContent.innerHTML = originalButtonContent;
             updateConvertButtonState();
+            if (progressWebSocket) { // Clean up if WS was somehow initiated
+                progressWebSocket.close();
+            }
         }
+        // Note: 'finally' block is removed because button state is managed within async flow now
     });
 
     // Reset Button Click with animation
     resetButton.addEventListener('click', () => {
+        if (progressWebSocket && progressWebSocket.readyState === WebSocket.OPEN) {
+            progressWebSocket.close();
+            console.log('WebSocket connection closed by reset.');
+        }
         // Add reset animation
         resetButton.style.transform = 'rotate(180deg)';
         setTimeout(() => {
