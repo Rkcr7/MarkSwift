@@ -90,15 +90,16 @@ The project will be implemented in several phases. Each phase will be completed,
 ---
 
 ### Phase 4: Frontend Modularization - Basic Structure & File Upload
-*   **Status:** Not Started
+*   **Status:** In Progress
 *   **Objective:** Reorganize `public/js/main.js` into modules, starting with the existing file upload functionality.
 *   **Tasks:**
-    *   [ ] Create `public/js/modules/` directory.
-    *   [ ] Create `public/js/utils/` directory (for DOM helpers, API calls).
-    *   [ ] `public/js/modules/fileUploadUI.js`: Handles UI interactions for file upload (form, progress display).
-    *   [ ] `public/js/modules/websocketClient.js`: Manages WebSocket connection and message handling.
-    *   [ ] `public/js/main.js` becomes an entry point, initializing modules.
-    *   [ ] **Testing:** Ensure file upload, progress display, and download links work as before.
+    *   [x] Create `public/js/modules/` directory (implicitly done).
+    *   [ ] Create `public/js/utils/` directory (deferred, not immediately needed for this phase).
+    *   [x] `public/js/modules/fileUploadUI.js`: Created, handles UI interactions for file upload.
+    *   [x] `public/js/modules/websocketClient.js`: Created, manages WebSocket connection and message handling.
+    *   [x] `public/js/main.js` updated to be a lean entry point, initializing `fileUploadUI.js`.
+    *   [x] `public/index.html` updated to load `main.js` as `type="module"`.
+    *   [ ] **Testing:** Ensure file upload, progress display, and download links work as before with the new modular structure.
     *   [ ] **User Commit Point**
 
 ---
