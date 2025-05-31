@@ -69,28 +69,28 @@ function getConcurrencyFromMode(mode) {
 }
 
 async function cleanupSessionFiles(sessionId) {
-    console.log(`🧹 Cleaning up session files for ${sessionId}...`);
+    // console.log(`🧹 Cleaning up session files for ${sessionId}...`);
     const sessionUploadPath = path.join(UPLOADS_DIR_BASE, sessionId);
     const sessionPdfPath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId);
     const sessionZipPath = path.join(ZIPS_DIR_BASE, sessionId);
 
     try {
         await fs.remove(sessionUploadPath);
-        console.log(`Removed ${sessionUploadPath}`);
+        // console.log(`Removed ${sessionUploadPath}`);
     } catch (err) {
-        console.error(`Error removing upload path ${sessionUploadPath}:`, err);
+        // console.error(`Error removing upload path ${sessionUploadPath}:`, err);
     }
     try {
         await fs.remove(sessionPdfPath);
-        console.log(`Removed ${sessionPdfPath}`);
+        // console.log(`Removed ${sessionPdfPath}`);
     } catch (err) {
-        console.error(`Error removing PDF path ${sessionPdfPath}:`, err);
+        // console.error(`Error removing PDF path ${sessionPdfPath}:`, err);
     }
     try {
         await fs.remove(sessionZipPath);
-        console.log(`Removed ${sessionZipPath}`);
+        // console.log(`Removed ${sessionZipPath}`);
     } catch (err) {
-        console.error(`Error removing ZIP path ${sessionZipPath}:`, err);
+        // console.error(`Error removing ZIP path ${sessionZipPath}:`, err);
     }
 }
 
@@ -119,7 +119,7 @@ app.post('/api/convert', (req, res, next) => {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(progressData));
         } else {
-            console.log(`WebSocket not open or not found for session ${sessionId}. Progress not sent.`);
+            // console.log(`WebSocket not open or not found for session ${sessionId}. Progress not sent.`);
         }
     };
     
@@ -181,7 +181,7 @@ app.post('/api/convert', (req, res, next) => {
                 });
 
                 output.on('close', () => {
-                    console.log(`ZIP created: ${zipFilePath} (${archive.pointer()} total bytes)`);
+                    // console.log(`ZIP created: ${zipFilePath} (${archive.pointer()} total bytes)`);
                     sendProgress({
                         type: 'complete',
                         downloadType: 'zip',
@@ -224,7 +224,7 @@ app.get('/api/download/pdf/:sessionId/:filename', (req, res) => {
                  res.status(404).send('File not found or error during download.');
             }
         } else {
-            console.log(`PDF ${filename} downloaded successfully for session ${sessionId}.`);
+            // console.log(`PDF ${filename} downloaded successfully for session ${sessionId}.`);
             // Schedule cleanup after a short delay to ensure download completes
             setTimeout(() => cleanupSessionFiles(sessionId), 5000); 
         }
@@ -242,7 +242,7 @@ app.get('/api/download/zip/:sessionId/:filename', (req, res) => {
                 res.status(404).send('File not found or error during download.');
             }
         } else {
-            console.log(`ZIP ${filename} downloaded successfully for session ${sessionId}.`);
+            // console.log(`ZIP ${filename} downloaded successfully for session ${sessionId}.`);
             // Schedule cleanup
             setTimeout(() => cleanupSessionFiles(sessionId), 5000);
         }
@@ -280,7 +280,7 @@ wss.on('connection', (ws, req) => {
 
     ws.on('message', (message) => {
         // Handle messages from client if needed, e.g., cancel request
-        console.log(`Received message from ${sessionId}: ${message}`);
+        // console.log(`Received message from ${sessionId}: ${message}`);
     });
 
     ws.on('close', () => {
@@ -300,8 +300,8 @@ wss.on('connection', (ws, req) => {
 // --- Start Server ---
 // app.listen(PORT, () => { // Original app.listen
 server.listen(PORT, () => { // Use server.listen for WebSocket
-    console.log(`🚀 Batch Converter Server (with WebSocket) listening on http://localhost:${PORT}`);
-    console.log(`📁 Uploads will be stored temporarily in: ${UPLOADS_DIR_BASE}`);
-    console.log(`📄 Converted PDFs will be stored temporarily in: ${CONVERTED_PDFS_DIR_BASE}`);
-    console.log(`📦 ZIPs will be stored temporarily in: ${ZIPS_DIR_BASE}`);
+    console.log(`🚀 MarkSwift Server (with WebSocket) listening on http://localhost:${PORT}`);
+    // console.log(`📁 Uploads will be stored temporarily in: ${UPLOADS_DIR_BASE}`);
+    // console.log(`📄 Converted PDFs will be stored temporarily in: ${CONVERTED_PDFS_DIR_BASE}`);
+    // console.log(`📦 ZIPs will be stored temporarily in: ${ZIPS_DIR_BASE}`);
 });

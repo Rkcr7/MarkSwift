@@ -1,7 +1,7 @@
 {
-  "name": "batch-converter-app-backend",
+  "name": "markswift",
   "version": "1.0.0",
-  "description": "Backend server for the batch markdown to PDF converter web UI.",
+  "description": "Backend server for MarkSwift, a batch markdown to PDF converter.",
   "main": "server/server.js",
   "scripts": {
     "start": "npm run build:css && node server/server.js",
@@ -26,6 +26,7 @@
     "glob": "^10.3.10",
     "jsdom": "^22.1.0",
     "marked": "^9.1.2",
+    "markswift": "file:",
     "multer": "^1.4.5-lts.1",
     "puppeteer": "^21.5.2",
     "ws": "^8.18.2"

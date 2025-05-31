@@ -34,7 +34,7 @@ class MarkdownToPDFConverter {
         this.sendProgress = sendProgressCallback; // Store the callback
         if (this.sendProgress) this.sendProgress({ type: 'status', message: 'Initializing converter...', progress: 0 });
         if (!this.browser) {
-            console.log('🌐 Launching browser for conversion...');
+            // console.log('🌐 Launching browser for conversion...');
             if (this.sendProgress) this.sendProgress({ type: 'status', message: 'Launching browser...', progress: 2 });
             this.browser = await puppeteer.launch(this.puppeteerLaunchOptions);
             if (this.sendProgress) this.sendProgress({ type: 'status', message: 'Browser launched.', progress: 5 });
@@ -150,7 +150,7 @@ class MarkdownToPDFConverter {
         const baseProgress = 10 + (this.processedCount / this.totalFiles * 70); // Base progress before this file
 
         try {
-            console.log(`📄 [${currentFileProgress}/${this.totalFiles}] Processing: ${originalFileName}`);
+            // console.log(`📄 [${currentFileProgress}/${this.totalFiles}] Processing: ${originalFileName}`);
             // More generic message, focusing on count
             if (this.sendProgress) this.sendProgress({ type: 'file_status', message: `Processing file`, currentFile: currentFileProgress, totalFiles: this.totalFiles, progress: baseProgress });
 
@@ -178,7 +178,7 @@ class MarkdownToPDFConverter {
             
             this.processedCount++;
             const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            console.log(`✅ [${this.processedCount}/${this.totalFiles}] Generated: ${path.basename(outputFile)} for ${originalFileName} (${duration}s)`);
+            // console.log(`✅ [${this.processedCount}/${this.totalFiles}] Generated: ${path.basename(outputFile)} for ${originalFileName} (${duration}s)`);
             // More generic completion message for the file
             if (this.sendProgress) this.sendProgress({ type: 'file_complete', message: `File processed`, currentFile: this.processedCount, totalFiles: this.totalFiles, progress: 10 + (this.processedCount / this.totalFiles * 70) });
             return { success: true, input: originalFileName, output: outputFile, duration };
@@ -194,7 +194,7 @@ class MarkdownToPDFConverter {
     async processConcurrently(fileTasks, maxConcurrency) {
         const results = [];
         this.maxConcurrency = Math.max(1, Math.min(10, maxConcurrency));
-        console.log(`⚡ Concurrency level for this batch: ${this.maxConcurrency} files at once`);
+        // console.log(`⚡ Concurrency level for this batch: ${this.maxConcurrency} files at once`);
         if (this.sendProgress) this.sendProgress({ type: 'status', message: `Starting batch processing. Concurrency: ${this.maxConcurrency}`, progress: 10 + (this.processedCount / this.totalFiles * 70) });
 
 
@@ -203,7 +203,7 @@ class MarkdownToPDFConverter {
             const batchNumber = Math.floor(i / this.maxConcurrency) + 1;
             const totalBatches = Math.ceil(fileTasks.length / this.maxConcurrency);
             
-            console.log(`🚀 Processing batch ${batchNumber}/${totalBatches} (${batch.length} files)`);
+            // console.log(`🚀 Processing batch ${batchNumber}/${totalBatches} (${batch.length} files)`);
             if (this.sendProgress) this.sendProgress({ type: 'status', message: `Processing batch ${batchNumber}/${totalBatches}`, progress: 10 + (this.processedCount / this.totalFiles * 70) });
             
             const batchPromises = batch.map(({ tempFilePath, outputFile, originalName }) => 
@@ -227,12 +227,12 @@ class MarkdownToPDFConverter {
         this.totalFiles = uploadedFiles.length;
 
         if (this.totalFiles === 0) {
-            console.log('📝 No files provided for conversion.');
+            // console.log('📝 No files provided for conversion.');
             if (this.sendProgress) this.sendProgress({ type: 'status', message: 'No files to convert.', progress: 0 });
             return [];
         }
 
-        console.log(`📚 Received ${this.totalFiles} file(s) for conversion.`);
+        // console.log(`📚 Received ${this.totalFiles} file(s) for conversion.`);
         if (this.sendProgress) this.sendProgress({ type: 'status', message: `Received ${this.totalFiles} file(s). Preparing...`, progress: 5, totalFiles: this.totalFiles });
         
         const fileTasks = [];
@@ -247,15 +247,15 @@ class MarkdownToPDFConverter {
             fileTasks.push({ tempFilePath, outputFile, originalName });
         }
         
-        console.log('🔥 Starting concurrent processing of uploaded files...');
+        // console.log('🔥 Starting concurrent processing of uploaded files...');
         if (this.sendProgress) this.sendProgress({ type: 'status', message: 'Starting conversion process...', progress: 10, totalFiles: this.totalFiles });
         const conversionResults = await this.processConcurrently(fileTasks, concurrency);
         
         const totalDuration = ((Date.now() - overallStartTime) / 1000).toFixed(1);
         const successfulConversions = conversionResults.filter(r => r.success).length;
         
-        console.log('🎉 Batch conversion for uploaded files completed!');
-        console.log(`📊 Processed ${this.totalFiles} files. Successful: ${successfulConversions}, Failed: ${this.totalFiles - successfulConversions}. Total time: ${totalDuration}s`);
+        // console.log('🎉 Batch conversion for uploaded files completed!');
+        // console.log(`📊 Processed ${this.totalFiles} files. Successful: ${successfulConversions}, Failed: ${this.totalFiles - successfulConversions}. Total time: ${totalDuration}s`);
         if (this.sendProgress) this.sendProgress({ type: 'status', message: `Batch complete. Processed: ${this.totalFiles}, Successful: ${successfulConversions}.`, progress: 85 });
         
         return conversionResults;
@@ -265,7 +265,7 @@ class MarkdownToPDFConverter {
         if (this.browser) {
             await this.browser.close();
             this.browser = null; // Important to allow re-init
-            console.log('🔒 Browser closed after conversion job.');
+            // console.log('🔒 Browser closed after conversion job.');
         }
     }
 }

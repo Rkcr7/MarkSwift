@@ -1,8 +1,8 @@
-# Batch Markdown to PDF Converter
+# MarkSwift
 
 ## Summary
 
-The Batch Markdown to PDF Converter is a web application that allows users to upload multiple Markdown files (.md, .markdown) and convert them into PDF documents. It provides real-time progress updates via WebSockets and offers different concurrency modes for conversion. Processed files can be downloaded as individual PDFs or as a single ZIP archive if multiple files were converted.
+MarkSwift is a web application that allows users to upload multiple Markdown files (.md, .markdown) and convert them into PDF documents. It provides real-time progress updates via WebSockets and offers different concurrency modes for conversion. Processed files can be downloaded as individual PDFs or as a single ZIP archive if multiple files were converted.
 
 ## Features
 
@@ -59,7 +59,7 @@ The Batch Markdown to PDF Converter is a web application that allows users to up
     This will install all necessary packages listed in `package.json`, including Express, Puppeteer, Tailwind CSS, etc.
 
 3.  **Build Tailwind CSS:**
-    The project uses Tailwind CSS. The CSS needs to be built from `public/css/input.css` to `public/css/tailwind.css`.
+    MarkSwift uses Tailwind CSS. The CSS needs to be built from `public/css/input.css` to `public/css/tailwind.css`.
     *   For a one-time build:
         ```bash
         npm run build:css
