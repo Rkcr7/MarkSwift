@@ -12,7 +12,8 @@
     },
     "cleanupSettings": {
         "periodicScanIntervalMinutes": 10,
-        "orphanedSessionAgeMinutes": 15
+        "orphanedSessionAgeMinutes": 15,
+        "postDownloadCleanupDelayMs": 10000
     },
     "logging": {
         "level": "info"

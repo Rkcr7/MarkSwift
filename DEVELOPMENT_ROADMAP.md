@@ -63,7 +63,12 @@ The project will be implemented in several phases. Each phase will be completed,
         *   [x] `cleanupService.js`: Encapsulated `scanAndCleanupOrphanedSessions` and `cleanupSessionFiles`.
     *   [x] Update route files (`uploadRoutes.js`, `downloadRoutes.js`) to use controllers.
     *   [x] `server/server.js` is now leaner, using `CleanupService` and updated route modules.
-    *   [ ] **Testing:** Verify all existing functionalities (upload, download, cleanup).
+    *   [ ] **Enhancement:** Implement configurable post-download cleanup delay.
+        *   [x] Add `postDownloadCleanupDelayMs` to `config.json`.
+        *   [x] Update `downloadController.js` to use this delay.
+        *   [x] Update `downloadRoutes.js` to pass the delay to the controller.
+        *   [x] Update `server.js` to pass `config` to `downloadRoutes`.
+    *   [ ] **Testing:** Verify all existing functionalities (upload, download, cleanup, new post-download delay).
     *   [ ] **User Commit Point**
 
 ---

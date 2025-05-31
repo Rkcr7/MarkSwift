@@ -154,8 +154,8 @@ const cleanupService = new CleanupService(logMessage, config, UPLOADS_DIR_BASE, 
 // --- Setup Routes ---
 // Note: The rate limiter is applied before the uploadRoutes, so it still protects /api/convert
 app.use('/api', uploadRoutes(logMessage, config, queueManager, UPLOADS_DIR_BASE));
-// Pass the bound method from cleanupService instance
-app.use('/api/download', downloadRoutes(logMessage, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE, cleanupService.cleanupSessionFiles.bind(cleanupService)));
+// Pass the bound method from cleanupService instance and the config object
+app.use('/api/download', downloadRoutes(logMessage, config, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE, cleanupService.cleanupSessionFiles.bind(cleanupService)));
 
 
 // --- Actual Conversion Logic (called by QueueManager) ---

@@ -175,7 +175,8 @@ The configuration file contains the following settings:
     },
     "cleanupSettings": {
         "periodicScanIntervalMinutes": 10,
-        "orphanedSessionAgeMinutes": 20
+        "orphanedSessionAgeMinutes": 20,
+        "postDownloadCleanupDelayMs": 180000
     },
     "logging": {
         "level": "info"
@@ -206,8 +207,9 @@ The configuration file contains the following settings:
 *   `max`: Maximum speed processing (default: 10 concurrent files)
 
 **Cleanup Settings:**
-*   `periodicScanIntervalMinutes`: How often to scan for orphaned session files (default: 10 minutes)
-*   `orphanedSessionAgeMinutes`: Age threshold in minutes for cleaning up orphaned session files (default: 20 minutes)
+*   `periodicScanIntervalMinutes`: How often to scan for orphaned session files (default: 10 minutes).
+*   `orphanedSessionAgeMinutes`: Age threshold in minutes for cleaning up orphaned session files (default: 20 minutes).
+*   `postDownloadCleanupDelayMs`: Grace period in milliseconds before cleaning up files after a user initiates a download (default: 180000ms, i.e., 3 minutes).
 
 **Queue Settings:**
 *   `maxConcurrentSessions`: Maximum number of user sessions that can process conversions simultaneously (default: 2).
@@ -234,7 +236,7 @@ MarkSwift implements a multi-layered cleanup strategy to prevent server storage 
    - Individual PDF files are deleted after being zipped (for multi-file conversions)
 
 2. **Download Cleanup:**
-   - Remaining files are cleaned up 5 seconds after successful download
+   - After a user successfully initiates a download, the associated session files are scheduled for cleanup after a configurable delay (default: 3 minutes via `postDownloadCleanupDelayMs`). This allows users a grace period for re-downloads.
 
 3. **Periodic Cleanup:**
    - Every 10 minutes (configurable via `periodicScanIntervalMinutes`), the server scans for orphaned session files.
