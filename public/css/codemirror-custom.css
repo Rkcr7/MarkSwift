@@ -1,0 +1,81 @@
+/* public/css/codemirror-custom.css */
+.CodeMirror {
+    font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 14.5px; /* Slightly increased font size for better readability */
+    line-height: 1.6; /* Increased line height for better spacing */
+    height: 100%; 
+    color: #37474F; /* Default darker text color for better base contrast */
+}
+
+/* Ensure the editor takes full height and width within its parent */
+.split-pane-left .CodeMirror {
+    height: 100%;
+    width: 100%;
+    border: none; 
+}
+
+/* Enhanced Styling for the 'material' theme */
+.cm-s-material.CodeMirror {
+    background-color: #FDFDFD; /* Slightly off-white for a softer background */
+    color: #333; /* General text color */
+}
+
+.cm-s-material .CodeMirror-gutters {
+    background: #F5F5F5; /* Light grey gutter background */
+    border-right: 1px solid #E0E0E0; 
+    color: #757575; /* Gutter text color */
+}
+
+.cm-s-material .CodeMirror-linenumber {
+    color: #607D8B; /* Darker, more visible line numbers */
+    padding: 0 5px 0 5px;
+}
+
+.cm-s-material .CodeMirror-cursor {
+    border-left: 2px solid #007ACC; /* More prominent cursor */
+}
+
+.cm-s-material .CodeMirror-selected {
+    background: rgba(0, 122, 204, 0.2); /* Softer selection background */
+}
+.cm-s-material.CodeMirror-focused .CodeMirror-selected {
+    background: rgba(0, 122, 204, 0.25);
+}
+
+/* Markdown specific syntax highlighting improvements */
+.cm-s-material .cm-header { color: #0D47A1; font-weight: bold; } /* Dark blue for headers */
+.cm-s-material .cm-strong { color: #1B5E20; font-weight: bold; } /* Dark green for bold */
+.cm-s-material .cm-em { color: #4A148C; font-style: italic; } /* Dark purple for emphasis/italic */
+.cm-s-material .cm-link { color: #00695C; text-decoration: underline; } /* Teal for links */
+.cm-s-material .cm-url { color: #00695C; }
+.cm-s-material .cm-hr { color: #BDBDBD; } /* Light grey for horizontal rules */
+
+.cm-s-material .cm-comment { color: #78909C; font-style: italic; } /* Grey for comments */
+.cm-s-material .cm-meta { color: #78909C; } /* Meta elements like frontmatter */
+
+.cm-s-material .cm-keyword { color: #C2185B; font-weight: bold; } /* Pink/Magenta for keywords (e.g., in code blocks) */
+.cm-s-material .cm-atom { color: #C2185B; }
+.cm-s-material .cm-number { color: #D32F2F; } /* Red for numbers */
+.cm-s-material .cm-def { color: #00796B; font-weight: bold; } /* Teal for definitions */
+.cm-s-material .cm-variable { color: #303F9F; } /* Indigo for variables */
+.cm-s-material .cm-variable-2 { color: #303F9F; }
+.cm-s-material .cm-variable-3, .cm-s-material .cm-type { color: #303F9F; }
+.cm-s-material .cm-property { color: #512DA8; } /* Deep purple for properties */
+.cm-s-material .cm-operator { color: #7B1FA2; } /* Purple for operators */
+.cm-s-material .cm-string { color: #00897B; } /* Darker teal for strings */
+.cm-s-material .cm-string-2 { color: #00897B; } /* For regex, etc. */
+.cm-s-material .cm-qualifier { color: #555; }
+.cm-s-material .cm-builtin { color: #D84315; font-weight: bold; } /* Orange for builtins */
+.cm-s-material .cm-tag { color: #00796B; font-weight: bold; } /* Teal for HTML tags */
+.cm-s-material .cm-attribute { color: #512DA8; } /* Deep purple for HTML attributes */
+.cm-s-material .cm-error { color: #D32F2F; background-color: rgba(211, 47, 47, 0.1); } /* Error styling */
+
+/* For list items */
+.cm-s-material .cm-formatting-list { color: #FF6F00; } /* Orange for list markers like *, -, 1. */
+.cm-s-material .cm-quote { color: #4E342E; font-style: italic; } /* Brown for blockquotes */
+
+/* Ensure placeholder text is visible if CodeMirror uses it */
+.CodeMirror-placeholder {
+  color: #999 !important;
+  font-style: italic;
+}
