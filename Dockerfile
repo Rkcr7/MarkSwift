@@ -1,14 +1,8 @@
-# 1. Base Image: Use an official Node.js image.
-# Using a specific LTS version is good practice (e.g., Node 18 or 20).
-# Choose one that comes with a Debian-based OS for easier package management.
-FROM node:18-slim AS base
+# Stage 1: Install Puppeteer System Dependencies
+FROM node:18-slim AS puppeteer_deps
 
-# Set working directory
-WORKDIR /usr/src/app
-
-# Install Puppeteer dependencies (Chromium system libraries)
-# This list is comprehensive and should cover most needs for Puppeteer.
-# Using `apt-get update && apt-get install -y --no-install-recommends` is standard.
+# Install Puppeteer's system dependencies
+# Using --no-install-recommends to keep it lean
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     fonts-liberation \
@@ -49,55 +43,61 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Dependencies Stage: Install npm dependencies
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Stage 2: Build Application (Install ALL dependencies, build CSS)
+FROM node:18-slim AS builder
 
-# Install dependencies (including devDependencies for build steps like Tailwind)
-# Using --omit=dev for production build after this step if needed, but for simplicity keeping them for now
-# as Tailwind build needs devDependencies.
-RUN npm install --include=dev
+WORKDIR /usr/src/app
 
-# 3. Build Stage: Build Tailwind CSS
+# Copy system dependencies from the puppeteer_deps stage
+COPY --from=puppeteer_deps / /
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install ALL dependencies (including devDependencies for Tailwind build)
+# Using npm ci is generally faster and more reliable if package-lock.json is present
+# If package-lock.json might be missing or outdated, npm install is safer.
+# Given the timeout, let's try to be robust.
+RUN npm install --include=dev --legacy-peer-deps
+
 # Copy the rest of your application code
 COPY . .
 
 # Run the Tailwind CSS build script
 RUN npm run build:css
 
-# 4. Production Stage: Create a lean production image
-# Use a new Node.js slim image for the final stage
+# Optional: Prune devDependencies if they are not needed for the runtime
+# RUN npm prune --production
+
+# Stage 3: Production Image (Copy artifacts from builder)
 FROM node:18-slim AS production
 
 WORKDIR /usr/src/app
 
-# Copy Puppeteer system dependencies from the 'base' stage's /usr/lib and /lib
-# This is a common approach to keep the final image smaller.
-# We need to be careful to copy the right directories.
-# A more robust way is to identify exact .so files needed by chrome.
-# For now, copying common lib paths.
-COPY --from=base /lib/ /lib/
-COPY --from=base /usr/lib/ /usr/lib/
-COPY --from=base /etc/fonts /etc/fonts
-COPY --from=base /usr/share/fonts /usr/share/fonts
+# Copy system dependencies from the puppeteer_deps stage
+COPY --from=puppeteer_deps / /
 
-# Copy only necessary production files from the 'base' stage (which now includes built assets)
-COPY --from=base /usr/src/app/node_modules ./node_modules
-COPY --from=base /usr/src/app/package.json ./package.json
-COPY --from=base /usr/src/app/public ./public
-COPY --from=base /usr/src/app/server ./server
-COPY --from=base /usr/src/app/config.json ./config.json
-COPY --from=base /usr/src/app/tailwind.config.js ./tailwind.config.js
-# package-lock.json is not strictly needed if node_modules is copied directly
+# Set user to non-root (optional but good practice)
+# Create a non-root user and group called "appuser"
+# RUN groupadd -r appuser && useradd -r -g appuser -s /bin/false -d /usr/src/app appuser
+# USER appuser
+# Ensure /usr/src/app is writable by appuser if you create files at runtime outside of mounted volumes.
 
-# Expose the port the app runs on (from your config or default)
+# Copy built application and node_modules from the builder stage
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/package.json ./package.json
+# COPY --from=builder /usr/src/app/package-lock.json ./package-lock.json # Not strictly needed if node_modules is copied
+COPY --from=builder /usr/src/app/public ./public
+COPY --from=builder /usr/src/app/server ./server
+COPY --from=builder /usr/src/app/config.json ./config.json
+COPY --from=builder /usr/src/app/tailwind.config.js ./tailwind.config.js
+
+# Expose the port the app runs on
 EXPOSE 3000
 
-# Set environment variable for Puppeteer to find Chromium if needed
-# This is often not required if system libraries are correctly installed and Puppeteer uses its bundled Chromium.
-# However, for system-installed Chromium, you might need to set this.
-# For now, we rely on Puppeteer's bundled Chromium and the system libs.
-# ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+# Set environment variables for production
+ENV NODE_ENV=production
+# PUPPETEER_CACHE_DIR=/usr/src/app/.cache/puppeteer # Optional: if you want to control cache location
 
 # Command to run the application
 # This uses the "start_docker" script from your package.json
