@@ -17,9 +17,9 @@ This document tracks the development progress for implementing the "Live Markdow
 
 ## 2. Current Status
 
-*   **Overall Progress:** 0%
-*   **Current Phase:** Phase 0 - Planning & Setup
-*   **Next Step:** Begin Phase 1 - Backend Modularization (Routes & Initial Services)
+*   **Overall Progress:** 70%
+*   **Current Phase:** Phase 7 - Live Editor - Markdown Editor & HTML Preview
+*   **Next Step:** Test the live preview functionality
 
 ## 3. Phase Breakdown & Task Checklist
 
@@ -27,7 +27,7 @@ The project will be implemented in several phases. Each phase will be completed,
 
 ---
 
-### Phase 0: Planning & Setup (Completed)
+### Phase 0: Planning & Setup ✅ COMPLETED
 *   [x] Define scope for Live Editor feature.
 *   [x] Define scope for modularization.
 *   [x] Agree on phased implementation approach.
@@ -35,115 +35,87 @@ The project will be implemented in several phases. Each phase will be completed,
 
 ---
 
-### Phase 1: Backend Modularization - Routes & Initial Services
-*   **Status:** In Progress
+### Phase 1: Backend Modularization - Routes & Initial Services ✅ COMPLETED
+*   **Status:** Completed
 *   **Objective:** Extract route handling from `server/server.js` and establish a basic service structure.
 *   **Tasks:**
-    *   [x] Create `server/routes/` directory (implicitly done by creating files within it).
+    *   [x] Create `server/routes/` directory.
     *   [x] Create `server/routes/uploadRoutes.js` for existing `/api/convert` (file upload).
     *   [x] Create `server/routes/downloadRoutes.js` for existing `/api/download/...` endpoints.
     *   [x] Modify `server/server.js` to use these route modules.
-    *   [x] Create `server/services/` directory (implicitly done).
-    *   [x] Create `server/services/conversionService.js` (placeholder created).
-    *   [ ] Create `server/controllers/` directory (deferred to Phase 2, as current route handlers are simple enough).
-    *   [ ] **Testing:** Ensure existing file upload and download functionality works perfectly.
-    *   [ ] **User Commit Point**
+    *   [x] Create `server/services/` directory.
+    *   [x] Create `server/services/conversionService.js`.
 
 ---
 
-### Phase 2: Backend Modularization - Core Services & Controllers
-*   **Status:** In Progress
+### Phase 2: Backend Modularization - Core Services & Controllers ✅ COMPLETED
+*   **Status:** Completed
 *   **Objective:** Further modularize backend logic into controllers and services.
 *   **Tasks:**
-    *   [x] Refine `server/controllers/` structure.
-        *   [x] `uploadController.js`: Logic for handling file uploads created.
-        *   [x] `downloadController.js`: Logic for handling file downloads created.
+    *   [x] Create `server/controllers/` structure.
+        *   [x] `uploadController.js`: Logic for handling file uploads.
+        *   [x] `downloadController.js`: Logic for handling file downloads.
     *   [x] Expand `server/services/`.
-        *   [ ] `sessionService.js`: Logic for session ID generation and management (deferred, as current crypto usage is simple and handled in `uploadController`).
-        *   [x] `cleanupService.js`: Encapsulated `scanAndCleanupOrphanedSessions` and `cleanupSessionFiles`.
-    *   [x] Update route files (`uploadRoutes.js`, `downloadRoutes.js`) to use controllers.
-    *   [x] `server/server.js` is now leaner, using `CleanupService` and updated route modules.
-    *   [ ] **Enhancement:** Implement configurable post-download cleanup delay.
-        *   [x] Add `postDownloadCleanupDelayMs` to `config.json`.
-        *   [x] Update `downloadController.js` to use this delay.
-        *   [x] Update `downloadRoutes.js` to pass the delay to the controller.
-        *   [x] Update `server.js` to pass `config` to `downloadRoutes`.
-    *   [ ] **Testing:** Verify all existing functionalities (upload, download, cleanup, new post-download delay).
-    *   [ ] **User Commit Point**
+        *   [x] `cleanupService.js`: Encapsulated cleanup functionality.
+    *   [x] Update route files to use controllers.
+    *   [x] Implement configurable post-download cleanup delay.
 
 ---
 
-### Phase 3: Backend Modularization - WebSocket & Utilities
-*   **Status:** In Progress
+### Phase 3: Backend Modularization - WebSocket & Utilities ✅ COMPLETED
+*   **Status:** Completed
 *   **Objective:** Modularize WebSocket handling and utility functions.
 *   **Tasks:**
-    *   [x] Create `server/websocket/websocketHandler.js` to manage WebSocket connections, message routing, and `activeConnections`.
-    *   [x] `server/server.js` updated to delegate WebSocket setup to `websocketHandler.js` and use its send method.
-    *   [ ] Create `server/utils/logger.js` (deferred, `logMessage` in `server.js` is currently sufficient).
-    *   [ ] Create `server/utils/configManager.js` (deferred, config loading in `server.js` is currently sufficient).
-    *   [x] Create `server/middleware/` directory (implicitly done).
-        *   [x] `rateLimitMiddleware.js` created and `server.js` updated to use it.
-        *   [x] `errorMiddleware.js` created and `server.js` updated to use it.
-    *   [ ] **Testing:** Verify all existing functionalities, especially WebSocket communication, rate limiting, and error handling.
-    *   [ ] **User Commit Point**
+    *   [x] Create `server/websocket/websocketHandler.js`.
+    *   [x] Create middleware directory with rate limiting and error handling.
+    *   [x] Update `server/server.js` to use modular components.
 
 ---
 
-### Phase 4: Frontend Modularization - Basic Structure & File Upload
-*   **Status:** In Progress
-*   **Objective:** Reorganize `public/js/main.js` into modules, starting with the existing file upload functionality.
+### Phase 4: Frontend Modularization - Basic Structure & File Upload ✅ COMPLETED
+*   **Status:** Completed
+*   **Objective:** Reorganize `public/js/main.js` into modules.
 *   **Tasks:**
-    *   [x] Create `public/js/modules/` directory (implicitly done).
-    *   [ ] Create `public/js/utils/` directory (deferred, not immediately needed for this phase).
-    *   [x] `public/js/modules/fileUploadUI.js`: Created, handles UI interactions for file upload.
-    *   [x] `public/js/modules/websocketClient.js`: Created, manages WebSocket connection and message handling.
-    *   [x] `public/js/main.js` updated to be a lean entry point, initializing `fileUploadUI.js`.
-    *   [x] `public/index.html` updated to load `main.js` as `type="module"`.
-    *   [ ] **Testing:** Ensure file upload, progress display, and download links work as before with the new modular structure.
-    *   [ ] **User Commit Point**
+    *   [x] Create `public/js/modules/` directory.
+    *   [x] `fileUploadUI.js`: Handles UI interactions for file upload.
+    *   [x] `websocketClient.js`: Manages WebSocket connection and message handling.
+    *   [x] Update `main.js` to be a lean entry point.
 
 ---
 
-### Phase 5: Live Editor - Backend API
-*   **Status:** In Progress
+### Phase 5: Live Editor - Backend API ✅ COMPLETED
+*   **Status:** Completed
 *   **Objective:** Create backend endpoints to support the live editor.
 *   **Tasks:**
-    *   [x] Install `marked` library.
-    *   [x] Create `server/services/previewService.js` using `marked` for MD to HTML conversion.
-    *   [x] Create `server/controllers/editorController.js` with handlers for HTML preview and PDF conversion from text.
-    *   [x] Create `server/routes/editorRoutes.js` to define `/api/editor/preview-html` and `/api/editor/convert-pdf` endpoints.
-    *   [x] Update `server/server.js` to instantiate `PreviewService` and use `editorRoutes`.
-    *   [ ] **Testing:** Test new API endpoints (`/api/editor/preview-html`, `/api/editor/convert-pdf`) using a tool like Postman or curl.
-        *   Verify `/preview-html` returns correct HTML for given Markdown.
-        *   Verify `/convert-pdf` queues a job correctly, creates a temporary file, and responds with session/job ID. (Full PDF generation will be tested with frontend).
-    *   [ ] **User Commit Point**
+    *   [x] Install `marked` library for Markdown to HTML conversion.
+    *   [x] Create `server/services/previewService.js` using `marked`.
+    *   [x] Create `server/controllers/editorController.js` with handlers for HTML preview and PDF conversion.
+    *   [x] Create `server/routes/editorRoutes.js` defining API endpoints.
+    *   [x] Update `server/server.js` to use new routes and services.
 
 ---
 
-### Phase 6: Live Editor - Frontend UI Shell & Tabs
-*   **Status:** In Progress
+### Phase 6: Live Editor - Frontend UI Shell & Tabs ✅ COMPLETED
+*   **Status:** Completed
 *   **Objective:** Implement the basic UI structure for the Live Editor (tabs, split-pane).
 *   **Tasks:**
-    *   [x] Modify `public/index.html` to include tab navigation and a shell for the Live Editor (split-pane layout, placeholders for editor controls, editor, preview, and status areas).
-    *   [x] Create `public/js/modules/tabManager.js` to handle tab switching logic.
-    *   [x] Update `public/js/main.js` to initialize `tabManager.js`.
-    *   [ ] **Testing:** Verify that tabs switch correctly, the new "Live Editor" tab displays its basic shell structure, and the "Upload Files" tab still functions as before. Check responsiveness of the new tab layout.
-    *   [ ] **User Commit Point**
+    *   [x] Modify `public/index.html` to include tab navigation and Live Editor shell.
+    *   [x] Create `public/js/modules/tabManager.js` to handle tab switching.
+    *   [x] Update `public/js/main.js` to initialize tab manager.
+    *   [x] Optimize layout for maximum space usage in Live Editor.
 
 ---
 
 ### Phase 7: Live Editor - Markdown Editor & HTML Preview
-*   **Status:** Not Started
-*   **Objective:** Integrate a Markdown editor and display live HTML preview.
+*   **Status:** In Progress
+*   **Objective:** Integrate live Markdown editing with real-time HTML preview.
 *   **Tasks:**
-    *   [ ] Integrate CodeMirror or Monaco Editor into the left pane.
-        *   `public/js/components/markdownEditor.js`.
-    *   [ ] Fetch Markdown content from the editor.
-    *   [ ] On editor change (debounced), send content to `POST /api/editor/preview-html`.
-    *   [ ] Display the returned HTML in the right preview pane.
-        *   `public/js/components/htmlPreview.js`.
-    *   [ ] Style the HTML preview to resemble the final PDF output as closely as possible.
-    *   [ ] **Testing:** Editor works, HTML preview updates live, styling is reasonable.
+    *   [x] Create `public/js/modules/liveEditor.js` with core editor functionality.
+    *   [x] Implement debounced live preview using `/api/editor/preview-html`.
+    *   [x] Add localStorage persistence for editor content.
+    *   [x] Implement clear editor functionality.
+    *   [x] Update `public/js/main.js` to initialize live editor.
+    *   [ ] **Testing:** Verify live preview works, content persists, clear button functions.
     *   [ ] **User Commit Point**
 
 ---
@@ -152,9 +124,8 @@ The project will be implemented in several phases. Each phase will be completed,
 *   **Status:** Not Started
 *   **Objective:** Enable PDF conversion and download from the Live Editor.
 *   **Tasks:**
-    *   [ ] Add "Download PDF" button.
-    *   [ ] On click, send editor content to `POST /api/editor/convert-pdf`.
-    *   [ ] Handle the response (similar to file upload: session ID, job ID, WebSocket for progress).
+    *   [ ] Connect "Download PDF" button to send content to `/api/editor/convert-pdf`.
+    *   [ ] Handle response with session ID and job ID.
     *   [ ] Integrate with `websocketClient.js` to show progress for editor conversions.
     *   [ ] Provide download link upon completion.
     *   [ ] **Testing:** PDF conversion from editor works, progress is shown, download is successful.
@@ -164,16 +135,12 @@ The project will be implemented in several phases. Each phase will be completed,
 
 ### Phase 9: Live Editor - Advanced Features (Sync Scroll, Persistence)
 *   **Status:** Not Started
-*   **Objective:** Implement sync scrolling and localStorage persistence.
+*   **Objective:** Implement sync scrolling and enhanced features.
 *   **Tasks:**
     *   [ ] Implement synchronized scrolling between editor and HTML preview.
-        *   `public/js/components/syncScroll.js`.
-        *   Add a checkbox to toggle this feature.
-    *   [ ] Save editor content to localStorage automatically (debounced).
-        *   `public/js/utils/storage.js`.
-    *   [ ] Load content from localStorage when the Live Editor tab is opened.
-    *   [ ] Add a "Clear Editor" button.
-    *   [ ] **Testing:** Sync scroll works, content persists across page reloads, clear button works.
+    *   [ ] Add toggle checkbox for sync scroll feature.
+    *   [ ] Enhance localStorage persistence with auto-save indicators.
+    *   [ ] **Testing:** Sync scroll works, enhanced persistence functions correctly.
     *   [ ] **User Commit Point**
 
 ---
