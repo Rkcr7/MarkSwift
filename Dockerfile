@@ -51,13 +51,11 @@ WORKDIR /usr/src/app
 # Copy system dependencies from the puppeteer_deps stage
 COPY --from=puppeteer_deps / /
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy package files (only package.json as package-lock.json was removed)
+COPY package.json ./
 
 # Install ALL dependencies (including devDependencies for Tailwind build)
-# Using npm ci is generally faster and more reliable if package-lock.json is present
-# If package-lock.json might be missing or outdated, npm install is safer.
-# Given the timeout, let's try to be robust.
+# Using npm install --legacy-peer-deps as package-lock.json is not used here.
 RUN npm install --include=dev --legacy-peer-deps
 
 # Copy the rest of your application code
@@ -86,7 +84,7 @@ COPY --from=puppeteer_deps / /
 # Copy built application and node_modules from the builder stage
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package.json ./package.json
-# COPY --from=builder /usr/src/app/package-lock.json ./package-lock.json # Not strictly needed if node_modules is copied
+# package-lock.json is not copied as it was removed
 COPY --from=builder /usr/src/app/public ./public
 COPY --from=builder /usr/src/app/server ./server
 COPY --from=builder /usr/src/app/config.json ./config.json
