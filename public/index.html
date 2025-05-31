@@ -331,24 +331,37 @@ Happy writing with your draggable editor! 🚀
                     </div>
                     
                     <!-- Minimal Status Areas (only shown when needed) -->
-                    <div id="editor-status-area" class="hidden flex-shrink-0 bg-blue-50 p-1.5 rounded text-xs border border-blue-200">
-                        <p id="editor-status-message" class="text-blue-700 font-medium"></p>
-                        <div id="editor-progress-bar-container" class="hidden mt-1">
-                            <div class="w-full bg-blue-200 rounded-full h-1">
-                                <div id="editor-progress-bar" class="bg-blue-600 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div id="editor-status-area" class="hidden flex-shrink-0 bg-blue-50 p-1.5 rounded text-xs border border-blue-200 flex items-center justify-between">
+                        <div class="flex-grow">
+                            <p id="editor-status-message" class="text-blue-700 font-medium"></p>
+                            <div id="editor-progress-bar-container" class="hidden mt-1">
+                                <div class="w-full bg-blue-200 rounded-full h-1">
+                                    <div id="editor-progress-bar" class="bg-blue-600 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
+                        <button id="close-editor-status-button" class="ml-2 text-blue-700 hover:text-blue-900 focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                     
-                    <div id="editor-error-area" class="hidden flex-shrink-0 bg-red-50 p-1.5 rounded text-xs border border-red-200">
-                        <p id="editor-error-message" class="text-red-700 font-medium"></p>
+                    <div id="editor-error-area" class="hidden flex-shrink-0 bg-red-50 p-1.5 rounded text-xs border border-red-200 flex items-center justify-between">
+                        <p id="editor-error-message" class="text-red-700 font-medium flex-grow"></p>
+                        <button id="close-editor-error-button" class="ml-2 text-red-700 hover:text-red-900 focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                     
-                    <div id="editor-download-area" class="hidden flex-shrink-0 bg-green-50 p-1.5 rounded text-xs border border-green-200 text-center">
-                        <p class="text-green-800 font-medium mb-1">PDF Ready!</p>
-                        <a id="editor-download-link" href="#" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">
-                            <i class="fas fa-download mr-1"></i>Download
-                        </a>
+                    <div id="editor-download-area" class="hidden flex-shrink-0 bg-green-50 p-1.5 rounded text-xs border border-green-200 flex items-center justify-between">
+                        <div class="flex-grow text-center">
+                            <p class="text-green-800 font-medium mb-1">PDF Ready!</p>
+                            <a id="editor-download-link" href="#" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">
+                                <i class="fas fa-download mr-1"></i>Download
+                            </a>
+                        </div>
+                        <button id="close-editor-download-button" class="ml-2 text-green-700 hover:text-green-900 focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
             </div>

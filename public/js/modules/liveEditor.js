@@ -24,6 +24,11 @@ class LiveEditor {
         this.editorDownloadLink = null;
         this.editorErrorArea = null;
         this.editorErrorMessage = null;
+
+        // Close buttons for status areas
+        this.closeEditorStatusButton = null;
+        this.closeEditorErrorButton = null;
+        this.closeEditorDownloadButton = null;
     }
 
     init() {
@@ -48,6 +53,11 @@ class LiveEditor {
         this.editorDownloadLink = document.getElementById('editor-download-link');
         this.editorErrorArea = document.getElementById('editor-error-area');
         this.editorErrorMessage = document.getElementById('editor-error-message');
+
+        // Get close buttons
+        this.closeEditorStatusButton = document.getElementById('close-editor-status-button');
+        this.closeEditorErrorButton = document.getElementById('close-editor-error-button');
+        this.closeEditorDownloadButton = document.getElementById('close-editor-download-button');
 
 
         if (!this.markdownTextarea) {
@@ -148,6 +158,18 @@ class LiveEditor {
         } else {
             console.warn('[LiveEditor] editor-convert-pdf-button not found.');
         }
+
+        // Add event listeners for close buttons
+        const setupCloseButtonListener = (button, area) => {
+            if (button && area) {
+                button.addEventListener('click', () => {
+                    area.classList.add('hidden');
+                });
+            }
+        };
+        setupCloseButtonListener(this.closeEditorStatusButton, this.editorStatusArea);
+        setupCloseButtonListener(this.closeEditorErrorButton, this.editorErrorArea);
+        setupCloseButtonListener(this.closeEditorDownloadButton, this.editorDownloadArea);
 
         // Handle tab switching to initialize editor when Live Editor tab is activated
         document.addEventListener('click', (e) => {
