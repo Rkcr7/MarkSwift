@@ -1,4 +1,5 @@
 // public/js/modules/liveEditor.js
+import { connect as websocketConnect } from './websocketClient.js';
 
 let previewUpdateTimeout;
 const PREVIEW_UPDATE_DELAY = 100; // 500ms debounce
@@ -12,6 +13,17 @@ class LiveEditor {
         this.isInitialized = false;
         this.lastContent = '';
         this.currentTheme = 'neat'; // Default theme updated to 'neat'
+
+        // Elements for PDF conversion UI
+        this.convertPdfButton = null;
+        this.editorStatusArea = null;
+        this.editorStatusMessage = null;
+        this.editorProgressBarContainer = null;
+        this.editorProgressBar = null;
+        this.editorDownloadArea = null;
+        this.editorDownloadLink = null;
+        this.editorErrorArea = null;
+        this.editorErrorMessage = null;
     }
 
     init() {
@@ -25,6 +37,18 @@ class LiveEditor {
         this.documentContainer = document.getElementById('pdf-preview-container');
         this.clearButton = document.getElementById('editor-clear-button');
         this.themeSelector = document.getElementById('theme-selector');
+
+        // PDF Conversion UI Elements
+        this.convertPdfButton = document.getElementById('editor-convert-pdf-button');
+        this.editorStatusArea = document.getElementById('editor-status-area');
+        this.editorStatusMessage = document.getElementById('editor-status-message');
+        this.editorProgressBarContainer = document.getElementById('editor-progress-bar-container');
+        this.editorProgressBar = document.getElementById('editor-progress-bar');
+        this.editorDownloadArea = document.getElementById('editor-download-area');
+        this.editorDownloadLink = document.getElementById('editor-download-link');
+        this.editorErrorArea = document.getElementById('editor-error-area');
+        this.editorErrorMessage = document.getElementById('editor-error-message');
+
 
         if (!this.markdownTextarea) {
             console.error('[LiveEditor] markdown-input element not found for CodeMirror');
@@ -114,6 +138,15 @@ class LiveEditor {
             this.themeSelector.addEventListener('change', (event) => {
                 this.setTheme(event.target.value);
             });
+        }
+
+        // PDF Convert Button
+        if (this.convertPdfButton) {
+            this.convertPdfButton.addEventListener('click', () => {
+                this.handlePdfConversionRequest();
+            });
+        } else {
+            console.warn('[LiveEditor] editor-convert-pdf-button not found.');
         }
 
         // Handle tab switching to initialize editor when Live Editor tab is activated
@@ -350,6 +383,129 @@ class LiveEditor {
             this.updatePreview();
             this.saveContentToLocalStorage();
         }
+    }
+
+    // --- PDF Conversion Methods ---
+    async handlePdfConversionRequest() {
+        if (!this.cmInstance) {
+            this.displayEditorError('Editor not initialized.');
+            return;
+        }
+        const markdownText = this.getContent();
+        if (!markdownText.trim()) {
+            this.displayEditorError('Cannot convert empty content.');
+            // Or show a more gentle message in status area
+            // this.displayEditorStatus('Content is empty. Type some Markdown to convert.', false);
+            return;
+        }
+
+        this.displayEditorStatus('Preparing PDF conversion...', false);
+        this.convertPdfButton.disabled = true;
+
+        try {
+            const response = await fetch('/api/editor/convert-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ markdownText }), // mode defaults to 'normal' on backend
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || `Server error: ${response.status}`);
+            }
+
+            this.displayEditorStatus(`Request queued (Job ID: ${result.jobId}). Connecting for updates...`, false);
+            console.log(`[LiveEditor] PDF conversion request successful. SessionID: ${result.sessionId}, JobID: ${result.jobId}`);
+            
+            // Connect WebSocket for progress updates
+            websocketConnect(result.sessionId, this.getEditorUiCallbacks());
+
+        } catch (error) {
+            console.error('[LiveEditor] PDF conversion request failed:', error);
+            this.displayEditorError(error.message || 'Failed to start PDF conversion.');
+            this.convertPdfButton.disabled = false;
+        }
+    }
+
+    getEditorUiCallbacks() {
+        return {
+            showStatus: (message, showProgress, progressPercent) => {
+                this.displayEditorStatus(message, showProgress, progressPercent);
+            },
+            showQueueStatus: (message, queuePosition, queueLength, estimatedWaitTime, estimatedWaitTimeMs) => {
+                const fullMessage = `${message} Est. wait: ${estimatedWaitTime || 'N/A'}`;
+                this.displayEditorStatus(fullMessage, false);
+            },
+            showError: (errorMessage) => {
+                this.displayEditorError(errorMessage);
+                this.convertPdfButton.disabled = false;
+            },
+            showDownloadLink: (downloadUrl, downloadType) => {
+                this.displayEditorDownload(downloadUrl, downloadType);
+                this.convertPdfButton.disabled = false;
+            },
+            onOpen: () => {
+                this.displayEditorStatus('Connected for real-time PDF progress.', false);
+            },
+            onClose: (wasClean) => {
+                // If download or error isn't shown, means it closed unexpectedly or before completion
+                if (this.editorDownloadArea.classList.contains('hidden') && this.editorErrorArea.classList.contains('hidden')) {
+                    this.displayEditorStatus('PDF progress connection closed.', false);
+                }
+                this.convertPdfButton.disabled = false; // Re-enable button on close if not completed
+            },
+            onComplete: () => { // Callback from websocketClient when 'complete' message is processed
+                this.convertPdfButton.disabled = false;
+            },
+            onError: () => { // Callback from websocketClient for WS errors or 'error' message
+                this.convertPdfButton.disabled = false;
+            }
+        };
+    }
+
+    // Helper UI functions
+    _hideAllStatusAreas() {
+        if(this.editorStatusArea) this.editorStatusArea.classList.add('hidden');
+        if(this.editorErrorArea) this.editorErrorArea.classList.add('hidden');
+        if(this.editorDownloadArea) this.editorDownloadArea.classList.add('hidden');
+        if(this.editorProgressBarContainer) this.editorProgressBarContainer.classList.add('hidden');
+    }
+
+    displayEditorStatus(message, showProgress = false, progressPercent = 0) {
+        this._hideAllStatusAreas();
+        if (!this.editorStatusArea || !this.editorStatusMessage) return;
+
+        this.editorStatusArea.classList.remove('hidden');
+        this.editorStatusMessage.textContent = message;
+
+        if (showProgress && this.editorProgressBarContainer && this.editorProgressBar) {
+            this.editorProgressBarContainer.classList.remove('hidden');
+            this.editorProgressBar.style.width = `${progressPercent}%`;
+        } else if (this.editorProgressBarContainer) {
+            this.editorProgressBarContainer.classList.add('hidden');
+        }
+    }
+
+    displayEditorError(errorMessage) {
+        this._hideAllStatusAreas();
+        if (!this.editorErrorArea || !this.editorErrorMessage) return;
+
+        this.editorErrorArea.classList.remove('hidden');
+        this.editorErrorMessage.textContent = errorMessage;
+    }
+
+    displayEditorDownload(downloadUrl, downloadType) {
+        this._hideAllStatusAreas();
+        if (!this.editorDownloadArea || !this.editorDownloadLink) return;
+
+        this.editorDownloadArea.classList.remove('hidden');
+        this.editorDownloadLink.href = downloadUrl;
+        this.editorDownloadLink.textContent = `Download ${downloadType ? downloadType.toUpperCase() : 'PDF'}`;
+        // Optional: auto-click
+        // this.editorDownloadLink.click(); 
     }
 }
 
