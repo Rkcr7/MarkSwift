@@ -11,8 +11,8 @@
         "max": 10
     },
     "cleanupSettings": {
-        "periodicScanIntervalMinutes": 30,
-        "orphanedSessionAgeHours": 3
+        "periodicScanIntervalMinutes": 10,
+        "orphanedSessionAgeMinutes": 20
     },
     "logging": {
         "level": "info"

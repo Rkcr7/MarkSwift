@@ -142,7 +142,9 @@ function getConcurrencyFromMode(mode) {
 async function scanAndCleanupOrphanedSessions() {
     logMessage('info', "Starting scan for orphaned sessions.");
     const now = Date.now();
-    const maxAgeMs = config.cleanupSettings.orphanedSessionAgeHours * 60 * 60 * 1000;
+    // Use orphanedSessionAgeMinutes from config, default to 180 minutes (3 hours) if not set
+    const orphanedAgeMinutes = config.cleanupSettings.orphanedSessionAgeMinutes || (config.cleanupSettings.orphanedSessionAgeHours * 60) || 180;
+    const maxAgeMs = orphanedAgeMinutes * 60 * 1000;
     const directoriesToScan = [UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE];
     let cleanedCount = 0;
 
@@ -459,7 +461,8 @@ server.listen(PORT, () => {
     logMessage('info', `🚀 MarkSwift Server (with Queue System & WebSocket) listening on http://localhost:${PORT}`);
     logMessage('info', `Max concurrent conversion sessions: ${config.queueSettings.maxConcurrentSessions}`);
     logMessage('info', `Periodic session cleanup interval: ${config.cleanupSettings.periodicScanIntervalMinutes} minutes.`);
-    logMessage('info', `Orphaned session age for cleanup: ${config.cleanupSettings.orphanedSessionAgeHours} hours.`);
+    const orphanedAgeMinutesDisplay = config.cleanupSettings.orphanedSessionAgeMinutes || (config.cleanupSettings.orphanedSessionAgeHours * 60) || 180;
+    logMessage('info', `Orphaned session age for cleanup: ${orphanedAgeMinutesDisplay} minutes.`);
     setInterval(scanAndCleanupOrphanedSessions, config.cleanupSettings.periodicScanIntervalMinutes * 60 * 1000);
     setTimeout(scanAndCleanupOrphanedSessions, 5000); // Initial scan
 });
