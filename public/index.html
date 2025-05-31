@@ -13,6 +13,8 @@
     <!-- CodeMirror CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/neat.min.css">
     <link href="css/codemirror-custom.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans leading-normal tracking-normal h-full overflow-hidden flex flex-col">
@@ -241,6 +243,14 @@
                                 <input type="checkbox" id="sync-scroll-checkbox" class="form-checkbox h-3 w-3 text-blue-600 rounded mr-1">
                                 Sync
                             </label>
+                            <div class="flex items-center space-x-1">
+                                <label for="theme-selector" class="text-xs text-slate-600">Theme:</label>
+                                <select id="theme-selector" class="form-select text-xs py-0.5 px-1.5 rounded border-slate-300 focus:ring-blue-500 focus:border-blue-500 shadow-sm" style="min-width: 100px;">
+                                    <option value="neat">Neat Light</option>
+                                    <option value="dracula">Dracula Dark</option>
+                                    <option value="material">Material Light</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="flex items-center space-x-2">
                             <span class="text-xs text-slate-500">Drag to resize</span>

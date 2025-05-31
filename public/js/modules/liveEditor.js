@@ -8,8 +8,10 @@ class LiveEditor {
         this.markdownTextarea = null; // Will be the original textarea, CodeMirror hides it
         this.cmInstance = null; // To store the CodeMirror instance
         this.documentContainer = null;
+        this.themeSelector = null; // To store the theme selector element
         this.isInitialized = false;
         this.lastContent = '';
+        this.currentTheme = 'neat'; // Default theme updated to 'neat'
     }
 
     init() {
@@ -22,27 +24,43 @@ class LiveEditor {
         this.markdownTextarea = document.getElementById('markdown-input'); // Keep ref to original
         this.documentContainer = document.getElementById('pdf-preview-container');
         this.clearButton = document.getElementById('editor-clear-button');
+        this.themeSelector = document.getElementById('theme-selector');
 
         if (!this.markdownTextarea) {
             console.error('[LiveEditor] markdown-input element not found for CodeMirror');
             return;
         }
 
+        // Load saved theme first, so CM initializes with it
+        this.loadTheme();
+
         // Initialize CodeMirror from the textarea
         if (typeof CodeMirror !== 'undefined') {
             this.cmInstance = CodeMirror.fromTextArea(this.markdownTextarea, {
                 mode: 'markdown',
-                theme: 'material',
+                theme: this.currentTheme, // Use loaded or default theme
                 lineNumbers: true,
                 lineWrapping: true,
                 // You can add more CodeMirror options here:
                 // extraKeys: {"Enter": "newlineAndIndentContinueMarkdownList"} // For auto-list continuation
-                // placeholder: this.markdownTextarea.placeholder // Use existing placeholder
             });
-            console.log('[LiveEditor] CodeMirror initialized');
-            // Use placeholder from original textarea if CM supports it or set it manually
-            if (this.markdownTextarea.placeholder && this.cmInstance.display.placeholder) {
-                 this.cmInstance.display.placeholder.innerHTML = this.markdownTextarea.placeholder.replace(/\n/g, '<br>');
+            console.log(`[LiveEditor] CodeMirror initialized with theme: ${this.currentTheme}`);
+            
+            // Set placeholder if available
+            if (this.markdownTextarea.placeholder) {
+                // CodeMirror's own placeholder option is usually better if the theme supports it well.
+                // Forcing via innerHTML can sometimes be overridden by theme CSS.
+                // Check if CM instance has a placeholder option or set it directly
+                if (this.cmInstance.options && this.cmInstance.options.placeholder !== undefined) {
+                    this.cmInstance.setOption("placeholder", this.markdownTextarea.placeholder);
+                } else if (this.cmInstance.display.placeholder) { // Fallback for older/different CM versions
+                    this.cmInstance.display.placeholder.innerHTML = this.markdownTextarea.placeholder.replace(/\n/g, '<br>');
+                }
+            }
+            
+            // Update the theme selector dropdown to reflect the current theme
+            if (this.themeSelector) {
+                this.themeSelector.value = this.currentTheme;
             }
 
         } else {
@@ -62,7 +80,7 @@ class LiveEditor {
         this.setupEventListeners();
         
         // Load saved content from localStorage
-        this.loadSavedContent();
+        this.loadSavedContent(); // This will also trigger a preview update if content exists
 
         this.isInitialized = true;
         console.log('[LiveEditor] Initialized successfully with improved layout');
@@ -88,6 +106,13 @@ class LiveEditor {
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => {
                 this.clearEditor();
+            });
+        }
+
+        // Theme selector listener
+        if (this.themeSelector) {
+            this.themeSelector.addEventListener('change', (event) => {
+                this.setTheme(event.target.value);
             });
         }
 
@@ -247,7 +272,41 @@ class LiveEditor {
         try {
             localStorage.removeItem('markswift-editor-content');
         } catch (error) {
-            console.warn('[LiveEditor] Failed to clear localStorage:', error);
+            console.warn('[LiveEditor] Failed to clear localStorage for content:', error);
+        }
+    }
+
+    setTheme(themeName) {
+        if (this.cmInstance) {
+            this.cmInstance.setOption('theme', themeName);
+            this.currentTheme = themeName;
+            this.saveTheme();
+            console.log(`[LiveEditor] Theme changed to: ${themeName}`);
+        }
+    }
+
+    saveTheme() {
+        try {
+            localStorage.setItem('markswift-editor-theme', this.currentTheme);
+        } catch (error) {
+            console.warn('[LiveEditor] Failed to save theme to localStorage:', error);
+        }
+    }
+
+    loadTheme() {
+        try {
+            const savedTheme = localStorage.getItem('markswift-editor-theme');
+            if (savedTheme) {
+                this.currentTheme = savedTheme;
+                console.log(`[LiveEditor] Loaded theme from localStorage: ${savedTheme}`);
+            }
+            // If themeSelector exists, update its value. This is also done after CM init.
+            if (this.themeSelector) {
+                this.themeSelector.value = this.currentTheme;
+            }
+        } catch (error) {
+            console.warn('[LiveEditor] Failed to load theme from localStorage:', error);
+            this.currentTheme = 'neat'; // Fallback to default, now 'neat'
         }
     }
 
