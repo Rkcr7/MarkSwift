@@ -105,16 +105,17 @@ The project will be implemented in several phases. Each phase will be completed,
 ---
 
 ### Phase 5: Live Editor - Backend API
-*   **Status:** Not Started
+*   **Status:** In Progress
 *   **Objective:** Create backend endpoints to support the live editor.
 *   **Tasks:**
-    *   [ ] Create `server/routes/editorRoutes.js`.
-    *   [ ] Endpoint `POST /api/editor/preview-html`: Accepts Markdown text, returns rendered HTML.
-        *   [ ] Create `server/services/previewService.js` (uses a Markdown-to-HTML library like `marked` or `markdown-it`).
-    *   [ ] Endpoint `POST /api/editor/convert-pdf`: Accepts Markdown text, initiates PDF conversion (can reuse/adapt `conversionService.js`).
-        *   This will involve creating a temporary .md file from the text to feed into the existing Puppeteer pipeline.
-    *   [ ] Update `server/controllers/editorController.js` to handle these requests.
-    *   [ ] **Testing:** Test new API endpoints using a tool like Postman or curl.
+    *   [x] Install `marked` library.
+    *   [x] Create `server/services/previewService.js` using `marked` for MD to HTML conversion.
+    *   [x] Create `server/controllers/editorController.js` with handlers for HTML preview and PDF conversion from text.
+    *   [x] Create `server/routes/editorRoutes.js` to define `/api/editor/preview-html` and `/api/editor/convert-pdf` endpoints.
+    *   [x] Update `server/server.js` to instantiate `PreviewService` and use `editorRoutes`.
+    *   [ ] **Testing:** Test new API endpoints (`/api/editor/preview-html`, `/api/editor/convert-pdf`) using a tool like Postman or curl.
+        *   Verify `/preview-html` returns correct HTML for given Markdown.
+        *   Verify `/convert-pdf` queues a job correctly, creates a temporary file, and responds with session/job ID. (Full PDF generation will be tested with frontend).
     *   [ ] **User Commit Point**
 
 ---
