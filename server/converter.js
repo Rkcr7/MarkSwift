@@ -128,7 +128,7 @@ class MarkdownToPDFConverter {
         let page; // Declare page here to ensure it's in scope for finally block if needed
 
         this.logMessage('info', `[${this.sessionId}] [File ${currentFileProgress}/${this.totalFiles}] Starting conversion: ${originalFileName} -> ${outputFile}`);
-        if (this.sendProgress) this.sendProgress({ type: 'file_status', message: `Processing file`, currentFile: currentFileProgress, totalFiles: this.totalFiles, progress: baseProgress });
+        // if (this.sendProgress) this.sendProgress({ type: 'file_status', message: `Processing file`, currentFile: currentFileProgress, totalFiles: this.totalFiles, progress: baseProgress }); // User requested less verbose client updates
 
         try {
             this.logMessage('debug', `[${this.sessionId}] [File ${currentFileProgress}] Reading content from: ${inputFile}`);

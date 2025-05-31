@@ -56,55 +56,81 @@ class QueueManager {
     }
 
     _updateQueuePositionsAndNotify() {
-        let cumulativeEstimatedWaitTime = 0;
-        const jobsCurrentlyProcessingCount = this.activeSessions.size;
+        // Initialize projected free times for each concurrent slot
+        const slotProjectedFreeTimes = new Array(this.maxConcurrentSessions).fill(0);
 
+        // Account for currently active jobs
+        const activeJobCompletionEstimates = [];
+        this.activeSessions.forEach(activeJob => {
+            const estimatedTotalDuration = this._getEstimatedProcessingTimeForJob(activeJob.filesCount);
+            const elapsedTime = Date.now() - activeJob.startTime;
+            const remainingTime = Math.max(0, estimatedTotalDuration - elapsedTime);
+            activeJobCompletionEstimates.push(remainingTime);
+        });
+        activeJobCompletionEstimates.sort((a, b) => a - b); // Sort by soonest completion
+
+        // Assign remaining times of active jobs to slots
+        for (let i = 0; i < Math.min(activeJobCompletionEstimates.length, this.maxConcurrentSessions); i++) {
+            slotProjectedFreeTimes[i] = activeJobCompletionEstimates[i];
+        }
+        // Any remaining slots are considered free now (0 time from now) if fewer active jobs than slots
+
+        // Process the queue to update positions and estimated wait times
         this.queue.forEach((job, index) => {
             job.queuePosition = index + 1;
-            
-            // Estimate time for this job based on its own files
-            const estimatedTimeForThisJob = this._calculateJobEstimate(job.files.length);
 
-            if (job.queuePosition <= this.maxConcurrentSessions - jobsCurrentlyProcessingCount) {
-                // This job will likely start in the current batch of processing or next immediate one
-                job.estimatedWaitTime = this._formatWaitTime(this.avgBaseJobOverheadMs / 2); // A small base time
-            } else {
-                 // For jobs further down, add the estimated time of jobs ahead of it that are *also* in the queue
-                job.estimatedWaitTime = this._formatWaitTime(cumulativeEstimatedWaitTime + (this.avgBaseJobOverheadMs / 2) );
+            const estimatedProcessingTimeForThisJob = this._getEstimatedProcessingTimeForJob(job.files.length);
+
+            // Find the slot that will be free earliest
+            let earliestSlotIndex = 0;
+            for (let i = 1; i < this.maxConcurrentSessions; i++) {
+                if (slotProjectedFreeTimes[i] < slotProjectedFreeTimes[earliestSlotIndex]) {
+                    earliestSlotIndex = i;
+                }
             }
             
-            // Add this job's estimated processing time to the cumulative total for the *next* job in queue
-            cumulativeEstimatedWaitTime += estimatedTimeForThisJob;
+            const estimatedWaitTimeMs = slotProjectedFreeTimes[earliestSlotIndex];
+            job.estimatedWaitTime = this._formatWaitTime(estimatedWaitTimeMs);
+            
+            // Update this slot's projected free time by adding the current job's processing time
+            slotProjectedFreeTimes[earliestSlotIndex] += estimatedProcessingTimeForThisJob;
 
-
-            if (job.ws && job.ws.readyState === 1) { // WebSocket.OPEN = 1
-                this.sendWebSocketMessage(job.ws, { // Send to the specific session's WebSocket
-                    type: 'queue_update',
-                    sessionId: job.sessionId,
+            // Use the sendWebSocketMessage callback with sessionId, not job.ws directly
+            // as job.ws might be undefined if the WS connection was made after job queuing.
+            // The callback (sendWebSocketMessageToSession in server.js) handles finding the active ws by sessionId.
+            this.sendWebSocketMessage(job.sessionId, { 
+                type: 'queue_update',
+                sessionId: job.sessionId,
                     jobId: job.id,
                     queuePosition: job.queuePosition,
                     queueLength: this.queue.length,
-                    estimatedWaitTime: job.estimatedWaitTime,
+                    estimatedWaitTime: job.estimatedWaitTime, // This is the formatted string
+                    estimatedWaitTimeMs: estimatedWaitTimeMs, // Send raw ms for potential client-side logic
                     message: `You are position ${job.queuePosition} of ${this.queue.length} in the queue.`
                 });
-            }
         });
     }
 
-    _calculateJobEstimate(filesCount) {
-        // Simple estimation: (avg time per file * num files) + base overhead
-        // Divided by number of concurrent processors to get a rough idea of how long one "slot" takes
-        const singleJobTime = (this.avgProcessingTimePerFileMs * filesCount) + this.avgBaseJobOverheadMs;
-        return singleJobTime / Math.max(1, this.maxConcurrentSessions); // Avoid division by zero
+    _getEstimatedProcessingTimeForJob(filesCount) {
+        // Returns the total estimated processing time for a job with 'filesCount' files.
+        return (this.avgProcessingTimePerFileMs * filesCount) + this.avgBaseJobOverheadMs;
     }
 
     _formatWaitTime(ms) {
-        if (ms < 1000) return "< 1 min";
+        if (ms <= 0) return "Starting soon"; // If wait time is 0 or negative
+        if (ms < 1000) return "< 1 sec"; // More granularity for very short waits
         const totalSeconds = Math.round(ms / 1000);
+        if (totalSeconds < 60) return `${totalSeconds} sec`;
+        
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
-        if (minutes === 0) return `${seconds} sec`;
-        return `${minutes} min ${seconds} sec`;
+        
+        if (minutes < 60) {
+            return `${minutes} min ${seconds > 0 ? `${seconds} sec` : ''}`.trim();
+        }
+        
+        // For longer waits, could add hours, but let's keep it to minutes for now
+        return `${minutes} min`; // Simplified for very long waits
     }
     
     _recalculateAverages() {
