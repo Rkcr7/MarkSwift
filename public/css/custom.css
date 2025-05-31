@@ -146,11 +146,27 @@
     background: rgba(148, 163, 184, 0.7);
 }
 
+/* Live Editor Layout Improvements */
+#liveEditorTab .grid-cols-5 {
+    grid-template-columns: 1fr 2.5fr; /* 30% Editor, 70% Preview */
+}
+
+#liveEditorTab .col-span-2 {
+    grid-column: span 1;
+}
+
+#liveEditorTab .col-span-3 {
+    grid-column: span 1;
+}
+
 /* Live Editor Preview Enhancements */
 #pdf-preview-container {
     transition: all 0.3s ease;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
                 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    padding: 8mm !important; /* Increased padding from 5mm to 8mm */
+    max-width: none !important; /* Remove max-width constraint */
+    width: 100% !important; /* Use full available width */
 }
 
 #pdf-preview-container:hover {
@@ -218,29 +234,26 @@
 
 /* Improved split pane responsiveness */
 @media (max-width: 1200px) {
-    .grid-cols-5 {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .col-span-2 {
-        grid-column: span 1;
-    }
-    
-    .col-span-3 {
-        grid-column: span 1;
+    #liveEditorTab .grid-cols-5 {
+        grid-template-columns: 1fr 2fr; /* Adjust for medium screens */
     }
 }
 
 @media (max-width: 768px) {
-    .grid-cols-5 {
+    #liveEditorTab .grid-cols-5 {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr 1fr;
         gap: 0.5rem;
     }
     
-    .col-span-2,
-    .col-span-3 {
+    #liveEditorTab .col-span-2,
+    #liveEditorTab .col-span-3 {
         grid-column: span 1;
+    }
+    
+    #pdf-preview-container {
+        padding: 4mm !important;
+        margin: 0.5rem;
     }
 }
 
@@ -324,27 +337,6 @@
     }
 }
 
-/* Mobile enhancements */
-@media (max-width: 768px) {
-    .mobile-optimized {
-        padding: 1rem;
-    }
-    
-    .mobile-text {
-        font-size: 0.875rem;
-    }
-    
-    .mobile-button {
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-    }
-    
-    #pdf-preview-container {
-        padding: 3mm !important;
-        margin: 0.5rem;
-    }
-}
-
 /* High contrast mode support */
 @media (prefers-contrast: high) {
     .high-contrast {
@@ -416,4 +408,48 @@
     width: 4px;
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     border-radius: 2px;
+}
+
+/* FIXED: Shield badges without horizontal scrolling */
+.preview-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    display: inline-block !important;
+    margin: 2px 4px;
+    vertical-align: middle;
+}
+
+/* Fix for centered content with images - NO SCROLLING */
+.preview-content div[align="center"],
+.preview-content [style*="text-align: center"],
+.preview-content [style*="text-align:center"] {
+    text-align: center;
+    padding: 8px 0;
+    line-height: 1.8; /* Better line spacing for wrapped badges */
+}
+
+/* Ensure shield badges display properly without forcing horizontal scroll */
+.preview-content a img[src*="shields.io"],
+.preview-content a img[src*="badge"],
+.preview-content img[src*="shields.io"],
+.preview-content img[src*="badge"] {
+    display: inline !important;
+    margin: 3px 4px !important;
+    vertical-align: middle !important;
+    border-radius: 4px !important;
+    max-width: none !important;
+    width: auto !important;
+    /* Allow natural wrapping without forcing horizontal layout */
+}
+
+/* Container for shield badges - ALLOW NATURAL WRAPPING */
+.preview-content p:has(img[src*="shields.io"]),
+.preview-content div:has(img[src*="shields.io"]),
+.preview-content p:has(img[src*="badge"]),
+.preview-content div:has(img[src*="badge"]) {
+    text-align: center !important;
+    padding: 8px 0 !important;
+    line-height: 1.8 !important;
+    /* REMOVED: white-space: nowrap and overflow-x: auto to prevent scrolling */
 }

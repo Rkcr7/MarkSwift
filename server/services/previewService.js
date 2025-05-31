@@ -142,7 +142,10 @@ class PreviewService {
                 .preview-content img { 
                     max-width: 100%; 
                     height: auto; 
-                    border-radius: 6px; 
+                    border-radius: 6px;
+                    display: inline-block !important;
+                    margin: 2px 4px;
+                    vertical-align: middle;
                 }
                 .preview-content a { 
                     color: #0969da; 
@@ -163,6 +166,27 @@ class PreviewService {
                 /* Ensure last element has proper bottom margin */
                 .preview-content > *:last-child {
                     margin-bottom: 0 !important;
+                }
+                /* FIXED: Centered divs with badges - NO SCROLLING */
+                .preview-content div[align="center"] {
+                    text-align: center;
+                    padding: 8px 0;
+                    margin: 16px 0;
+                    line-height: 1.8;
+                    /* Allow natural wrapping, no forced horizontal scrolling */
+                }
+                /* Shield badges specific styling - NO FORCED WIDTH */
+                .preview-content a img[src*="shields.io"],
+                .preview-content a img[src*="badge"],
+                .preview-content img[src*="shields.io"],
+                .preview-content img[src*="badge"] {
+                    display: inline !important;
+                    margin: 3px 4px !important;
+                    vertical-align: middle !important;
+                    border-radius: 4px !important;
+                    max-width: none !important;
+                    width: auto !important;
+                    /* Natural wrapping behavior */
                 }
             </style>
             <div class="preview-content">${htmlContent}</div>
