@@ -3,22 +3,8 @@ const crypto = require('crypto');
 const fs = require('fs-extra');
 const path = require('path');
 
-// Dependencies will be injected: logMessage, previewService, queueManager, config, UPLOADS_DIR_BASE
-
-const handleHtmlPreview = (logMessage, previewService) => (req, res) => {
-    const { markdownText } = req.body;
-    if (typeof markdownText !== 'string') {
-        logMessage('warn', '[EditorController] HTML preview request with invalid markdownText type.');
-        return res.status(400).json({ message: 'Invalid input: markdownText must be a string.' });
-    }
-    try {
-        const html = previewService.convertToHtml(markdownText);
-        res.json({ html });
-    } catch (error) {
-        logMessage('error', '[EditorController] Error generating HTML preview:', error);
-        res.status(500).json({ message: 'Failed to generate HTML preview.' });
-    }
-};
+// Dependencies will be injected: logMessage, queueManager, config, UPLOADS_DIR_BASE
+// previewService is no longer needed here
 
 const handlePdfConversionFromText = (logMessage, queueManager, config, UPLOADS_DIR_BASE) => async (req, res) => {
     const { markdownText, mode = 'normal' } = req.body;
@@ -78,6 +64,6 @@ const handlePdfConversionFromText = (logMessage, queueManager, config, UPLOADS_D
 };
 
 module.exports = {
-    handleHtmlPreview,
+    // handleHtmlPreview, // Removed
     handlePdfConversionFromText
 };

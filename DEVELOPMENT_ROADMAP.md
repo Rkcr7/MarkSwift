@@ -111,11 +111,13 @@ The project will be implemented in several phases. Each phase will be completed,
 *   **Objective:** Integrate live Markdown editing with real-time HTML preview.
 *   **Tasks:**
     *   [x] Create `public/js/modules/liveEditor.js` with core editor functionality.
-    *   [x] Implement debounced live preview using `/api/editor/preview-html`.
-    *   [x] Add localStorage persistence for editor content.
+    *   [x] Implement client-side Markdown to HTML preview (using `marked.js` and `DOMPurify`).
+    *   [x] Add localStorage persistence for editor content and selected theme.
     *   [x] Implement clear editor functionality.
+    *   [x] Add editor theme selector (Material Light, Dracula Dark, Neat Light) with persistence.
     *   [x] Update `public/js/main.js` to initialize live editor.
-    *   [ ] **Testing:** Verify live preview works, content persists, clear button functions.
+    *   [x] **Backend Cleanup:** Removed server-side HTML preview endpoint (`/api/editor/preview-html`), `server/services/previewService.js`, and related controller logic as preview is now client-side.
+    *   [ ] **Testing:** Verify live preview works with client-side rendering, content and theme persist, clear button functions, theme selector works.
     *   [ ] **User Commit Point**
 
 ---

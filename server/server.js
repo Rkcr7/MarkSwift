@@ -85,7 +85,7 @@ const editorRoutes = require('./routes/editorRoutes'); // New route for editor
 
 // --- Service Imports ---
 const CleanupService = require('./services/cleanupService');
-const PreviewService = require('./services/previewService'); // New service for HTML preview
+// const PreviewService = require('./services/previewService'); // REMOVED - No longer needed
 // const ConversionService = require('./services/conversionService'); // Placeholder, will be used later
 
 // --- Initialize WebSocket Handler (before QueueManager if QueueManager needs its send method) ---
@@ -163,7 +163,7 @@ function getConcurrencyFromMode(mode) {
 
 // --- Initialize Services ---
 const cleanupService = new CleanupService(logMessage, config, UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE);
-const previewService = new PreviewService(logMessage);
+// const previewService = new PreviewService(logMessage); // REMOVED
 // const conversionService = new ConversionService(logMessage, config, queueManager, webSocketHandler.sendMessageToSession.bind(webSocketHandler), UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE); // Pass correct WS send method
 
 
@@ -172,8 +172,8 @@ const previewService = new PreviewService(logMessage);
 app.use('/api', uploadRoutes(logMessage, config, queueManager, UPLOADS_DIR_BASE));
 // Pass the bound method from cleanupService instance and the config object
 app.use('/api/download', downloadRoutes(logMessage, config, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE, cleanupService.cleanupSessionFiles.bind(cleanupService)));
-// Add editor routes
-app.use('/api/editor', editorRoutes(logMessage, previewService, queueManager, config, UPLOADS_DIR_BASE));
+// Add editor routes - previewService removed from dependencies
+app.use('/api/editor', editorRoutes(logMessage, queueManager, config, UPLOADS_DIR_BASE));
 
 
 // --- Actual Conversion Logic (called by QueueManager) ---
