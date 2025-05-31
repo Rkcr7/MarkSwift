@@ -1,0 +1,20 @@
+{
+    "appName": "MarkSwift",
+    "port": 3000,
+    "fileUploadLimits": {
+        "maxFileSizeMB": 10,
+        "maxFilesPerBatch": 200
+    },
+    "concurrencyModes": {
+        "normal": 4,
+        "fast": 7,
+        "max": 10
+    },
+    "cleanupSettings": {
+        "periodicScanIntervalMinutes": 30,
+        "orphanedSessionAgeHours": 3
+    },
+    "logging": {
+        "level": "info"
+    }
+}

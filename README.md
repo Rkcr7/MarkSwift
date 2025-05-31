@@ -123,27 +123,70 @@ After starting the server, the application will typically be accessible at:
 
 ## Configuration
 
-### Concurrency Settings
+MarkSwift uses a `config.json` file to manage important settings. This file is automatically created with default values when the server starts if it doesn't exist.
 
-The number of concurrent file conversions is managed in `server/server.js` within the `getConcurrencyFromMode(mode)` function. You can adjust the values for 'normal', 'fast', and 'max' modes directly in this function if needed.
+### Configuration File (`config.json`)
 
-```javascript
-// server/server.js
-function getConcurrencyFromMode(mode) {
-    switch (mode) {
-        case 'fast': return 7;
-        case 'max': return 10; // Default max concurrency
-        case 'normal':
-        default: return 4;
+The configuration file contains the following settings:
+
+```json
+{
+    "appName": "MarkSwift",
+    "port": 3000,
+    "fileUploadLimits": {
+        "maxFileSizeMB": 10,
+        "maxFilesPerBatch": 200
+    },
+    "concurrencyModes": {
+        "normal": 4,
+        "fast": 7,
+        "max": 10
+    },
+    "cleanupSettings": {
+        "periodicScanIntervalMinutes": 30,
+        "orphanedSessionAgeHours": 3
+    },
+    "logging": {
+        "level": "info"
     }
 }
 ```
 
-### File Upload Limits
+### Configuration Options
 
-*   Maximum file size: 10MB per file
-*   Maximum number of files: 200 files per batch
-*   Supported file types: `.md`, `.markdown`
+**File Upload Limits:**
+*   `maxFileSizeMB`: Maximum file size per uploaded file (default: 10MB)
+*   `maxFilesPerBatch`: Maximum number of files per upload batch (default: 200)
+
+**Concurrency Modes:**
+*   `normal`: Balanced processing (default: 4 concurrent files)
+*   `fast`: Faster processing (default: 7 concurrent files)
+*   `max`: Maximum speed processing (default: 10 concurrent files)
+
+**Cleanup Settings:**
+*   `periodicScanIntervalMinutes`: How often to scan for orphaned session files (default: 30 minutes)
+*   `orphanedSessionAgeHours`: Age threshold for cleaning up orphaned session files (default: 3 hours)
+
+**Other Settings:**
+*   `port`: Server port (default: 3000, can be overridden by `PORT` environment variable)
+*   `appName`: Application name used in branding
+*   `logging.level`: Logging level for future logging enhancements
+
+### File Cleanup Strategy
+
+MarkSwift implements a multi-layered cleanup strategy to prevent server storage issues:
+
+1. **Immediate Cleanup:**
+   - Upload files are deleted immediately after processing
+   - Individual PDF files are deleted after being zipped (for multi-file conversions)
+
+2. **Download Cleanup:**
+   - Remaining files are cleaned up 5 seconds after successful download
+
+3. **Periodic Cleanup:**
+   - Every 30 minutes (configurable), the server scans for orphaned session files
+   - Files older than 3 hours (configurable) are automatically deleted
+   - Runs on server startup and then at regular intervals
 
 ## Dependencies
 

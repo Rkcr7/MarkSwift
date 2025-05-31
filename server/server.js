@@ -7,8 +7,42 @@ const crypto = require('crypto');
 const WebSocket = require('ws'); // Added
 const MarkdownToPDFConverter = require('./converter');
 
+// Load configuration
+let config;
+const defaultConfig = {
+    appName: "MarkSwift",
+    port: 3000,
+    fileUploadLimits: { maxFileSizeMB: 10, maxFilesPerBatch: 200 },
+    concurrencyModes: { normal: 4, fast: 7, max: 10 },
+    cleanupSettings: { periodicScanIntervalMinutes: 30, orphanedSessionAgeHours: 3 },
+    logging: { level: "info" }
+};
+
+try {
+    const configPath = path.join(__dirname, '../config.json');
+    if (fs.existsSync(configPath)) {
+        const configFile = fs.readFileSync(configPath, 'utf8');
+        config = JSON.parse(configFile);
+        // Merge with defaults to ensure all keys are present
+        config = { ...defaultConfig, ...config };
+        config.fileUploadLimits = { ...defaultConfig.fileUploadLimits, ...config.fileUploadLimits };
+        config.concurrencyModes = { ...defaultConfig.concurrencyModes, ...config.concurrencyModes };
+        config.cleanupSettings = { ...defaultConfig.cleanupSettings, ...config.cleanupSettings };
+        // console.log("Configuration loaded from config.json");
+    } else {
+        config = defaultConfig;
+        // console.log("config.json not found, using default configuration.");
+        // Optionally create default config.json
+        fs.writeJsonSync(configPath, defaultConfig, { spaces: 4 });
+        // console.log("Created default config.json. Please review and customize if needed.");
+    }
+} catch (error) {
+    console.error("Error loading or parsing config.json, using default configuration:", error.message);
+    config = defaultConfig;
+}
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || config.port;
 const server = require('http').createServer(app); // Added for WebSocket
 const wss = new WebSocket.Server({ server }); // Added WebSocket Server
 
@@ -55,17 +89,50 @@ const upload = multer({
             cb(new Error('Invalid file type. Only Markdown files (.md, .markdown) are allowed.'), false);
         }
     },
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit per file
+    limits: { fileSize: config.fileUploadLimits.maxFileSizeMB * 1024 * 1024 }
 });
 
 // --- Helper Functions ---
 function getConcurrencyFromMode(mode) {
     switch (mode) {
-        case 'fast': return 7;
-        case 'max': return 10;
+        case 'fast': return config.concurrencyModes.fast;
+        case 'max': return config.concurrencyModes.max;
         case 'normal':
-        default: return 4;
+        default: return config.concurrencyModes.normal;
     }
+}
+
+// Periodic scan for orphaned session cleanup
+async function scanAndCleanupOrphanedSessions() {
+    // console.log('🧹 Starting periodic scan for orphaned session files...');
+    const now = Date.now();
+    const maxAgeMs = config.cleanupSettings.orphanedSessionAgeHours * 60 * 60 * 1000;
+
+    const directoriesToScan = [UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE];
+
+    for (const baseDir of directoriesToScan) {
+        try {
+            const sessionFolders = await fs.readdir(baseDir);
+            for (const sessionId of sessionFolders) {
+                const sessionPath = path.join(baseDir, sessionId);
+                try {
+                    const stats = await fs.stat(sessionPath);
+                    if (stats.isDirectory()) {
+                        const ageMs = now - stats.mtimeMs;
+                        if (ageMs > maxAgeMs) {
+                            // console.log(`🗑️ Orphaned session ${sessionId} in ${baseDir} is older than ${config.cleanupSettings.orphanedSessionAgeHours} hours. Deleting.`);
+                            await fs.remove(sessionPath);
+                        }
+                    }
+                } catch (statErr) {
+                    // console.error(`Error stating session folder ${sessionPath}:`, statErr.message);
+                }
+            }
+        } catch (readDirErr) {
+            // console.error(`Error reading base directory ${baseDir} for cleanup:`, readDirErr.message);
+        }
+    }
+    // console.log('🧹 Periodic scan finished.');
 }
 
 async function cleanupSessionFiles(sessionId) {
@@ -100,7 +167,7 @@ app.post('/api/convert', (req, res, next) => {
     // Generate a unique session ID for this request
     req.sessionId = crypto.randomBytes(16).toString('hex');
     next();
-}, upload.array('markdownFiles', 200), async (req, res) => { // Max 200 files
+}, upload.array('markdownFiles', config.fileUploadLimits.maxFilesPerBatch), async (req, res) => {
     const sessionId = req.sessionId;
     const files = req.files;
     const mode = req.body.mode || 'normal';
@@ -321,4 +388,10 @@ server.listen(PORT, () => { // Use server.listen for WebSocket
     // console.log(`📁 Uploads will be stored temporarily in: ${UPLOADS_DIR_BASE}`);
     // console.log(`📄 Converted PDFs will be stored temporarily in: ${CONVERTED_PDFS_DIR_BASE}`);
     // console.log(`📦 ZIPs will be stored temporarily in: ${ZIPS_DIR_BASE}`);
+    
+    // Schedule periodic cleanup
+    setInterval(scanAndCleanupOrphanedSessions, config.cleanupSettings.periodicScanIntervalMinutes * 60 * 1000);
+    
+    // Run initial cleanup after a short delay
+    setTimeout(scanAndCleanupOrphanedSessions, 5000);
 });
