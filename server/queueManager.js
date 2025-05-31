@@ -9,6 +9,7 @@ class QueueManager {
         this.queue = []; // Stores { sessionId, files, mode, originalFilenames, ws, timestamp, status, queuePosition, estimatedWaitTime }
         this.activeSessions = new Map(); // Stores sessionId -> { startTime, filesCount, jobId }
         this.maxConcurrentSessions = this.config.queueSettings?.maxConcurrentSessions || 2;
+        this.minimumQueueDisplayTimeMs = this.config.queueSettings?.minimumQueueDisplayTimeMs || 0; // New setting
         this.processingHistory = []; // Stores { durationMs, filesCount } for completed jobs
         this.avgProcessingTimePerFileMs = this.config.queueSettings?.defaultAvgTimePerFileMs || 5000; // Default 5s per file
         this.avgBaseJobOverheadMs = this.config.queueSettings?.defaultBaseJobOverheadMs || 10000; // Default 10s base overhead
@@ -16,7 +17,8 @@ class QueueManager {
         this.logMessage('info', '[QueueManager] Initialized.', { 
             maxConcurrentSessions: this.maxConcurrentSessions,
             avgProcessingTimePerFileMs: this.avgProcessingTimePerFileMs,
-            avgBaseJobOverheadMs: this.avgBaseJobOverheadMs
+            avgBaseJobOverheadMs: this.avgBaseJobOverheadMs,
+            minimumQueueDisplayTimeMs: this.minimumQueueDisplayTimeMs
         });
         this._processingInterval = setInterval(() => this._processQueue(), this.config.queueSettings?.queueCheckIntervalMs || 2000);
     }
@@ -77,7 +79,7 @@ class QueueManager {
 
         // Process the queue to update positions and estimated wait times
         this.queue.forEach((job, index) => {
-            job.queuePosition = index + 1;
+            job.queuePosition = index + 1; // Position is 1-based
 
             const estimatedProcessingTimeForThisJob = this._getEstimatedProcessingTimeForJob(job.files.length);
 
@@ -90,12 +92,13 @@ class QueueManager {
             }
             
             const estimatedWaitTimeMs = slotProjectedFreeTimes[earliestSlotIndex];
+            job.estimatedWaitTimeMs = estimatedWaitTimeMs; // Store raw ms on the job object
             let formattedWaitTime = this._formatWaitTime(estimatedWaitTimeMs);
-            if (!formattedWaitTime) { // Defensive check, though _formatWaitTime should always return a string
+            if (!formattedWaitTime) { // Defensive check
                 this.logMessage('warn', `[QueueManager] _formatWaitTime returned a falsy value for ${estimatedWaitTimeMs}ms. Defaulting.`, { sessionId: job.sessionId, jobId: job.id });
                 formattedWaitTime = "Calculating...";
             }
-            job.estimatedWaitTime = formattedWaitTime;
+            job.estimatedWaitTime = formattedWaitTime; // Store formatted string
             
             // Update this slot's projected free time by adding the current job's processing time
             slotProjectedFreeTimes[earliestSlotIndex] += estimatedProcessingTimeForThisJob;
@@ -185,11 +188,11 @@ class QueueManager {
         }
 
         const jobToProcess = this.queue.shift(); // Get the first job
-        jobToProcess.status = 'processing';
-        jobToProcess.queuePosition = 0; // No longer in queue, now processing
+        jobToProcess.status = 'processing'; // Mark as processing conceptually
+        // jobToProcess.queuePosition remains its last queue position until actual processing starts after delay
 
         this.activeSessions.set(jobToProcess.sessionId, { 
-            startTime: Date.now(), 
+            startTime: Date.now(), // This will be the time it's picked, not necessarily when conversion starts
             filesCount: jobToProcess.files.length,
             jobId: jobToProcess.id // Keep track of the job ID
         });
@@ -204,14 +207,41 @@ class QueueManager {
             });
         }
         
-        this._updateQueuePositionsAndNotify(); // Update positions for remaining jobs
+        this._updateQueuePositionsAndNotify(); // Update positions for remaining jobs, reflecting this one is "taken"
 
-        // Emit an event or call a callback to start the actual conversion in server.js
-        if (this.onProcessJob) {
-            this.onProcessJob(jobToProcess);
-        } else {
-            this.logMessage('warn', '[QueueManager] onProcessJob callback not set. Cannot start conversion.');
-        }
+        const actualProcessingDelay = Math.max(0, this.minimumQueueDisplayTimeMs - (jobToProcess.estimatedWaitTimeMs || 0));
+        
+        this.logMessage('info', `[QueueManager] Job ${jobToProcess.id} for session ${jobToProcess.sessionId} selected. Estimated wait was ${jobToProcess.estimatedWaitTimeMs}ms. Delaying actual start by ${actualProcessingDelay}ms.`);
+
+        setTimeout(() => {
+            // Update startTime to reflect when actual processing begins after the delay
+            const activeJobDetails = this.activeSessions.get(jobToProcess.sessionId);
+            if (activeJobDetails) {
+                activeJobDetails.startTime = Date.now(); // Update start time to be more accurate for duration tracking
+            }
+            jobToProcess.queuePosition = 0; // Now truly processing, not in queue display
+
+            this.logMessage('info', `[QueueManager] Starting actual conversion for job ${jobToProcess.id} (session ${jobToProcess.sessionId}) after delay. Active: ${this.activeSessions.size}/${this.maxConcurrentSessions}`);
+            
+            // Send processing_started message *after* the delay
+            // Use the generic sendWebSocketMessage callback
+            this.sendWebSocketMessage(jobToProcess.sessionId, {
+                type: 'processing_started',
+                sessionId: jobToProcess.sessionId,
+                jobId: jobToProcess.id,
+                message: 'Your files are now being processed.'
+            });
+            // Note: The original `if (jobToProcess.ws && ...)` for sending processing_started is removed
+            // as we now use the callback method.
+
+            if (this.onProcessJob) {
+                this.onProcessJob(jobToProcess);
+            } else {
+                this.logMessage('warn', `[QueueManager] onProcessJob callback not set. Cannot start conversion for job ${jobToProcess.id}.`);
+                // If onProcessJob is not set, we should probably put the job back in queue or mark as failed.
+                // For now, it will just hang in activeSessions. This is a setup issue.
+            }
+        }, actualProcessingDelay);
     }
 
     // Called from server.js when a job is finished (successfully or with error)
