@@ -4,6 +4,8 @@
   <img src="public/images/logo.png" alt="MarkSwift Logo" width="120" height="120">
   <p><em>Swiftly convert your Markdown files to PDF</em></p>
   
+  <p><strong><a href="https://markswift-1032065492518.asia-south2.run.app" target="_blank" rel="noopener noreferrer">🚀 Live at MarkSwift 🚀</a></strong></p>
+  
   <!-- Demo GIF -->
   <img src="public/images/MarkSwift.gif" alt="MarkSwift Demo" width="600" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
   
@@ -19,7 +21,11 @@ MarkSwift is a web application that allows users to upload multiple Markdown fil
 *   **Beautiful PDF Output:** Generates professionally formatted, clean PDFs with proper typography, styling, and layout preservation from your Markdown content.
 *   **Batch Conversion:** Upload and convert multiple Markdown files simultaneously.
 *   **Web Interface:** User-friendly interface for uploading files and selecting conversion mode.
-*   **Real-time Progress:** Track the conversion status of your files in real-time using WebSockets.
+*   **Real-time Progress & Queue Management:**
+    *   Track the conversion status of your files in real-time using WebSockets.
+    *   Accurate queue position updates and estimated wait time display.
+    *   Minimum display duration for queue status ensures visibility even for quick jobs.
+    *   Reduced per-file processing messages on the client for a cleaner status view.
 *   **Concurrency Modes:**
     *   **Normal:** Balances speed and resource usage (default: 4 concurrent processes).
     *   **Fast:** Prioritizes quicker processing (default: 7 concurrent processes).
@@ -28,7 +34,7 @@ MarkSwift is a web application that allows users to upload multiple Markdown fil
     *   Download a single PDF if only one file is successfully converted.
     *   Download a ZIP archive containing all successfully converted PDFs for batch uploads.
 *   **Session Management:** Each conversion batch is handled in an isolated session with unique identifiers.
-*   **Automatic Cleanup:** Temporary files (uploads, generated PDFs, ZIPs) are automatically cleaned up after download or a timeout period.
+*   **Automatic Cleanup:** Temporary files (uploads, generated PDFs, ZIPs) are automatically cleaned up after download or a configurable timeout period (default: 20 minutes, scanned every 10 minutes).
 *   **File Validation:** Accepts only Markdown files (`.md`, `.markdown`) and has a file size limit (10MB per file).
 *   **Secure by Design:** Uses `crypto` for secure session ID generation and `multer` for robust file upload handling.
 *   **Modern Frontend:** Styled with Tailwind CSS.
@@ -168,11 +174,22 @@ The configuration file contains the following settings:
         "max": 10
     },
     "cleanupSettings": {
-        "periodicScanIntervalMinutes": 30,
-        "orphanedSessionAgeHours": 3
+        "periodicScanIntervalMinutes": 10,
+        "orphanedSessionAgeMinutes": 20
     },
     "logging": {
         "level": "info"
+    },
+    "queueSettings": {
+        "maxConcurrentSessions": 2,
+        "maxQueueSize": 50,
+        "queueCheckIntervalMs": 2000,
+        "jobTimeoutMs": 300000,
+        "maxRequestsPerMinute": 10,
+        "defaultAvgTimePerFileMs": 900,
+        "defaultBaseJobOverheadMs": 10000,
+        "maxProcessingHistory": 20,
+        "minimumQueueDisplayTimeMs": 2000
     }
 }
 ```
@@ -189,8 +206,19 @@ The configuration file contains the following settings:
 *   `max`: Maximum speed processing (default: 10 concurrent files)
 
 **Cleanup Settings:**
-*   `periodicScanIntervalMinutes`: How often to scan for orphaned session files (default: 30 minutes)
-*   `orphanedSessionAgeHours`: Age threshold for cleaning up orphaned session files (default: 3 hours)
+*   `periodicScanIntervalMinutes`: How often to scan for orphaned session files (default: 10 minutes)
+*   `orphanedSessionAgeMinutes`: Age threshold in minutes for cleaning up orphaned session files (default: 20 minutes)
+
+**Queue Settings:**
+*   `maxConcurrentSessions`: Maximum number of user sessions that can process conversions simultaneously (default: 2).
+*   `maxQueueSize`: Maximum number of jobs allowed in the queue (default: 50).
+*   `queueCheckIntervalMs`: How often the queue manager checks to process new jobs (default: 2000ms).
+*   `jobTimeoutMs`: (Currently informational) Intended maximum duration for a single job (default: 300000ms).
+*   `maxRequestsPerMinute`: Rate limit for conversion requests per IP (default: 10).
+*   `defaultAvgTimePerFileMs`: Default average time assumed per file for initial wait time estimates (default: 900ms).
+*   `defaultBaseJobOverheadMs`: Default base overhead assumed per job for initial wait time estimates (default: 10000ms).
+*   `maxProcessingHistory`: Number of completed jobs to keep for recalculating average processing times (default: 20).
+*   `minimumQueueDisplayTimeMs`: Minimum time (in ms) a user sees their queue status before processing starts, even if their wait is shorter (default: 2000ms).
 
 **Other Settings:**
 *   `port`: Server port (default: 3000, can be overridden by `PORT` environment variable)
@@ -209,9 +237,9 @@ MarkSwift implements a multi-layered cleanup strategy to prevent server storage 
    - Remaining files are cleaned up 5 seconds after successful download
 
 3. **Periodic Cleanup:**
-   - Every 30 minutes (configurable), the server scans for orphaned session files
-   - Files older than 3 hours (configurable) are automatically deleted
-   - Runs on server startup and then at regular intervals
+   - Every 10 minutes (configurable via `periodicScanIntervalMinutes`), the server scans for orphaned session files.
+   - Files older than 20 minutes (configurable via `orphanedSessionAgeMinutes`) are automatically deleted.
+   - Runs on server startup and then at regular intervals.
 
 ## Deployment
 
