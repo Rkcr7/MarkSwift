@@ -136,54 +136,55 @@ class LiveEditor {
     }
 
     async updatePreview() {
-        const content = this.cmInstance ? this.cmInstance.getValue().trim() : (this.markdownTextarea ? this.markdownTextarea.value.trim() : '');
-        console.log('[LiveEditor] Updating preview with content length:', content.length);
+        const markdownText = this.cmInstance ? this.cmInstance.getValue() : (this.markdownTextarea ? this.markdownTextarea.value : '');
+        // No trim() here, let marked.js handle leading/trailing whitespace as it would on server
         
-        // Don't update if content hasn't changed
-        if (content === this.lastContent) {
+        console.log('[LiveEditor] Updating preview with content length:', markdownText.length);
+        
+        // Don't update if content hasn't changed (check raw content)
+        if (markdownText === this.lastContent) {
             console.log('[LiveEditor] Content unchanged, skipping update');
             return;
         }
 
-        this.lastContent = content;
+        this.lastContent = markdownText;
 
         // If empty, show placeholder
-        if (!content) {
+        if (!markdownText.trim()) { // Trim only for the empty check
             console.log('[LiveEditor] Empty content, showing placeholder');
             this.showEmptyPreview();
             return;
         }
 
         try {
-            console.log('[LiveEditor] Sending preview request to server...');
-            const response = await fetch('/api/editor/preview-html', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ markdownText: content })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+                console.error('[LiveEditor] marked.js or DOMPurify is not loaded.');
+                this.showPreviewError('Client-side Markdown processor not available.');
+                return;
             }
 
-            const data = await response.json();
-            console.log('[LiveEditor] Received preview HTML from server');
-            this.displayPreview(data.html);
+            console.log('[LiveEditor] Converting Markdown on client-side...');
+            // Same options as backend's previewService.js
+            const markedOptions = { headerIds: false, mangle: false };
+            const rawHtml = marked.parse(markdownText, markedOptions);
+            
+            // Sanitize HTML (ensure DOMPurify is available globally or imported)
+            const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+            
+            // Wrap with the preview-content class for styling
+            const finalHtml = `<div class="preview-content">${sanitizedHtml}</div>`;
+            
+            this.displayPreview(finalHtml);
 
         } catch (error) {
-            console.error('[LiveEditor] Preview update failed:', error);
-            this.showPreviewError(error.message);
+            console.error('[LiveEditor] Client-side preview update failed:', error);
+            this.showPreviewError(error.message || 'Failed to render Markdown preview.');
         }
     }
 
     displayPreview(html) {
-        console.log('[LiveEditor] Displaying preview HTML');
-        // Display the HTML content in the professional document container
+        console.log('[LiveEditor] Displaying client-rendered preview HTML');
         if (this.documentContainer) {
-            // The HTML from the API already includes proper styling and padding
-            // We just need to display it in our document container
             this.documentContainer.innerHTML = html;
         } else {
             console.error('[LiveEditor] Document container not found during display');
