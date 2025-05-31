@@ -375,14 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'queue_update':
                         showQueueStatus(data.message, data.queuePosition, data.queueLength, data.estimatedWaitTime);
-                        statusMessage.textContent = "Waiting in queue..."; // Main status
-                        progressBarContainer.classList.add('hidden'); 
-                        if (estimatedWaitTimeMessage && data.estimatedWaitTime) {
-                            estimatedWaitTimeMessage.textContent = `Estimated wait: ${data.estimatedWaitTime}`;
-                            estimatedWaitTimeMessage.classList.remove('hidden');
-                        } else if (estimatedWaitTimeMessage) {
-                            estimatedWaitTimeMessage.classList.add('hidden');
-                        }
+                        // The showQueueStatus function now correctly handles displaying/hiding estimatedWaitTimeMessage
+                        // and setting the main statusMessage appropriately for queue updates.
                         break;
                     case 'processing_started':
                         if (queueStatusMessage) queueStatusMessage.classList.add('hidden'); 

@@ -23,7 +23,7 @@
         "queueCheckIntervalMs": 2000,
         "jobTimeoutMs": 300000,
         "maxRequestsPerMinute": 10,
-        "defaultAvgTimePerFileMs": 5000,
+        "defaultAvgTimePerFileMs": 810,
         "defaultBaseJobOverheadMs": 10000,
         "maxProcessingHistory": 20
     }

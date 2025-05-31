@@ -90,7 +90,12 @@ class QueueManager {
             }
             
             const estimatedWaitTimeMs = slotProjectedFreeTimes[earliestSlotIndex];
-            job.estimatedWaitTime = this._formatWaitTime(estimatedWaitTimeMs);
+            let formattedWaitTime = this._formatWaitTime(estimatedWaitTimeMs);
+            if (!formattedWaitTime) { // Defensive check, though _formatWaitTime should always return a string
+                this.logMessage('warn', `[QueueManager] _formatWaitTime returned a falsy value for ${estimatedWaitTimeMs}ms. Defaulting.`, { sessionId: job.sessionId, jobId: job.id });
+                formattedWaitTime = "Calculating...";
+            }
+            job.estimatedWaitTime = formattedWaitTime;
             
             // Update this slot's projected free time by adding the current job's processing time
             slotProjectedFreeTimes[earliestSlotIndex] += estimatedProcessingTimeForThisJob;
