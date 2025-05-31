@@ -230,6 +230,24 @@ These guides include server setup, application deployment scripts, Nginx configu
 *   `npm run dev` - Start development mode with auto-restart and CSS watching
 *   `npm run build:css` - Build Tailwind CSS once
 
+### Puppeteer Configuration for Different Environments
+
+MarkSwift uses Puppeteer for PDF conversion. The configuration for Puppeteer's Chrome/Chromium executable path is handled automatically based on the environment:
+
+*   **Production (Docker/Cloud Run):**
+    *   When `NODE_ENV` is set to `production` (as it is in the `Dockerfile`), the application expects `google-chrome-stable` to be installed at `/usr/bin/google-chrome-stable` within the Docker container.
+    *   The `Dockerfile` includes steps to install `google-chrome-stable` in the `puppeteer_deps` stage.
+    *   The `server/converter.js` file will set Puppeteer's `executablePath` to this location.
+
+*   **Local Development (e.g., Windows, macOS, Linux without global Chrome for Puppeteer):**
+    *   When `NODE_ENV` is not `production` (e.g., during local development using `npm run dev`), `server/converter.js` does *not* set a specific `executablePath`.
+    *   In this scenario, Puppeteer will attempt to:
+        1.  Use a version of Chromium it downloads itself (usually into `node_modules/puppeteer/.local-chromium`).
+        2.  Find a locally installed version of Chrome/Chromium if available and configured in your system's PATH or via Puppeteer environment variables (like `PUPPETEER_EXECUTABLE_PATH`).
+    *   This ensures that local development works out-of-the-box on different operating systems without requiring a globally installed Chrome specifically for Puppeteer, as long as Puppeteer can download its own Chromium version or find a suitable local one.
+
+This conditional configuration allows MarkSwift to run seamlessly in both Dockerized production environments and diverse local development setups.
+
 ### Troubleshooting
 
 *   If you encounter issues with Puppeteer installation, try running `npm install puppeteer --force`

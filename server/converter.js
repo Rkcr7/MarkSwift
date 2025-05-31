@@ -18,19 +18,46 @@ class MarkdownToPDFConverter {
         this.processedCount = 0;
         this.totalFiles = 0;
         this.sendProgress = null; 
-        this.puppeteerLaunchOptions = {
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage', // Crucial for Docker/Cloud Run
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--disable-gpu' // Often recommended for server environments
-            ],
-            // timeout: 60000 // Optional: Increase Puppeteer's own launch timeout
-        };
+        
+        const baseArgs = [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage', // Crucial for Docker/Cloud Run
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-gpu' // Often recommended for server environments
+        ];
+
+        if (process.env.NODE_ENV === 'production') {
+            this.logMessage('info', `[${this.sessionId}] Production environment detected. Setting executablePath for Puppeteer.`);
+            this.puppeteerLaunchOptions = {
+                headless: true,
+                executablePath: '/usr/bin/google-chrome-stable',
+                args: baseArgs
+            };
+        } else {
+            this.logMessage('info', `[${this.sessionId}] Development/local environment detected. Using default Puppeteer executable path.`);
+            this.puppeteerLaunchOptions = {
+                headless: true, // Consider 'new' for newer Puppeteer versions if issues arise locally
+                args: baseArgs
+            };
+        }
+        
+        // this.puppeteerLaunchOptions = {
+        //     headless: true,
+        //     executablePath: '/usr/bin/google-chrome-stable', // Specify path to installed Chrome
+        //     args: [
+        //         '--no-sandbox',
+        //         '--disable-setuid-sandbox',
+        //         '--disable-dev-shm-usage', // Crucial for Docker/Cloud Run
+        //         '--disable-accelerated-2d-canvas',
+        //         '--no-first-run',
+        //         '--no-zygote',
+        //         '--disable-gpu' // Often recommended for server environments
+        //     ],
+        //     // timeout: 60000 // Optional: Increase Puppeteer's own launch timeout
+        // };
         this.logMessage('info', `[${this.sessionId}] MarkdownToPDFConverter instance created.`, { options, puppeteerLaunchOptions: this.puppeteerLaunchOptions });
     }
 
