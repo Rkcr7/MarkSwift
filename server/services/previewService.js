@@ -83,14 +83,50 @@ class PreviewService {
                     border-left: 0.25em solid #d1d9e0; 
                     margin: 0 0 16px 0; 
                 }
+                
+                /* IMPROVED LIST STYLING TO MATCH PDF */
                 .preview-content ul, .preview-content ol { 
                     margin-top: 0; 
                     margin-bottom: 16px; 
-                    padding-left: 2em; 
+                    padding-left: 30px; /* Increased for better indentation like PDF */
+                    list-style-position: outside; /* Proper bullet positioning */
                 } 
-                .preview-content li { 
-                    margin: 0.25em 0; 
+                
+                .preview-content ul {
+                    list-style-type: disc; /* Solid bullet points for first level */
                 }
+                
+                .preview-content ul ul {
+                    list-style-type: circle; /* Hollow circles for second level */
+                    margin-top: 4px;
+                    margin-bottom: 4px;
+                }
+                
+                .preview-content ul ul ul {
+                    list-style-type: square; /* Square bullets for third level */
+                }
+                
+                .preview-content ol {
+                    list-style-type: decimal; /* Numbers for ordered lists */
+                }
+                
+                .preview-content ol ol {
+                    list-style-type: lower-alpha; /* Letters for nested ordered lists */
+                }
+                
+                .preview-content li { 
+                    margin: 4px 0; /* Better spacing between list items */
+                    line-height: 1.6; /* Consistent with paragraph line height */
+                    padding-left: 4px; /* Small padding for better text alignment */
+                }
+                
+                /* Ensure nested lists have proper spacing */
+                .preview-content li > ul,
+                .preview-content li > ol {
+                    margin-top: 4px;
+                    margin-bottom: 4px;
+                }
+                
                 .preview-content table { 
                     border-spacing: 0; 
                     border-collapse: collapse; 
