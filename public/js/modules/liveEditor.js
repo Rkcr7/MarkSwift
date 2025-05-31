@@ -29,6 +29,13 @@ class LiveEditor {
         this.closeEditorStatusButton = null;
         this.closeEditorErrorButton = null;
         this.closeEditorDownloadButton = null;
+
+        // Sync Scroll properties
+        this.syncScrollCheckbox = null;
+        this.isSyncScrollEnabled = false;
+        this.isEditorScrolling = false; // Flags to prevent event loops
+        this.isPreviewScrolling = false;
+        this.previewPane = null; // Reference to the preview pane for scrolling
     }
 
     init() {
@@ -58,6 +65,18 @@ class LiveEditor {
         this.closeEditorStatusButton = document.getElementById('close-editor-status-button');
         this.closeEditorErrorButton = document.getElementById('close-editor-error-button');
         this.closeEditorDownloadButton = document.getElementById('close-editor-download-button');
+
+        // Sync Scroll elements
+        this.syncScrollCheckbox = document.getElementById('sync-scroll-checkbox');
+        // The preview pane is the direct child of split-pane-right that scrolls
+        // In index.html, it's #pdf-preview-container, but its parent .split-pane-right is the one with overflow-auto.
+        // Let's get the .split-pane-right element for scrolling.
+        const splitPaneRight = document.querySelector('.split-pane-right');
+        if (splitPaneRight) {
+            this.previewPane = splitPaneRight;
+        } else {
+            console.error('[LiveEditor] Preview pane (.split-pane-right) not found for sync scroll.');
+        }
 
 
         if (!this.markdownTextarea) {
@@ -115,6 +134,7 @@ class LiveEditor {
         
         // Load saved content from localStorage
         this.loadSavedContent(); // This will also trigger a preview update if content exists
+        this.loadSyncScrollState(); // Load sync scroll preference
 
         this.isInitialized = true;
         console.log('[LiveEditor] Initialized successfully with improved layout');
@@ -170,6 +190,16 @@ class LiveEditor {
         setupCloseButtonListener(this.closeEditorStatusButton, this.editorStatusArea);
         setupCloseButtonListener(this.closeEditorErrorButton, this.editorErrorArea);
         setupCloseButtonListener(this.closeEditorDownloadButton, this.editorDownloadArea);
+
+        // Sync Scroll listener
+        if (this.syncScrollCheckbox) {
+            this.syncScrollCheckbox.addEventListener('change', (event) => {
+                this.setSyncScrollEnabled(event.target.checked);
+            });
+        }
+
+        // Scroll event listeners for sync scroll (conditionally added/removed by setSyncScrollEnabled)
+        // Will be bound/unbound in setSyncScrollEnabled
 
         // Handle tab switching to initialize editor when Live Editor tab is activated
         document.addEventListener('click', (e) => {
@@ -528,6 +558,114 @@ class LiveEditor {
         this.editorDownloadLink.textContent = `Download ${downloadType ? downloadType.toUpperCase() : 'PDF'}`;
         // Optional: auto-click
         // this.editorDownloadLink.click(); 
+    }
+
+    // --- Sync Scroll Methods ---
+    loadSyncScrollState() {
+        if (!this.syncScrollCheckbox) return;
+        try {
+            const savedState = localStorage.getItem('markswift-sync-scroll-enabled');
+            if (savedState !== null) {
+                this.isSyncScrollEnabled = JSON.parse(savedState);
+                this.syncScrollCheckbox.checked = this.isSyncScrollEnabled;
+            }
+            // Apply the initial state (add/remove listeners)
+            this.setSyncScrollEnabled(this.isSyncScrollEnabled, true); // true to skip saving again
+        } catch (error) {
+            console.warn('[LiveEditor] Failed to load sync scroll state from localStorage:', error);
+            this.isSyncScrollEnabled = false; // Default to false
+            this.syncScrollCheckbox.checked = false;
+            this.setSyncScrollEnabled(false, true);
+        }
+    }
+
+    saveSyncScrollState() {
+        try {
+            localStorage.setItem('markswift-sync-scroll-enabled', JSON.stringify(this.isSyncScrollEnabled));
+        } catch (error) {
+            console.warn('[LiveEditor] Failed to save sync scroll state to localStorage:', error);
+        }
+    }
+
+    setSyncScrollEnabled(enabled, skipSave = false) {
+        this.isSyncScrollEnabled = enabled;
+        if (this.syncScrollCheckbox) {
+            this.syncScrollCheckbox.checked = enabled;
+        }
+
+        if (!skipSave) {
+            this.saveSyncScrollState();
+        }
+
+        // Remove existing listeners first to avoid duplicates
+        if (this.cmInstance && this.previewPane) {
+            this.cmInstance.off('scroll', this.handleEditorScroll);
+            this.previewPane.removeEventListener('scroll', this.handlePreviewScroll);
+        }
+        
+        if (enabled && this.cmInstance && this.previewPane) {
+            // Bind 'this' context for event handlers
+            this.handleEditorScroll = this.handleEditorScroll || this._syncScrollFromEditor.bind(this);
+            this.handlePreviewScroll = this.handlePreviewScroll || this._syncScrollFromPreview.bind(this);
+
+            this.cmInstance.on('scroll', this.handleEditorScroll);
+            this.previewPane.addEventListener('scroll', this.handlePreviewScroll);
+            console.log('[LiveEditor] Sync scroll enabled.');
+        } else {
+            console.log('[LiveEditor] Sync scroll disabled.');
+        }
+    }
+
+    _syncScrollFromEditor() {
+        if (!this.isSyncScrollEnabled || this.isPreviewScrolling || !this.cmInstance || !this.previewPane) return;
+
+        this.isEditorScrolling = true;
+
+        const scrollInfo = this.cmInstance.getScrollInfo();
+        // Calculate percentage scrolled in editor
+        // clientHeight is visible area, scrollHeight is total scrollable height
+        const editorScrollableHeight = scrollInfo.height - scrollInfo.clientHeight;
+        if (editorScrollableHeight <= 0) { // Not scrollable or fully visible
+            this.isEditorScrolling = false;
+            return;
+        }
+        const editorScrollPercent = scrollInfo.top / editorScrollableHeight;
+
+        // Apply to preview pane
+        const previewScrollableHeight = this.previewPane.scrollHeight - this.previewPane.clientHeight;
+        if (previewScrollableHeight > 0) {
+            this.previewPane.scrollTop = previewScrollableHeight * editorScrollPercent;
+        }
+        
+        // Use a short timeout to release the flag, allowing the other pane to take over if needed
+        // This helps prevent jitter if both try to scroll simultaneously due to slight miscalculations
+        setTimeout(() => {
+            this.isEditorScrolling = false;
+        }, 50); // Adjust timeout as needed
+    }
+
+    _syncScrollFromPreview() {
+        if (!this.isSyncScrollEnabled || this.isEditorScrolling || !this.cmInstance || !this.previewPane) return;
+
+        this.isPreviewScrolling = true;
+
+        const previewScrollableHeight = this.previewPane.scrollHeight - this.previewPane.clientHeight;
+        if (previewScrollableHeight <= 0) { // Not scrollable or fully visible
+            this.isPreviewScrolling = false;
+            return;
+        }
+        const previewScrollPercent = this.previewPane.scrollTop / previewScrollableHeight;
+
+        // Apply to editor
+        const scrollInfo = this.cmInstance.getScrollInfo();
+        const editorScrollableHeight = scrollInfo.height - scrollInfo.clientHeight;
+        if (editorScrollableHeight > 0) {
+            this.cmInstance.scrollTo(null, editorScrollableHeight * previewScrollPercent);
+        }
+
+        setTimeout(() => {
+            this.isPreviewScrolling = false;
+        }, 50);
     }
 }
 

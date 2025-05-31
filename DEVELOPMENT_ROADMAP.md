@@ -17,9 +17,9 @@ This document tracks the development progress for implementing the "Live Markdow
 
 ## 2. Current Status
 
-*   **Overall Progress:** 70%
-*   **Current Phase:** Phase 7 - Live Editor - Markdown Editor & HTML Preview
-*   **Next Step:** Test the live preview functionality
+*   **Overall Progress:** 80%
+*   **Current Phase:** Phase 9 - Live Editor - Synchronized Scrolling
+*   **Next Step:** Implement and test synchronized scrolling.
 
 ## 3. Phase Breakdown & Task Checklist
 
@@ -122,27 +122,29 @@ The project will be implemented in several phases. Each phase will be completed,
 
 ---
 
-### Phase 8: Live Editor - PDF Conversion & Download
-*   **Status:** Not Started
-*   **Objective:** Enable PDF conversion and download from the Live Editor.
+### Phase 8: Live Editor - PDF Conversion & Download ✅ COMPLETED
+*   **Status:** Completed
+*   **Objective:** Enable PDF conversion and download from the Live Editor, with UI enhancements for status messages.
 *   **Tasks:**
-    *   [ ] Connect "Download PDF" button to send content to `/api/editor/convert-pdf`.
-    *   [ ] Handle response with session ID and job ID.
-    *   [ ] Integrate with `websocketClient.js` to show progress for editor conversions.
-    *   [ ] Provide download link upon completion.
-    *   [ ] **Testing:** PDF conversion from editor works, progress is shown, download is successful.
-    *   [ ] **User Commit Point**
+    *   [x] Connect "Download PDF" button to send content to `/api/editor/convert-pdf`.
+    *   [x] Handle response with session ID and job ID.
+    *   [x] Integrate with `websocketClient.js` to show progress for editor conversions.
+    *   [x] Provide download link upon completion.
+    *   [x] **UI Enhancement:** Added close buttons and improved layout for status, error, and download messages in the Live Editor.
+    *   [x] **Testing:** PDF conversion from editor works, progress is shown, download is successful, UI enhancements function correctly.
+    *   [x] **User Commit Point**
 
 ---
 
-### Phase 9: Live Editor - Advanced Features (Sync Scroll, Persistence)
-*   **Status:** Not Started
-*   **Objective:** Implement sync scrolling and enhanced features.
+### Phase 9: Live Editor - Advanced Features (Sync Scroll)
+*   **Status:** In Progress
+*   **Objective:** Implement synchronized scrolling between the Markdown editor and HTML preview.
 *   **Tasks:**
-    *   [ ] Implement synchronized scrolling between editor and HTML preview.
-    *   [ ] Add toggle checkbox for sync scroll feature.
-    *   [ ] Enhance localStorage persistence with auto-save indicators.
-    *   [ ] **Testing:** Sync scroll works, enhanced persistence functions correctly.
+    *   [ ] Implement synchronized scrolling logic.
+    *   [ ] Add toggle checkbox for sync scroll feature (ensure good UI/UX).
+    *   [ ] Persist sync scroll toggle state in localStorage.
+    *   [ ] **Testing:** Verify sync scroll works accurately in both directions and toggle functions correctly.
+    *   [ ] ~~Enhance localStorage persistence with auto-save indicators.~~ (Deferred by user)
     *   [ ] **User Commit Point**
 
 ---
