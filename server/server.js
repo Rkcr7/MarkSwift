@@ -12,7 +12,7 @@ let config;
 const defaultConfig = {
     appName: "MarkSwift",
     port: 3000,
-    fileUploadLimits: { maxFileSizeMB: 10, maxFilesPerBatch: 200 },
+    fileUploadLimits: { maxFileSizeMB: 10, maxFilesPerBatch: 100 }, // Corrected here
     concurrencyModes: { normal: 4, fast: 7, max: 10 },
     cleanupSettings: { periodicScanIntervalMinutes: 30, orphanedSessionAgeHours: 3 },
     logging: { level: "info" }
@@ -24,10 +24,18 @@ try {
         const configFile = fs.readFileSync(configPath, 'utf8');
         config = JSON.parse(configFile);
         // Merge with defaults to ensure all keys are present
-        config = { ...defaultConfig, ...config };
-        config.fileUploadLimits = { ...defaultConfig.fileUploadLimits, ...config.fileUploadLimits };
-        config.concurrencyModes = { ...defaultConfig.concurrencyModes, ...config.concurrencyModes };
-        config.cleanupSettings = { ...defaultConfig.cleanupSettings, ...config.cleanupSettings };
+        // Important: Ensure defaultConfig is used as the base for merging
+        const mergedFileUploadLimits = { ...defaultConfig.fileUploadLimits, ...config.fileUploadLimits };
+        const mergedConcurrencyModes = { ...defaultConfig.concurrencyModes, ...config.concurrencyModes };
+        const mergedCleanupSettings = { ...defaultConfig.cleanupSettings, ...config.cleanupSettings };
+
+        config = { 
+            ...defaultConfig, 
+            ...config,
+            fileUploadLimits: mergedFileUploadLimits,
+            concurrencyModes: mergedConcurrencyModes,
+            cleanupSettings: mergedCleanupSettings
+        };
         // console.log("Configuration loaded from config.json");
     } else {
         config = defaultConfig;
@@ -38,7 +46,7 @@ try {
     }
 } catch (error) {
     console.error("Error loading or parsing config.json, using default configuration:", error.message);
-    config = defaultConfig;
+    config = defaultConfig; // Fallback to original defaultConfig on error
 }
 
 const app = express();
@@ -65,9 +73,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Multer setup for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // Files will be initially saved to a session-specific subfolder in UPLOADS_DIR_BASE
-        // This will be created in the /api/convert route handler
-        const sessionId = req.sessionId; // Will be set in the route
+        const sessionId = req.sessionId; 
         if (!sessionId) {
             return cb(new Error("Session ID not set for upload"), null);
         }
@@ -76,7 +82,6 @@ const storage = multer.diskStorage({
         cb(null, sessionUploadPath);
     },
     filename: (req, file, cb) => {
-        // Keep original file names for processing, multer handles sanitization
         cb(null, file.originalname);
     }
 });
@@ -102,12 +107,9 @@ function getConcurrencyFromMode(mode) {
     }
 }
 
-// Periodic scan for orphaned session cleanup
 async function scanAndCleanupOrphanedSessions() {
-    // console.log('🧹 Starting periodic scan for orphaned session files...');
     const now = Date.now();
     const maxAgeMs = config.cleanupSettings.orphanedSessionAgeHours * 60 * 60 * 1000;
-
     const directoriesToScan = [UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE];
 
     for (const baseDir of directoriesToScan) {
@@ -117,54 +119,26 @@ async function scanAndCleanupOrphanedSessions() {
                 const sessionPath = path.join(baseDir, sessionId);
                 try {
                     const stats = await fs.stat(sessionPath);
-                    if (stats.isDirectory()) {
-                        const ageMs = now - stats.mtimeMs;
-                        if (ageMs > maxAgeMs) {
-                            // console.log(`🗑️ Orphaned session ${sessionId} in ${baseDir} is older than ${config.cleanupSettings.orphanedSessionAgeHours} hours. Deleting.`);
-                            await fs.remove(sessionPath);
-                        }
+                    if (stats.isDirectory() && (now - stats.mtimeMs > maxAgeMs)) {
+                        await fs.remove(sessionPath);
                     }
-                } catch (statErr) {
-                    // console.error(`Error stating session folder ${sessionPath}:`, statErr.message);
-                }
+                } catch (statErr) { /* console.error(`Error stating/removing session folder ${sessionPath}:`, statErr.message); */ }
             }
-        } catch (readDirErr) {
-            // console.error(`Error reading base directory ${baseDir} for cleanup:`, readDirErr.message);
-        }
+        } catch (readDirErr) { /* console.error(`Error reading base directory ${baseDir} for cleanup:`, readDirErr.message); */ }
     }
-    // console.log('🧹 Periodic scan finished.');
 }
 
 async function cleanupSessionFiles(sessionId) {
-    // console.log(`🧹 Cleaning up session files for ${sessionId}...`);
     const sessionUploadPath = path.join(UPLOADS_DIR_BASE, sessionId);
     const sessionPdfPath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId);
     const sessionZipPath = path.join(ZIPS_DIR_BASE, sessionId);
-
-    try {
-        await fs.remove(sessionUploadPath);
-        // console.log(`Removed ${sessionUploadPath}`);
-    } catch (err) {
-        // console.error(`Error removing upload path ${sessionUploadPath}:`, err);
-    }
-    try {
-        await fs.remove(sessionPdfPath);
-        // console.log(`Removed ${sessionPdfPath}`);
-    } catch (err) {
-        // console.error(`Error removing PDF path ${sessionPdfPath}:`, err);
-    }
-    try {
-        await fs.remove(sessionZipPath);
-        // console.log(`Removed ${sessionZipPath}`);
-    } catch (err) {
-        // console.error(`Error removing ZIP path ${sessionZipPath}:`, err);
-    }
+    try { await fs.remove(sessionUploadPath); } catch (err) { /* ignore */ }
+    try { await fs.remove(sessionPdfPath); } catch (err) { /* ignore */ }
+    try { await fs.remove(sessionZipPath); } catch (err) { /* ignore */ }
 }
-
 
 // --- API Routes ---
 app.post('/api/convert', (req, res, next) => {
-    // Generate a unique session ID for this request
     req.sessionId = crypto.randomBytes(16).toString('hex');
     next();
 }, upload.array('markdownFiles', config.fileUploadLimits.maxFilesPerBatch), async (req, res) => {
@@ -173,76 +147,48 @@ app.post('/api/convert', (req, res, next) => {
     const mode = req.body.mode || 'normal';
 
     if (!files || files.length === 0) {
-        // No need to cleanup if no files were even processed by multer
         return res.status(400).json({ message: 'No Markdown files uploaded.' });
     }
     
-    // Immediately respond to client with sessionId
     res.json({ sessionId, message: "Conversion process started. Awaiting WebSocket connection for progress." });
 
-    // Define sendProgress function for this session
     const sendProgress = (progressData) => {
         const ws = activeConnections.get(sessionId);
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(progressData));
-        } else {
-            // console.log(`WebSocket not open or not found for session ${sessionId}. Progress not sent.`);
         }
     };
     
-    // Start conversion process asynchronously
     (async () => {
         const concurrency = getConcurrencyFromMode(mode);
-        const converter = new MarkdownToPDFConverter(); // Consider passing sendProgress to constructor if needed early
-
+        const converter = new MarkdownToPDFConverter();
         const sessionUploadPath = path.join(UPLOADS_DIR_BASE, sessionId);
         const sessionPdfPath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId);
         const sessionZipPath = path.join(ZIPS_DIR_BASE, sessionId);
         
         try {
-            await fs.ensureDir(sessionPdfPath); // ensureDir is fine, it won't throw if exists
+            await fs.ensureDir(sessionPdfPath);
             await fs.ensureDir(sessionZipPath);
-
             sendProgress({ type: 'status', message: 'Preparing files...', progress: 5 });
-
-            const uploadedFileObjects = files.map(f => ({
-                path: f.path,
-                originalname: f.originalname
-            }));
-
-            await converter.init(sendProgress); // Pass sendProgress to init if it can provide updates
+            const uploadedFileObjects = files.map(f => ({ path: f.path, originalname: f.originalname }));
+            await converter.init(sendProgress);
             sendProgress({ type: 'status', message: 'Converter initialized. Starting file processing...', progress: 10 });
-            
-            const results = await converter.processUploadedFiles(uploadedFileObjects, sessionPdfPath, concurrency, sendProgress); // Pass sendProgress
-            
+            const results = await converter.processUploadedFiles(uploadedFileObjects, sessionPdfPath, concurrency, sendProgress);
             sendProgress({ type: 'status', message: 'File processing complete. Finalizing...', progress: 85 });
             await converter.cleanup();
 
-            // Immediate cleanup: Remove uploads folder since processing is complete
-            try {
-                await fs.remove(sessionUploadPath);
-                // console.log(`Cleaned up uploads folder for session ${sessionId}`);
-            } catch (err) {
-                // console.error(`Error cleaning up uploads folder for session ${sessionId}:`, err);
-            }
+            try { await fs.remove(sessionUploadPath); } catch (err) { /* ignore */ }
 
             const successfulPdfs = results.filter(r => r.success && r.output).map(r => r.output);
 
             if (successfulPdfs.length === 0) {
                 sendProgress({ type: 'error', message: 'Conversion failed for all files.', details: results });
-                // No need to call cleanupSessionFiles here yet, let download attempt or timeout handle it
                 return;
             }
 
             if (successfulPdfs.length === 1) {
                 const pdfFileName = path.basename(successfulPdfs[0]);
-                sendProgress({
-                    type: 'complete',
-                    downloadType: 'pdf',
-                    downloadUrl: `/api/download/pdf/${sessionId}/${encodeURIComponent(pdfFileName)}`,
-                    message: 'Conversion successful.',
-                    progress: 100
-                });
+                sendProgress({ type: 'complete', downloadType: 'pdf', downloadUrl: `/api/download/pdf/${sessionId}/${encodeURIComponent(pdfFileName)}`, message: 'Conversion successful.', progress: 100 });
             } else {
                 const zipFileName = `converted_markdown_${sessionId}.zip`;
                 const zipFilePath = path.join(sessionZipPath, zipFileName);
@@ -250,148 +196,65 @@ app.post('/api/convert', (req, res, next) => {
                 const archive = archiver('zip', { zlib: { level: 9 } });
 
                 archive.on('progress', (progress) => {
-                    // This progress is for zipping, map it to overall progress (e.g., 85-95%)
                     const overallProgress = 85 + (progress.fs.processedBytes / progress.fs.totalBytes * 10);
                     sendProgress({ type: 'status', message: `Zipping files: ${Math.round(overallProgress)}%`, progress: Math.round(overallProgress) });
                 });
 
                 output.on('close', async () => {
-                    // console.log(`ZIP created: ${zipFilePath} (${archive.pointer()} total bytes)`);
-                    
-                    // Immediate cleanup: Remove individual PDF files since they're now in the ZIP
-                    try {
-                        await fs.remove(sessionPdfPath);
-                        // console.log(`Cleaned up individual PDFs folder for session ${sessionId}`);
-                    } catch (err) {
-                        // console.error(`Error cleaning up PDFs folder for session ${sessionId}:`, err);
-                    }
-                    
-                    sendProgress({
-                        type: 'complete',
-                        downloadType: 'zip',
-                        downloadUrl: `/api/download/zip/${sessionId}/${encodeURIComponent(zipFileName)}`,
-                        message: 'Conversion successful. Files zipped.',
-                        progress: 100
-                    });
+                    try { await fs.remove(sessionPdfPath); } catch (err) { /* ignore */ }
+                    sendProgress({ type: 'complete', downloadType: 'zip', downloadUrl: `/api/download/zip/${sessionId}/${encodeURIComponent(zipFileName)}`, message: 'Conversion successful. Files zipped.', progress: 100 });
                 });
                 archive.on('error', err => { 
-                    console.error('Archiving error:', err);
                     sendProgress({ type: 'error', message: `Error creating ZIP file: ${err.message}` });
-                    // No cleanup here, let timeout handle
                 });
                 archive.pipe(output);
-                successfulPdfs.forEach(pdfPath => {
-                    archive.file(pdfPath, { name: path.basename(pdfPath) });
-                });
+                successfulPdfs.forEach(pdfPath => archive.file(pdfPath, { name: path.basename(pdfPath) }));
                 await archive.finalize();
             }
         } catch (error) {
-            console.error('Conversion process error (async block):', error);
-            if (converter) await converter.cleanup(); // Ensure browser is closed on error
+            if (converter) await converter.cleanup();
             sendProgress({ type: 'error', message: error.message || 'An error occurred during conversion.' });
-            // No cleanup here, let timeout handle
         }
-        // Note: Session cleanup is now primarily handled by download routes or a more robust general cleanup mechanism
-        // For instance, a cron job or on server start for orphaned sessions.
-        // The setTimeout for cleanup after download is still in the download routes.
-    })(); // Self-invoking async function
+    })();
 });
 
 app.get('/api/download/pdf/:sessionId/:filename', (req, res) => {
     const { sessionId, filename } = req.params;
     const filePath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId, decodeURIComponent(filename));
-
     res.download(filePath, decodeURIComponent(filename), async (err) => {
-        if (err) {
-            console.error('Error downloading PDF:', err);
-            if (!res.headersSent) {
-                 res.status(404).send('File not found or error during download.');
-            }
-        } else {
-            // console.log(`PDF ${filename} downloaded successfully for session ${sessionId}.`);
-            // Schedule cleanup after a short delay to ensure download completes
-            setTimeout(() => cleanupSessionFiles(sessionId), 5000); 
-        }
+        if (err && !res.headersSent) res.status(404).send('File not found or error during download.');
+        if (!err) setTimeout(() => cleanupSessionFiles(sessionId), 5000); 
     });
 });
 
 app.get('/api/download/zip/:sessionId/:filename', (req, res) => {
     const { sessionId, filename } = req.params;
     const filePath = path.join(ZIPS_DIR_BASE, sessionId, decodeURIComponent(filename));
-
     res.download(filePath, decodeURIComponent(filename), async (err) => {
-        if (err) {
-            console.error('Error downloading ZIP:', err);
-            if (!res.headersSent) {
-                res.status(404).send('File not found or error during download.');
-            }
-        } else {
-            // console.log(`ZIP ${filename} downloaded successfully for session ${sessionId}.`);
-            // Schedule cleanup
-            setTimeout(() => cleanupSessionFiles(sessionId), 5000);
-        }
+        if (err && !res.headersSent) res.status(404).send('File not found or error during download.');
+        if (!err) setTimeout(() => cleanupSessionFiles(sessionId), 5000);
     });
 });
 
-// Global error handler for multer
 app.use((err, req, res, next) => {
-    if (err instanceof multer.MulterError) {
-        return res.status(400).json({ message: `File upload error: ${err.message}` });
-    } else if (err) {
-        // Handle other errors (e.g., file type validation)
-        return res.status(400).json({ message: err.message });
-    }
+    if (err instanceof multer.MulterError) return res.status(400).json({ message: `File upload error: ${err.message}` });
+    if (err) return res.status(400).json({ message: err.message });
     next();
 });
 
-// --- WebSocket Handling ---
 wss.on('connection', (ws, req) => {
-    // Extract sessionId from query parameter (e.g., ws://localhost:3000?sessionId=xxxx)
-    // req.url will be like '/?sessionId=xxxx'
     const urlParams = new URLSearchParams(req.url.substring(req.url.indexOf('?')));
     const sessionId = urlParams.get('sessionId');
+    if (!sessionId) { ws.close(); return; }
 
-    if (!sessionId) {
-        console.log('WebSocket connection attempt without sessionId. Closing.');
-        ws.close();
-        return;
-    }
-
-    console.log(`WebSocket client connected for session: ${sessionId}`);
     activeConnections.set(sessionId, ws);
-    
     ws.send(JSON.stringify({ type: 'connection_ack', message: 'WebSocket connection established.' }));
-
-    ws.on('message', (message) => {
-        // Handle messages from client if needed, e.g., cancel request
-        // console.log(`Received message from ${sessionId}: ${message}`);
-    });
-
-    ws.on('close', () => {
-        console.log(`WebSocket client disconnected for session: ${sessionId}`);
-        activeConnections.delete(sessionId);
-        // Consider if session cleanup should be triggered here if conversion wasn't finished
-        // For now, cleanup is tied to download or a general timeout/mechanism
-    });
-
-    ws.on('error', (error) => {
-        console.error(`WebSocket error for session ${sessionId}:`, error);
-        activeConnections.delete(sessionId); // Remove on error too
-    });
+    ws.on('close', () => activeConnections.delete(sessionId));
+    ws.on('error', () => activeConnections.delete(sessionId));
 });
 
-
-// --- Start Server ---
-// app.listen(PORT, () => { // Original app.listen
-server.listen(PORT, () => { // Use server.listen for WebSocket
+server.listen(PORT, () => {
     console.log(`🚀 MarkSwift Server (with WebSocket) listening on http://localhost:${PORT}`);
-    // console.log(`📁 Uploads will be stored temporarily in: ${UPLOADS_DIR_BASE}`);
-    // console.log(`📄 Converted PDFs will be stored temporarily in: ${CONVERTED_PDFS_DIR_BASE}`);
-    // console.log(`📦 ZIPs will be stored temporarily in: ${ZIPS_DIR_BASE}`);
-    
-    // Schedule periodic cleanup
     setInterval(scanAndCleanupOrphanedSessions, config.cleanupSettings.periodicScanIntervalMinutes * 60 * 1000);
-    
-    // Run initial cleanup after a short delay
     setTimeout(scanAndCleanupOrphanedSessions, 5000);
 });

@@ -5,6 +5,7 @@
   "main": "server/server.js",
   "scripts": {
     "start": "npm run build:css && node server/server.js",
+    "start_docker": "node server/server.js",
     "dev": "concurrently \"npm run build:css -- --watch\" \"nodemon server/server.js\"",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.css"
   },
