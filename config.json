@@ -16,5 +16,15 @@
     },
     "logging": {
         "level": "info"
+    },
+    "queueSettings": {
+        "maxConcurrentSessions": 2,
+        "maxQueueSize": 50,
+        "queueCheckIntervalMs": 2000,
+        "jobTimeoutMs": 300000,
+        "maxRequestsPerMinute": 10,
+        "defaultAvgTimePerFileMs": 5000,
+        "defaultBaseJobOverheadMs": 10000,
+        "maxProcessingHistory": 20
     }
 }

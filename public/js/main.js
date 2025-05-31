@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeRadios = document.querySelectorAll('input[name="conversion-mode"]');
 
     const statusArea = document.getElementById('status-area');
+    const queueStatusMessage = document.getElementById('queue-status-message'); 
+    const estimatedWaitTimeMessage = document.getElementById('estimated-wait-time'); // New element for wait time
     const statusMessage = document.getElementById('status-message');
     const progressBarContainer = document.getElementById('progress-bar-container');
     const progressBar = document.getElementById('progress-bar');
@@ -190,6 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearMessages() {
         statusArea.classList.add('hidden');
         statusMessage.textContent = '';
+        if (queueStatusMessage) queueStatusMessage.textContent = '';
+        if (queueStatusMessage) queueStatusMessage.classList.add('hidden');
+        if (estimatedWaitTimeMessage) estimatedWaitTimeMessage.textContent = ''; // Clear wait time
+        if (estimatedWaitTimeMessage) estimatedWaitTimeMessage.classList.add('hidden');
         progressBarContainer.classList.add('hidden');
         progressBar.style.width = '0%';
         downloadArea.classList.add('hidden');
@@ -198,27 +204,65 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMessage.textContent = '';
     }
     
-    function showStatus(message, showProgress = false, progressValue = 0, fileDetails = null) {
-        // Ensure clearMessages is called if this is a new top-level status,
-        // but not for every incremental update of the same status.
-        // For simplicity now, we might clear more often than strictly necessary.
-        // clearMessages(); // Potentially move this to be more selective
-
-        statusMessage.textContent = message;
-        if (fileDetails) {
-            statusMessage.textContent += ` (${fileDetails})`;
-        }
+    function showStatus(message, showProgress = false, progressValue = 0, fileDetails = null, isQueueUpdate = false) {
         statusArea.classList.remove('hidden');
+
+        if (isQueueUpdate && queueStatusMessage) {
+            queueStatusMessage.textContent = message;
+            queueStatusMessage.classList.remove('hidden');
+            // Main status message might show something generic like "Waiting in queue..."
+            // For now, let's ensure the main status message is also updated or cleared.
+            // statusMessage.textContent = "Waiting in queue..."; // Or clear it if queue message is primary
+        } else if (queueStatusMessage && !isQueueUpdate) {
+            // If it's not a queue update, hide the queue message if it was visible
+            // queueStatusMessage.classList.add('hidden'); 
+            // queueStatusMessage.textContent = '';
+        }
+        
+        // Always update the main status message for non-queue updates or as a fallback
+        // If it's a queue update, the main status message might be different or cleared.
+        // This logic needs refinement based on desired UI behavior.
+        // For now, let's have queue messages in queueStatusMessage and others in statusMessage.
+        if (!isQueueUpdate) {
+            statusMessage.textContent = message;
+            if (fileDetails) {
+                statusMessage.textContent += ` (${fileDetails})`;
+            }
+        }
+
 
         if (showProgress) {
             progressBarContainer.classList.remove('hidden');
             progressBar.style.width = `${progressValue}%`;
-        } else {
-            // If not showing progress explicitly, but it was visible, hide it.
+        } else if (!isQueueUpdate) { // Don't hide progress bar if it's just a queue text update
             // progressBarContainer.classList.add('hidden');
             // progressBar.style.width = '0%';
         }
     }
+    
+    function showQueueStatus(message, queuePosition, queueLength, estimatedWaitTimeStr) {
+        statusArea.classList.remove('hidden');
+        
+        if (queueStatusMessage) {
+            queueStatusMessage.textContent = message;
+            queueStatusMessage.classList.remove('hidden');
+        } else { 
+            statusMessage.textContent = message; // Fallback
+        }
+
+        if (estimatedWaitTimeMessage) {
+            if (estimatedWaitTimeStr) {
+                estimatedWaitTimeMessage.textContent = `Estimated wait: ${estimatedWaitTimeStr}`;
+                estimatedWaitTimeMessage.classList.remove('hidden');
+            } else {
+                estimatedWaitTimeMessage.classList.add('hidden');
+            }
+        }
+        
+        progressBarContainer.classList.add('hidden'); // Always hide progress bar for queue status
+        statusMessage.textContent = "Waiting in queue..."; // General status
+    }
+
 
     function showError(message) {
         clearMessages();
@@ -282,12 +326,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const initialResult = await initialResponse.json();
             const sessionId = initialResult.sessionId;
+            const jobId = initialResult.jobId; 
+            const initialQueuePos = initialResult.queuePosition;
+            const initialQueueLen = initialResult.queueLength;
+            // initialResult might also send estimatedWaitTime directly if calculated on initial add.
+            // For now, we rely on the first 'queue_update' for estimatedWaitTime.
 
             if (!sessionId) {
                 throw new Error('Session ID not received from server.');
             }
 
-            showStatus('Connecting for progress updates...', true, 2); // Update status
+            if (initialQueuePos && initialQueuePos > 0) {
+                showQueueStatus(
+                    `Request queued. Position: ${initialQueuePos} of ${initialQueueLen}.`, 
+                    initialQueuePos, 
+                    initialQueueLen,
+                    initialResult.estimatedWaitTime || "Calculating..." // Use if provided
+                );
+            } else if (jobId) { // If not immediately queued, it might be processing or just ack'd
+                 showStatus('Request received. Connecting for updates...', true, 2);
+            } else {
+                 showStatus('Connecting for progress updates...', true, 2);
+            }
+
 
             // Step 2: Establish WebSocket connection
             // Ensure to use wss:// if your site is on https://
@@ -307,12 +368,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 switch (data.type) {
                     case 'connection_ack':
                         // Optional: Acknowledge connection if server sends one
-                        showStatus(data.message, true, data.progress !== undefined ? data.progress : progressBar.style.width.replace('%',''));
+                        // If not already in queue or processing, this is a good place to confirm connection.
+                        // If already showing queue status, this might be redundant or just a log.
+                        console.log('Connection Acknowledged by server:', data.message);
+                        // showStatus(data.message, true, data.progress !== undefined ? data.progress : progressBar.style.width.replace('%',''));
+                        break;
+                    case 'queue_update':
+                        showQueueStatus(data.message, data.queuePosition, data.queueLength, data.estimatedWaitTime);
+                        statusMessage.textContent = "Waiting in queue..."; // Main status
+                        progressBarContainer.classList.add('hidden'); 
+                        if (estimatedWaitTimeMessage && data.estimatedWaitTime) {
+                            estimatedWaitTimeMessage.textContent = `Estimated wait: ${data.estimatedWaitTime}`;
+                            estimatedWaitTimeMessage.classList.remove('hidden');
+                        } else if (estimatedWaitTimeMessage) {
+                            estimatedWaitTimeMessage.classList.add('hidden');
+                        }
+                        break;
+                    case 'processing_started':
+                        if (queueStatusMessage) queueStatusMessage.classList.add('hidden'); 
+                        if (estimatedWaitTimeMessage) estimatedWaitTimeMessage.classList.add('hidden');
+                        showStatus(data.message, true, 5); 
                         break;
                     case 'status':
+                        if (queueStatusMessage) queueStatusMessage.classList.add('hidden');
+                        if (estimatedWaitTimeMessage) estimatedWaitTimeMessage.classList.add('hidden');
                         showStatus(data.message, true, data.progress);
                         break;
-                    case 'file_status': // Handles per-file progress updates
+                    case 'file_status': 
+                        if (queueStatusMessage) queueStatusMessage.classList.add('hidden');
+                        if (estimatedWaitTimeMessage) estimatedWaitTimeMessage.classList.add('hidden');
                         let fileStatusDisplay = data.message; // e.g., "Processing file"
                         if (data.totalFiles > 1) {
                             fileStatusDisplay += ` (${data.currentFile} of ${data.totalFiles})`;
