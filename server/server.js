@@ -88,6 +88,9 @@ const sendWebSocketMessageToSession = (sessionId, data) => {
 // --- Initialize QueueManager ---
 const queueManager = new QueueManager(logMessage, config, sendWebSocketMessageToSession);
 
+// --- Route Imports ---
+const uploadRoutes = require('./routes/uploadRoutes');
+const downloadRoutes = require('./routes/downloadRoutes');
 
 const UPLOADS_DIR_BASE = path.join(__dirname, 'uploads');
 const CONVERTED_PDFS_DIR_BASE = path.join(__dirname, 'converted-pdfs');
@@ -182,45 +185,15 @@ async function cleanupSessionFiles(sessionId) {
     logMessage('info', `Cleanup completed for session: ${sessionId}`);
 }
 
-app.post('/api/convert', (req, res, next) => {
-    req.sessionId = crypto.randomBytes(16).toString('hex');
-    logMessage('info', `[${req.sessionId}] Received new conversion request.`);
-    next();
-}, upload.array('markdownFiles', config.fileUploadLimits.maxFilesPerBatch), (req, res) => {
-    const sessionId = req.sessionId;
-    const files = req.files; // These are multer file objects { path, originalname, etc. }
-    const mode = req.body.mode || 'normal';
-
-    logMessage('info', `[${sessionId}] Received /api/convert. Files: ${files ? files.length : 0}, Mode: ${mode}`);
-
-    if (!files || files.length === 0) {
-        logMessage('warn', `[${sessionId}] No Markdown files uploaded.`);
-        return res.status(400).json({ message: 'No Markdown files uploaded.' });
-    }
-
-    // Add job to queue
-    // The 'ws' object will be associated later when the WebSocket connection is established for this sessionId
-    // or QueueManager will use the sendWebSocketMessageToSession function which looks up by sessionId.
-    const jobId = queueManager.addJob(sessionId, files, mode); 
-                                        // files are full multer objects
-                                        // originalFilenames can be derived from files if needed
-
-    logMessage('info', `[${sessionId}] Job ${jobId} added to queue. Queue size: ${queueManager.getQueueStatus().queueLength}`);
-    
-    // Respond to client, indicating the job is queued.
-    // Client should then connect via WebSocket using this sessionId for progress.
-    const initialQueueStatus = queueManager.getJobBySessionId(sessionId);
-    res.json({ 
-        sessionId, 
-        jobId,
-        message: "Request received and queued. Connect via WebSocket for real-time updates.",
-        queuePosition: initialQueueStatus ? initialQueueStatus.queuePosition : -1, // Provide initial position
-        queueLength: queueManager.getQueueStatus().queueLength
-    });
-});
+// --- Setup Routes ---
+// Note: The rate limiter is applied before the uploadRoutes, so it still protects /api/convert
+app.use('/api', uploadRoutes(logMessage, config, queueManager, UPLOADS_DIR_BASE));
+app.use('/api/download', downloadRoutes(logMessage, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE, cleanupSessionFiles));
 
 
 // --- Actual Conversion Logic (called by QueueManager) ---
+// This function `processConversionJob` is a callback for queueManager, so it stays here for now.
+// It could be moved to a service in a later phase.
 async function processConversionJob(job) {
     const { sessionId, files, mode } = job; // files are multer objects
     logMessage('info', `[${sessionId}] [Job ${job.id}] Starting actual conversion from queue.`);
@@ -361,39 +334,10 @@ const convertApiLimiter = rateLimit({
         res.status(options.statusCode).json(options.message);
     }
 });
-app.use('/api/convert', convertApiLimiter); // Apply to the /api/convert route specifically
+app.use('/api/convert', convertApiLimiter); // Apply to the /api/convert route specifically (which is now part of uploadRoutes)
 
 
-app.get('/api/download/pdf/:sessionId/:filename', (req, res) => {
-    const { sessionId, filename } = req.params; // Make sure filename is properly sanitized if used in paths
-    logMessage('info', `[${sessionId}] PDF download request: ${filename}`);
-    const filePath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId, decodeURIComponent(filename)); // decodeURIComponent is important
-    res.download(filePath, decodeURIComponent(filename), async (err) => {
-        if (err) {
-            logMessage('error', `[${sessionId}] Error downloading PDF ${filename}:`, { message: err.message });
-            if (!res.headersSent) res.status(404).send('File not found or error during download.');
-        } else {
-            logMessage('info', `[${sessionId}] PDF ${filename} downloaded successfully. Scheduling cleanup.`);
-            setTimeout(() => cleanupSessionFiles(sessionId), 5000); 
-        }
-    });
-});
-
-app.get('/api/download/zip/:sessionId/:filename', (req, res) => {
-    const { sessionId, filename } = req.params; // Make sure filename is properly sanitized
-    logMessage('info', `[${sessionId}] ZIP download request: ${filename}`);
-    const filePath = path.join(ZIPS_DIR_BASE, sessionId, decodeURIComponent(filename)); // decodeURIComponent is important
-    res.download(filePath, decodeURIComponent(filename), async (err) => {
-        if (err) {
-            logMessage('error', `[${sessionId}] Error downloading ZIP ${filename}:`, { message: err.message });
-            if (!res.headersSent) res.status(404).send('File not found or error during download.');
-        } else {
-            logMessage('info', `[${sessionId}] ZIP ${filename} downloaded successfully. Scheduling cleanup.`);
-            setTimeout(() => cleanupSessionFiles(sessionId), 5000);
-        }
-    });
-});
-
+// Global error handler - keep this after all route definitions
 app.use((err, req, res, next) => {
     const sessionId = req.sessionId || 'N/A';
     logMessage('error', `[${sessionId}] Global error handler caught error:`, { message: err.message, type: err.constructor.name });
