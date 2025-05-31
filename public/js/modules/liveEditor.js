@@ -6,7 +6,7 @@ const PREVIEW_UPDATE_DELAY = 500; // 500ms debounce
 class LiveEditor {
     constructor() {
         this.markdownTextarea = null;
-        this.previewPane = null;
+        this.documentContainer = null;
         this.isInitialized = false;
         this.lastContent = '';
     }
@@ -17,15 +17,22 @@ class LiveEditor {
             return;
         }
 
-        // Get DOM elements
+        // Get DOM elements with correct IDs from our HTML
         this.markdownTextarea = document.getElementById('markdown-input');
-        this.previewPane = document.getElementById('html-preview-pane');
+        this.documentContainer = document.getElementById('pdf-preview-container');
         this.clearButton = document.getElementById('editor-clear-button');
 
-        if (!this.markdownTextarea || !this.previewPane) {
-            console.error('[LiveEditor] Required DOM elements not found');
+        if (!this.markdownTextarea) {
+            console.error('[LiveEditor] markdown-input element not found');
             return;
         }
+
+        if (!this.documentContainer) {
+            console.error('[LiveEditor] pdf-preview-container element not found');
+            return;
+        }
+
+        console.log('[LiveEditor] Found all required DOM elements');
 
         // Set up event listeners
         this.setupEventListeners();
@@ -34,12 +41,13 @@ class LiveEditor {
         this.loadSavedContent();
 
         this.isInitialized = true;
-        console.log('[LiveEditor] Initialized successfully');
+        console.log('[LiveEditor] Initialized successfully with improved layout');
     }
 
     setupEventListeners() {
         // Debounced input listener for live preview
         this.markdownTextarea.addEventListener('input', () => {
+            console.log('[LiveEditor] Input detected, updating preview...');
             this.debouncedPreviewUpdate();
             this.saveContentToLocalStorage();
         });
@@ -54,6 +62,7 @@ class LiveEditor {
         // Handle tab switching to initialize editor when Live Editor tab is activated
         document.addEventListener('click', (e) => {
             if (e.target.matches('[data-tab-target="#liveEditorTab"]')) {
+                console.log('[LiveEditor] Live Editor tab activated');
                 // Small delay to ensure tab is switched before initializing
                 setTimeout(() => {
                     this.onTabActivated();
@@ -71,9 +80,11 @@ class LiveEditor {
 
     async updatePreview() {
         const content = this.markdownTextarea.value.trim();
+        console.log('[LiveEditor] Updating preview with content length:', content.length);
         
         // Don't update if content hasn't changed
         if (content === this.lastContent) {
+            console.log('[LiveEditor] Content unchanged, skipping update');
             return;
         }
 
@@ -81,11 +92,13 @@ class LiveEditor {
 
         // If empty, show placeholder
         if (!content) {
+            console.log('[LiveEditor] Empty content, showing placeholder');
             this.showEmptyPreview();
             return;
         }
 
         try {
+            console.log('[LiveEditor] Sending preview request to server...');
             const response = await fetch('/api/editor/preview-html', {
                 method: 'POST',
                 headers: {
@@ -99,6 +112,7 @@ class LiveEditor {
             }
 
             const data = await response.json();
+            console.log('[LiveEditor] Received preview HTML from server');
             this.displayPreview(data.html);
 
         } catch (error) {
@@ -108,33 +122,45 @@ class LiveEditor {
     }
 
     displayPreview(html) {
-        // Clear any existing content and add the new HTML
-        this.previewPane.innerHTML = `<div class="p-3 prose prose-sm max-w-none">${html}</div>`;
+        console.log('[LiveEditor] Displaying preview HTML');
+        // Display the HTML content in the professional document container
+        if (this.documentContainer) {
+            // The HTML from the API already includes proper styling and padding
+            // We just need to display it in our document container
+            this.documentContainer.innerHTML = html;
+        } else {
+            console.error('[LiveEditor] Document container not found during display');
+        }
     }
 
     showEmptyPreview() {
-        this.previewPane.innerHTML = `
-            <div class="p-3 prose prose-sm max-w-none">
-                <div class="text-slate-400 text-center py-20">
-                    <i class="fas fa-eye text-3xl mb-3 block"></i>
-                    <p class="text-sm">Live HTML preview will appear here</p>
-                    <p class="text-xs mt-1">Start typing in the editor to see the preview</p>
+        if (this.documentContainer) {
+            this.documentContainer.innerHTML = `
+                <div class="flex items-center justify-center h-96 text-slate-400">
+                    <div class="text-center">
+                        <i class="fas fa-file-text text-5xl mb-6 block text-slate-300"></i>
+                        <h3 class="text-lg font-semibold mb-2 text-slate-600">PDF Preview</h3>
+                        <p class="text-sm mb-1">Your document will appear here</p>
+                        <p class="text-xs text-slate-400">Start typing in the editor to see the magic ✨</p>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
 
     showPreviewError(errorMessage) {
-        this.previewPane.innerHTML = `
-            <div class="p-3 prose prose-sm max-w-none">
-                <div class="text-red-500 text-center py-20">
-                    <i class="fas fa-exclamation-triangle text-3xl mb-3 block"></i>
-                    <p class="text-sm font-semibold">Preview Error</p>
-                    <p class="text-xs mt-1">${errorMessage}</p>
-                    <p class="text-xs mt-2 text-slate-500">Check the console for more details</p>
+        if (this.documentContainer) {
+            this.documentContainer.innerHTML = `
+                <div class="flex items-center justify-center h-96 text-red-500">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-5xl mb-6 block"></i>
+                        <h3 class="text-lg font-semibold mb-2 text-red-600">Preview Error</h3>
+                        <p class="text-sm mb-1">${errorMessage}</p>
+                        <p class="text-xs mt-2 text-slate-500">Check the console for more details</p>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
 
     clearEditor() {
@@ -161,6 +187,7 @@ class LiveEditor {
             if (savedContent) {
                 this.markdownTextarea.value = savedContent;
                 this.lastContent = savedContent;
+                console.log('[LiveEditor] Loaded saved content from localStorage');
                 // Update preview with saved content
                 this.updatePreview();
             }
@@ -181,6 +208,10 @@ class LiveEditor {
         // Focus the editor when tab is activated
         if (this.markdownTextarea) {
             this.markdownTextarea.focus();
+        }
+        // Re-initialize if needed
+        if (!this.isInitialized) {
+            this.init();
         }
     }
 

@@ -126,7 +126,7 @@
     20%, 40%, 60%, 80% { transform: translateX(8px); }
 }
 
-/* Custom scrollbar for file list */
+/* Custom scrollbar for file list and editor */
 .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
 }
@@ -144,6 +144,104 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.7);
+}
+
+/* Live Editor Preview Enhancements */
+#pdf-preview-container {
+    transition: all 0.3s ease;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+#pdf-preview-container:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* Professional Document Paper Effect */
+.preview-paper {
+    position: relative;
+    background: linear-gradient(145deg, #ffffff 0%, #fefefe 100%);
+    border: 1px solid #e5e7eb;
+}
+
+.preview-paper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.02) 0%, transparent 70%);
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Editor textarea enhancements */
+#markdown-input {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    line-height: 1.6;
+    resize: none;
+    transition: all 0.2s ease;
+}
+
+#markdown-input:focus {
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.3);
+}
+
+/* Preview loading animation */
+@keyframes preview-loading {
+    0% { opacity: 0.6; transform: translateY(5px); }
+    50% { opacity: 0.8; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.preview-loading {
+    animation: preview-loading 0.4s ease-out;
+}
+
+/* Enhanced empty state animations */
+@keyframes gentle-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+
+.gentle-float {
+    animation: gentle-float 4s ease-in-out infinite;
+}
+
+/* Professional document spacing */
+.document-content {
+    min-height: calc(100vh - 200px);
+    background: #ffffff;
+    position: relative;
+}
+
+/* Improved split pane responsiveness */
+@media (max-width: 1200px) {
+    .grid-cols-5 {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .col-span-2 {
+        grid-column: span 1;
+    }
+    
+    .col-span-3 {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid-cols-5 {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .col-span-2,
+    .col-span-3 {
+        grid-column: span 1;
+    }
 }
 
 /* Floating action effect */
@@ -240,6 +338,11 @@
         padding: 0.75rem 1rem;
         font-size: 0.875rem;
     }
+    
+    #pdf-preview-container {
+        padding: 3mm !important;
+        margin: 0.5rem;
+    }
 }
 
 /* High contrast mode support */
@@ -259,4 +362,58 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* Professional preview typography */
+.preview-content {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Improved code block styling in preview */
+.preview-content pre {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.preview-content pre::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
+}
+
+/* Enhanced table styling in preview */
+.preview-content table {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.preview-content table thead tr {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* Improved blockquote styling */
+.preview-content blockquote {
+    position: relative;
+    background: rgba(241, 245, 249, 0.5);
+    border-radius: 0 6px 6px 0;
+    margin-left: 0;
+    padding-left: 1.5em;
+}
+
+.preview-content blockquote::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 2px;
 }
