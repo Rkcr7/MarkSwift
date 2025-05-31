@@ -4,10 +4,13 @@ const fs = require('fs-extra');
 const multer = require('multer');
 const archiver = require('archiver');
 const crypto = require('crypto');
-const WebSocket = require('ws');
+// WebSocket is now handled by WebSocketHandler, so direct import might not be needed here unless for types
 const MarkdownToPDFConverter = require('./converter');
 const QueueManager = require('./queueManager'); // Added for queue system
-const rateLimit = require('express-rate-limit'); // Added for rate limiting
+
+// --- Middleware Imports ---
+const rateLimitMiddleware = require('./middleware/rateLimitMiddleware');
+const errorMiddleware = require('./middleware/errorMiddleware');
 
 // --- Logging Helper ---
 const LOG_PREFIX = "[MarkSwift_Server]";
@@ -70,23 +73,10 @@ try {
 
 const app = express();
 const PORT = process.env.PORT || config.port;
-const server = require('http').createServer(app);
-const wss = new WebSocket.Server({ server });
+const httpServer = require('http').createServer(app); // Renamed to httpServer for clarity
 
-const activeConnections = new Map(); // Stores sessionId -> WebSocket instance
-
-// --- WebSocket Message Sender for QueueManager ---
-const sendWebSocketMessageToSession = (sessionId, data) => {
-    const ws = activeConnections.get(sessionId);
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(data));
-    } else {
-        logMessage('warn', `[${sessionId}] WebSocket not open/found for QueueManager message. Type: ${data.type}, State: ${ws ? ws.readyState : 'N/A'}`);
-    }
-};
-
-// --- Initialize QueueManager ---
-const queueManager = new QueueManager(logMessage, config, sendWebSocketMessageToSession);
+// --- WebSocket Handler Import ---
+const WebSocketHandler = require('./websocket/websocketHandler');
 
 // --- Route Imports ---
 const uploadRoutes = require('./routes/uploadRoutes');
@@ -95,6 +85,29 @@ const downloadRoutes = require('./routes/downloadRoutes');
 // --- Service Imports ---
 const CleanupService = require('./services/cleanupService');
 // const ConversionService = require('./services/conversionService'); // Placeholder, will be used later
+
+// --- Initialize WebSocket Handler (before QueueManager if QueueManager needs its send method) ---
+// Note: WebSocketHandler needs the httpServer instance.
+// QueueManager will need the sendMessageToSession method from the webSocketHandler instance.
+
+// Placeholder for webSocketHandler instance, will be initialized after httpServer
+let webSocketHandler; 
+
+// --- Initialize QueueManager ---
+// We need to pass the sendMessageToSession method from webSocketHandler to queueManager.
+// This creates a slight ordering dependency. We'll initialize webSocketHandler first, then queueManager.
+// For now, let's define a placeholder function that will be replaced.
+let sendMessageCallbackForQueueManager = (sessionId, data) => {
+    // This will be replaced by webSocketHandler.sendMessageToSession.bind(webSocketHandler)
+    logMessage('warn', `[${sessionId}] WebSocketHandler not yet initialized. Message not sent:`, data);
+};
+const queueManager = new QueueManager(logMessage, config, sendMessageCallbackForQueueManager);
+
+// Now initialize WebSocketHandler and update the callback for QueueManager
+webSocketHandler = new WebSocketHandler(logMessage, httpServer, queueManager);
+sendMessageCallbackForQueueManager = webSocketHandler.sendMessageToSession.bind(webSocketHandler);
+queueManager.sendWebSocketMessage = sendMessageCallbackForQueueManager; // Update the callback in QueueManager
+
 
 const UPLOADS_DIR_BASE = path.join(__dirname, 'uploads');
 const CONVERTED_PDFS_DIR_BASE = path.join(__dirname, 'converted-pdfs');
@@ -165,14 +178,11 @@ async function processConversionJob(job) {
     const { sessionId, files, mode } = job; // files are multer objects
     logMessage('info', `[${sessionId}] [Job ${job.id}] Starting actual conversion from queue.`);
 
-    // This sendProgress function uses activeConnections, which is fine.
+    // Use webSocketHandler to send progress messages
     const sendProgress = (progressData) => {
-        const ws = activeConnections.get(sessionId);
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(progressData));
-        } else {
-            logMessage('warn', `[${sessionId}] WebSocket not open/found for sending progress during job processing. State: ${ws ? ws.readyState : 'N/A'}`);
-        }
+        // Ensure progressData includes sessionId if not already present, or rely on webSocketHandler's method
+        if (!progressData.sessionId) progressData.sessionId = sessionId;
+        webSocketHandler.sendMessageToSession(sessionId, progressData);
     };
 
     const concurrency = getConcurrencyFromMode(mode);
@@ -288,87 +298,21 @@ async function processConversionJob(job) {
 queueManager.setOnProcessJobCallback(processConversionJob);
 
 
-// --- Rate Limiter for /api/convert ---
-const convertApiLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: config.queueSettings?.maxRequestsPerMinute || 10, // Max requests per windowMs per IP
-    message: { message: 'Too many conversion requests from this IP, please try again after a minute.' },
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    keyGenerator: (req) => req.ip, // Use IP address for rate limiting
-    handler: (req, res, next, options) => {
-        logMessage('warn', `[${req.sessionId || req.ip}] Rate limit exceeded for /api/convert. IP: ${req.ip}`);
-        res.status(options.statusCode).json(options.message);
-    }
-});
-app.use('/api/convert', convertApiLimiter); // Apply to the /api/convert route specifically (which is now part of uploadRoutes)
+// --- Setup Rate Limiter ---
+// The '/api/convert' path is handled within uploadRoutes, which is mounted under '/api'
+// So, applying the limiter to '/api/convert' should still work.
+// Alternatively, pass the limiter to uploadRoutes to apply it specifically there.
+// For now, keeping it here as it was.
+const convertApiLimiter = rateLimitMiddleware(logMessage, config);
+app.use('/api/convert', convertApiLimiter);
 
 
-// Global error handler - keep this after all route definitions
-app.use((err, req, res, next) => {
-    const sessionId = req.sessionId || 'N/A';
-    logMessage('error', `[${sessionId}] Global error handler caught error:`, { message: err.message, type: err.constructor.name });
-    if (err instanceof multer.MulterError) return res.status(400).json({ message: `File upload error: ${err.message}` });
-    if (err) return res.status(400).json({ message: err.message });
-    next();
-});
+// Global error handler - must be the last piece of middleware
+app.use(errorMiddleware(logMessage));
 
-wss.on('connection', (ws, req) => {
-    const urlParams = new URLSearchParams(req.url.substring(req.url.indexOf('?')));
-    const sessionId = urlParams.get('sessionId');
-    if (!sessionId) {
-        logMessage('warn', "WebSocket connection attempt without sessionId. Closing.");
-        ws.close(1008, "Session ID required"); 
-        return; 
-    }
+// WebSocket setup is now handled by WebSocketHandler, which is initialized with httpServer
 
-    logMessage('info', `[${sessionId}] WebSocket connection established.`);
-    activeConnections.set(sessionId, ws);
-    ws.send(JSON.stringify({ type: 'connection_ack', message: 'WebSocket connection established.', sessionId }));
-
-    // If there's a job in queue for this session, send its current status
-    const jobInQueue = queueManager.getJobBySessionId(sessionId);
-    if (jobInQueue && jobInQueue.status === 'queued') {
-        sendWebSocketMessageToSession(sessionId, {
-            type: 'queue_update',
-            sessionId: sessionId,
-            queuePosition: jobInQueue.queuePosition,
-            queueLength: queueManager.getQueueStatus().queueLength,
-            message: `You are position ${jobInQueue.queuePosition} in the queue.`
-        });
-    } else if (jobInQueue && jobInQueue.status === 'processing') {
-         sendWebSocketMessageToSession(sessionId, {
-            type: 'processing_started', // Or a general status update
-            sessionId: sessionId,
-            message: 'Your files are currently being processed.'
-        });
-    }
-    
-    ws.on('message', (message) => {
-        try {
-            const parsedMessage = JSON.parse(message);
-            logMessage('debug', `[${sessionId}] Received WebSocket message:`, parsedMessage);
-            // Handle client messages if any (e.g., cancel request)
-            if (parsedMessage.type === 'getStatus') {
-                 const status = queueManager.getJobBySessionId(sessionId) || { status: 'unknown' };
-                 ws.send(JSON.stringify({ type: 'current_status', sessionId, status }));
-            }
-        } catch (e) {
-            logMessage('error', `[${sessionId}] Error parsing WebSocket message: ${message}`, e);
-        }
-    });
-
-    ws.on('close', (code, reason) => {
-        logMessage('info', `[${sessionId}] WebSocket connection closed. Code: ${code}, Reason: ${reason ? reason.toString() : 'N/A'}`);
-        activeConnections.delete(sessionId);
-    });
-    ws.on('error', (error) => {
-        logMessage('error', `[${sessionId}] WebSocket error:`, { message: error.message });
-        activeConnections.delete(sessionId); // Also remove on error
-    });
-});
-
-server.listen(PORT, () => {
+httpServer.listen(PORT, () => { // Use httpServer here
     logMessage('info', `🚀 MarkSwift Server (with Queue System & WebSocket) listening on http://localhost:${PORT}`);
     logMessage('info', `Max concurrent conversion sessions: ${config.queueSettings.maxConcurrentSessions}`);
     // Cleanup service now handles its own logging for interval and age
@@ -378,16 +322,18 @@ server.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
     logMessage('info', 'SIGTERM signal received. Closing http server and queue manager.');
-    server.close(() => {
+    httpServer.close(() => { // Use httpServer here
         logMessage('info', 'Http server closed.');
+        if (webSocketHandler) webSocketHandler.shutdown(); // Shutdown WebSocketHandler
         queueManager.shutdown();
         process.exit(0);
     });
 });
 process.on('SIGINT', () => {
     logMessage('info', 'SIGINT signal received. Closing http server and queue manager.');
-    server.close(() => {
+    httpServer.close(() => { // Use httpServer here
         logMessage('info', 'Http server closed.');
+        if (webSocketHandler) webSocketHandler.shutdown(); // Shutdown WebSocketHandler
         queueManager.shutdown();
         process.exit(0);
     });

@@ -74,17 +74,17 @@ The project will be implemented in several phases. Each phase will be completed,
 ---
 
 ### Phase 3: Backend Modularization - WebSocket & Utilities
-*   **Status:** Not Started
+*   **Status:** In Progress
 *   **Objective:** Modularize WebSocket handling and utility functions.
 *   **Tasks:**
-    *   [ ] Create `server/websocket/websocketHandler.js` to manage WebSocket connections, message routing, and `activeConnections`.
-    *   [ ] `server/server.js` to delegate WebSocket setup to `websocketHandler.js`.
-    *   [ ] Create `server/utils/logger.js` (if `logMessage` needs more features or standardization).
-    *   [ ] Create `server/utils/configManager.js` to handle loading and accessing `config.json`.
-    *   [ ] Create `server/middleware/` directory.
-        *   [ ] `rateLimitMiddleware.js` (move existing rate limiter setup).
-        *   [ ] `errorMiddleware.js` (centralized error handling).
-    *   [ ] **Testing:** Verify all existing functionalities, especially WebSocket communication and error handling.
+    *   [x] Create `server/websocket/websocketHandler.js` to manage WebSocket connections, message routing, and `activeConnections`.
+    *   [x] `server/server.js` updated to delegate WebSocket setup to `websocketHandler.js` and use its send method.
+    *   [ ] Create `server/utils/logger.js` (deferred, `logMessage` in `server.js` is currently sufficient).
+    *   [ ] Create `server/utils/configManager.js` (deferred, config loading in `server.js` is currently sufficient).
+    *   [x] Create `server/middleware/` directory (implicitly done).
+        *   [x] `rateLimitMiddleware.js` created and `server.js` updated to use it.
+        *   [x] `errorMiddleware.js` created and `server.js` updated to use it.
+    *   [ ] **Testing:** Verify all existing functionalities, especially WebSocket communication, rate limiting, and error handling.
     *   [ ] **User Commit Point**
 
 ---
