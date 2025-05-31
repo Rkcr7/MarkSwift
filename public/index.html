@@ -13,7 +13,7 @@
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans leading-normal tracking-normal h-full overflow-hidden flex flex-col">
 
-    <div class="container mx-auto p-2 md:p-3 max-w-7xl w-full flex-grow flex flex-col overflow-hidden">
+    <div class="container mx-auto p-2 md:p-3 w-full flex-grow flex flex-col overflow-hidden">
         <!-- Compact Header -->
         <header class="mb-2 text-center flex-shrink-0 relative">
             <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
@@ -224,7 +224,7 @@
                 </main>
             </div>
 
-            <!-- Live Editor Tab Content - IMPROVED LAYOUT & PREVIEW -->
+            <!-- Live Editor Tab Content - 50/50 SPLIT LAYOUT -->
             <div id="liveEditorTab" class="tab-content hidden h-full">
                 <div class="flex flex-col h-full space-y-1">
                     <!-- Minimal Editor Controls -->
@@ -243,10 +243,10 @@
                         </button>
                     </div>
                     
-                    <!-- Improved Split Pane: 40% Editor | 60% Preview -->
-                    <div class="flex-grow grid grid-cols-5 gap-2 overflow-hidden min-h-0">
-                        <!-- Editor Pane - 40% Width -->
-                        <div class="col-span-2 bg-white rounded border border-slate-200 h-full overflow-hidden">
+                    <!-- Perfect 50/50 Split Pane: Editor | Preview -->
+                    <div class="flex-grow grid grid-cols-2 gap-3 overflow-hidden min-h-0">
+                        <!-- Editor Pane - 50% Width -->
+                        <div class="bg-white rounded border border-slate-200 h-full overflow-hidden">
                             <textarea id="markdown-input" class="w-full h-full p-4 border-none resize-none focus:ring-0 focus:outline-none text-sm leading-relaxed custom-scrollbar" placeholder="# Welcome to MarkSwift Live Editor
 
 ## Getting Started
@@ -256,6 +256,7 @@ Start typing your Markdown here to see a real-time preview that matches your PDF
 - **Live Preview** - See changes as you type
 - **PDF-accurate styling** - What you see is what you get
 - **Auto-save** - Your content is automatically saved
+- **50/50 Layout** - Perfect balance between editor and preview
 
 ### Example Content
 
@@ -285,20 +286,20 @@ function hello() {
 
 ---
 
-Happy writing! 🚀"></textarea>
+Happy writing with your expanded editor! 🚀"></textarea>
                         </div>
                         
-                        <!-- Preview Pane - 60% Width with Professional Paper Layout -->
-                        <div class="col-span-3 bg-slate-200 rounded border border-slate-300 h-full overflow-auto custom-scrollbar p-6">
+                        <!-- Preview Pane - 50% Width with Professional Paper Layout -->
+                        <div class="bg-slate-200 rounded border border-slate-300 h-full overflow-auto custom-scrollbar p-4">
                             <!-- Professional Document Container -->
-                            <div id="pdf-preview-container" class="bg-white shadow-xl rounded-lg mx-auto min-h-full max-w-4xl border border-slate-300" style="padding: 5mm;">
+                            <div id="pdf-preview-container" class="bg-white shadow-xl rounded-lg mx-auto min-h-full border border-slate-300" style="padding: 8mm;">
                                 <!-- Default Empty State -->
                                 <div class="flex items-center justify-center h-96 text-slate-400">
                                     <div class="text-center">
                                         <i class="fas fa-file-text text-5xl mb-6 block text-slate-300"></i>
                                         <h3 class="text-lg font-semibold mb-2 text-slate-600">PDF Preview</h3>
                                         <p class="text-sm mb-1">Your document will appear here</p>
-                                        <p class="text-xs text-slate-400">Start typing in the editor to see the magic ✨</p>
+                                        <p class="text-xs text-slate-400">Start typing in the expanded editor to see the magic ✨</p>
                                     </div>
                                 </div>
                             </div>

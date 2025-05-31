@@ -146,17 +146,22 @@
     background: rgba(148, 163, 184, 0.7);
 }
 
-/* Live Editor Layout Improvements */
+/* IMPROVED: Live Editor Layout - 50/50 Split with Expanded Container */
+.container {
+    max-width: 1600px !important; /* Expanded from max-w-7xl (1280px) to 1600px */
+}
+
+/* Live Editor 50/50 Layout */
 #liveEditorTab .grid-cols-5 {
-    grid-template-columns: 1fr 2.5fr; /* 30% Editor, 70% Preview */
+    grid-template-columns: 1fr 1fr; /* Perfect 50/50 split */
 }
 
 #liveEditorTab .col-span-2 {
-    grid-column: span 1;
+    grid-column: span 1; /* Editor takes 50% */
 }
 
 #liveEditorTab .col-span-3 {
-    grid-column: span 1;
+    grid-column: span 1; /* Preview takes 50% */
 }
 
 /* Live Editor Preview Enhancements */
@@ -165,7 +170,7 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
                 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     padding: 8mm !important; /* Increased padding from 5mm to 8mm */
-    max-width: none !important; /* Remove max-width constraint */
+    max-width: 1000px !important; /* Expanded from max-w-4xl to accommodate larger container */
     width: 100% !important; /* Use full available width */
 }
 
@@ -198,6 +203,7 @@
     line-height: 1.6;
     resize: none;
     transition: all 0.2s ease;
+    font-size: 14px; /* Slightly larger font for better readability in wider editor */
 }
 
 #markdown-input:focus {
@@ -233,9 +239,23 @@
 }
 
 /* Improved split pane responsiveness */
+@media (max-width: 1400px) {
+    .container {
+        max-width: 1280px !important; /* Fall back to original size on smaller screens */
+    }
+    
+    #pdf-preview-container {
+        max-width: 800px !important;
+    }
+}
+
 @media (max-width: 1200px) {
     #liveEditorTab .grid-cols-5 {
-        grid-template-columns: 1fr 2fr; /* Adjust for medium screens */
+        grid-template-columns: 1fr 1fr; /* Maintain 50/50 on medium screens */
+    }
+    
+    #pdf-preview-container {
+        max-width: 700px !important;
     }
 }
 
@@ -254,6 +274,7 @@
     #pdf-preview-container {
         padding: 4mm !important;
         margin: 0.5rem;
+        max-width: none !important;
     }
 }
 
