@@ -59,7 +59,7 @@ MarkSwift is a web application that allows users to upload multiple Markdown fil
 
 1.  **Clone the repository (if applicable):**
     ```bash
-    git clone https://github.com/Rkcr7/MarkSwift
+    git clone https://github.com/Rkcr7/MarkSwift 
     cd MarkSwift
     ```
 
@@ -98,6 +98,10 @@ After starting the server, the application will typically be accessible at:
 
 ```
 .
+├── DEPLOYMENT_DO.md            # Deployment guide for DigitalOcean
+├── DEPLOYMENT_GCP.md           # Deployment guide for Google Cloud Platform
+├── MAINTENANCE.md              # Server maintenance and troubleshooting guide
+├── Dockerfile                  # Docker configuration for containerization
 ├── public/                     # Client-side static assets
 │   ├── css/
 │   │   ├── custom.css          # Custom user styles
@@ -110,6 +114,11 @@ After starting the server, the application will typically be accessible at:
 │   ├── js/
 │   │   └── main.js             # Client-side JavaScript for UI and WebSocket
 │   └── index.html              # Main HTML page
+├── scripts/                    # Deployment and utility scripts
+│   ├── deploy.sh
+│   ├── nginx.conf.template
+│   ├── setup-server.sh
+│   └── update-app.sh
 ├── server/                     # Backend server logic
 │   ├── converted-pdfs/         # Temporary storage for generated PDFs (session-based)
 │   ├── uploads/                # Temporary storage for uploaded Markdown files (session-based)
@@ -117,6 +126,7 @@ After starting the server, the application will typically be accessible at:
 │   ├── converter.js            # Core Markdown to PDF conversion logic (uses Puppeteer)
 │   └── server.js               # Express server setup, API routes, WebSocket handling
 ├── .gitignore
+├── config.json                 # Application configuration (auto-generated if not present)
 ├── package.json
 ├── package-lock.json
 ├── tailwind.config.js          # Tailwind CSS configuration
@@ -138,7 +148,7 @@ After starting the server, the application will typically be accessible at:
 
 ## Configuration
 
-MarkSwift uses a `config.json` file to manage important settings. This file is automatically created with default values when the server starts if it doesn't exist.
+MarkSwift uses a `config.json` file to manage important settings. This file is automatically created with default values when the server starts if it doesn't exist. It's recommended to include your customized `config.json` in the root of your repository for deployment.
 
 ### Configuration File (`config.json`)
 
@@ -203,20 +213,14 @@ MarkSwift implements a multi-layered cleanup strategy to prevent server storage 
    - Files older than 3 hours (configurable) are automatically deleted
    - Runs on server startup and then at regular intervals
 
-## Dependencies
+## Deployment
 
-Key dependencies include:
-*   **Express.js:** Web framework
-*   **Puppeteer:** Headless Chrome for PDF conversion
-*   **Multer:** File upload handling
-*   **Archiver:** ZIP file creation
-*   **ws:** WebSocket server implementation
-*   **fs-extra:** File system operations
-*   **Tailwind CSS:** CSS framework
-*   **Marked:** Markdown parsing
-*   **DOMPurify & JSDOM:** HTML sanitization and manipulation
+MarkSwift is designed to be deployed using Docker, making it suitable for various cloud platforms and virtual private servers. We provide detailed guides for deploying to popular platforms:
 
-For a full list of dependencies, see `package.json`.
+*   **[DigitalOcean Droplet Deployment Guide](./DEPLOYMENT_DO.md):** Step-by-step instructions for deploying MarkSwift to a DigitalOcean Droplet using Docker, Nginx (as a reverse proxy), and Certbot (for SSL).
+*   **[Google Cloud Platform Deployment Guide](./DEPLOYMENT_GCP.md):** Instructions for deploying to Google Cloud Platform, primarily focusing on Google Cloud Run for serverless container deployment, and also mentioning Google Compute Engine (GCE) as an alternative.
+
+These guides include server setup, application deployment scripts, Nginx configuration, SSL setup, and maintenance tips. The `MAINTENANCE.md` file provides general server upkeep and troubleshooting advice applicable to most Docker-based deployments.
 
 ## Development
 
