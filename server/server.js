@@ -151,6 +151,14 @@ app.post('/api/convert', (req, res, next) => {
             sendProgress({ type: 'status', message: 'File processing complete. Finalizing...', progress: 85 });
             await converter.cleanup();
 
+            // Immediate cleanup: Remove uploads folder since processing is complete
+            try {
+                await fs.remove(sessionUploadPath);
+                // console.log(`Cleaned up uploads folder for session ${sessionId}`);
+            } catch (err) {
+                // console.error(`Error cleaning up uploads folder for session ${sessionId}:`, err);
+            }
+
             const successfulPdfs = results.filter(r => r.success && r.output).map(r => r.output);
 
             if (successfulPdfs.length === 0) {
@@ -180,8 +188,17 @@ app.post('/api/convert', (req, res, next) => {
                     sendProgress({ type: 'status', message: `Zipping files: ${Math.round(overallProgress)}%`, progress: Math.round(overallProgress) });
                 });
 
-                output.on('close', () => {
+                output.on('close', async () => {
                     // console.log(`ZIP created: ${zipFilePath} (${archive.pointer()} total bytes)`);
+                    
+                    // Immediate cleanup: Remove individual PDF files since they're now in the ZIP
+                    try {
+                        await fs.remove(sessionPdfPath);
+                        // console.log(`Cleaned up individual PDFs folder for session ${sessionId}`);
+                    } catch (err) {
+                        // console.error(`Error cleaning up PDFs folder for session ${sessionId}:`, err);
+                    }
+                    
                     sendProgress({
                         type: 'complete',
                         downloadType: 'zip',
