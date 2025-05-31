@@ -3,7 +3,7 @@
     "port": 3000,
     "fileUploadLimits": {
         "maxFileSizeMB": 10,
-        "maxFilesPerBatch": 200
+        "maxFilesPerBatch": 100
     },
     "concurrencyModes": {
         "normal": 4,

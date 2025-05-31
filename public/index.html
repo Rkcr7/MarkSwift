@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MarkSwift - Batch Markdown to PDF</title>
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico" sizes="32x32">
+    <link rel="icon" type="image/png" href="images/logo.png" sizes="96x96">
+    <link rel="apple-touch-icon" href="images/logo.png" sizes="180x180">
     <link href="css/tailwind.css" rel="stylesheet">
     <link href="css/custom.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -15,9 +18,9 @@
         <header class="mb-3 text-center flex-shrink-0 relative">
             <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 <div class="flex items-center justify-center space-x-3 mb-1">
-                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-                        <i class="fas fa-file-pdf text-white text-sm"></i>
-                    </div>
+                    <img src="images/logo-header.png" alt="MarkSwift Logo" class="w-16 h-16 object-contain">
+
+
                     <h1 class="text-2xl md:text-3xl font-bold">MarkSwift</h1>
                 </div>
                 <p class="text-slate-600 text-sm font-medium">Swiftly convert your Markdown files to PDF</p>
@@ -38,6 +41,7 @@
                         </div>
                         <p class="text-slate-700 text-sm font-semibold mb-1">Drop files here</p>
                         <p class="text-slate-500 text-xs">or click to browse</p>
+                        <p class="text-slate-400 text-xs mt-1">Up to 100 files at a time</p>
                         <div class="mt-1.5 flex justify-center space-x-2">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 <i class="fab fa-markdown mr-1 text-xs"></i> .md
@@ -204,4 +208,3 @@
 
     <script src="js/main.js"></script>
 </body>
-</html>

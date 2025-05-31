@@ -1,11 +1,22 @@
 # MarkSwift
 
+<div align="center">
+  <img src="public/images/logo.png" alt="MarkSwift Logo" width="120" height="120">
+  <p><em>Swiftly convert your Markdown files to PDF</em></p>
+  
+  <!-- Demo GIF -->
+  <img src="public/images/MarkSwift.gif" alt="MarkSwift Demo" width="600" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  
+  <p><strong>See MarkSwift in action!</strong> Upload multiple Markdown files and convert them to PDF with real-time progress tracking.</p>
+</div>
+
 ## Summary
 
 MarkSwift is a web application that allows users to upload multiple Markdown files (.md, .markdown) and convert them into PDF documents. It provides real-time progress updates via WebSockets and offers different concurrency modes for conversion. Processed files can be downloaded as individual PDFs or as a single ZIP archive if multiple files were converted.
 
 ## Features
 
+*   **Beautiful PDF Output:** Generates professionally formatted, clean PDFs with proper typography, styling, and layout preservation from your Markdown content.
 *   **Batch Conversion:** Upload and convert multiple Markdown files simultaneously.
 *   **Web Interface:** User-friendly interface for uploading files and selecting conversion mode.
 *   **Real-time Progress:** Track the conversion status of your files in real-time using WebSockets.
@@ -48,8 +59,8 @@ MarkSwift is a web application that allows users to upload multiple Markdown fil
 
 1.  **Clone the repository (if applicable):**
     ```bash
-    git clone <your-repository-url>
-    cd <repository-directory>
+    git clone https://github.com/Rkcr7/MarkSwift
+    cd MarkSwift
     ```
 
 2.  **Install dependencies:**
@@ -92,6 +103,10 @@ After starting the server, the application will typically be accessible at:
 │   │   ├── custom.css          # Custom user styles
 │   │   ├── input.css           # Tailwind CSS input
 │   │   └── tailwind.css        # Generated Tailwind CSS
+│   ├── images/
+│   │   ├── favicon.ico         # Website favicon
+│   │   ├── logo.png            # MarkSwift logo
+│   │   └── MarkSwift.gif       # Demo showcase GIF
 │   ├── js/
 │   │   └── main.js             # Client-side JavaScript for UI and WebSocket
 │   └── index.html              # Main HTML page
@@ -135,7 +150,7 @@ The configuration file contains the following settings:
     "port": 3000,
     "fileUploadLimits": {
         "maxFileSizeMB": 10,
-        "maxFilesPerBatch": 200
+        "maxFilesPerBatch": 100
     },
     "concurrencyModes": {
         "normal": 4,
@@ -156,7 +171,7 @@ The configuration file contains the following settings:
 
 **File Upload Limits:**
 *   `maxFileSizeMB`: Maximum file size per uploaded file (default: 10MB)
-*   `maxFilesPerBatch`: Maximum number of files per upload batch (default: 200)
+*   `maxFilesPerBatch`: Maximum number of files per upload batch (default: 100)
 
 **Concurrency Modes:**
 *   `normal`: Balanced processing (default: 4 concurrent files)
