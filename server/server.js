@@ -92,6 +92,10 @@ const queueManager = new QueueManager(logMessage, config, sendWebSocketMessageTo
 const uploadRoutes = require('./routes/uploadRoutes');
 const downloadRoutes = require('./routes/downloadRoutes');
 
+// --- Service Imports ---
+const CleanupService = require('./services/cleanupService');
+// const ConversionService = require('./services/conversionService'); // Placeholder, will be used later
+
 const UPLOADS_DIR_BASE = path.join(__dirname, 'uploads');
 const CONVERTED_PDFS_DIR_BASE = path.join(__dirname, 'converted-pdfs');
 const ZIPS_DIR_BASE = path.join(__dirname, 'zips');
@@ -142,53 +146,16 @@ function getConcurrencyFromMode(mode) {
     }
 }
 
-async function scanAndCleanupOrphanedSessions() {
-    logMessage('info', "Starting scan for orphaned sessions.");
-    const now = Date.now();
-    // Use orphanedSessionAgeMinutes from config, default to 180 minutes (3 hours) if not set
-    const orphanedAgeMinutes = config.cleanupSettings.orphanedSessionAgeMinutes || (config.cleanupSettings.orphanedSessionAgeHours * 60) || 180;
-    const maxAgeMs = orphanedAgeMinutes * 60 * 1000;
-    const directoriesToScan = [UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE];
-    let cleanedCount = 0;
+// --- Initialize Services ---
+const cleanupService = new CleanupService(logMessage, config, UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE);
+// const conversionService = new ConversionService(logMessage, config, queueManager, activeConnections, UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE); // Instantiate when ready
 
-    for (const baseDir of directoriesToScan) {
-        try {
-            const sessionFolders = await fs.readdir(baseDir);
-            for (const sessionId of sessionFolders) {
-                const sessionPath = path.join(baseDir, sessionId);
-                try {
-                    const stats = await fs.stat(sessionPath);
-                    if (stats.isDirectory() && (now - stats.mtimeMs > maxAgeMs)) {
-                        logMessage('info', `Cleaning up orphaned session directory: ${sessionPath}`);
-                        await fs.remove(sessionPath);
-                        cleanedCount++;
-                    }
-                } catch (statErr) { logMessage('warn', `Error stating/removing session folder ${sessionPath} during scan:`, { message: statErr.message }); }
-            }
-        } catch (readDirErr) { logMessage('warn', `Error reading base directory ${baseDir} for cleanup scan:`, { message: readDirErr.message }); }
-    }
-    if (cleanedCount > 0) {
-        logMessage('info', `Orphaned session scan complete. Cleaned ${cleanedCount} session(s).`);
-    } else {
-        logMessage('info', "Orphaned session scan complete. No old sessions found to clean.");
-    }
-}
-
-async function cleanupSessionFiles(sessionId) {
-    logMessage('info', `Initiating cleanup for session: ${sessionId}`);
-    const sessionUploadPath = path.join(UPLOADS_DIR_BASE, sessionId);
-    const sessionPdfPath = path.join(CONVERTED_PDFS_DIR_BASE, sessionId);
-    const sessionZipPath = path.join(ZIPS_DIR_BASE, sessionId);
-    try { await fs.remove(sessionUploadPath); logMessage('debug', `Removed upload dir for session ${sessionId}`, { path: sessionUploadPath }); } catch (err) { /* ignore */ }
-    try { await fs.remove(sessionPdfPath); logMessage('debug', `Removed PDF dir for session ${sessionId}`, { path: sessionPdfPath }); } catch (err) { /* ignore */ }
-    try { await fs.remove(sessionZipPath); logMessage('debug', `Removed ZIP dir for session ${sessionId}`, { path: sessionZipPath }); } catch (err) { /* ignore */ }
-    logMessage('info', `Cleanup completed for session: ${sessionId}`);
-}
 
 // --- Setup Routes ---
 // Note: The rate limiter is applied before the uploadRoutes, so it still protects /api/convert
 app.use('/api', uploadRoutes(logMessage, config, queueManager, UPLOADS_DIR_BASE));
-app.use('/api/download', downloadRoutes(logMessage, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE, cleanupSessionFiles));
+// Pass the bound method from cleanupService instance
+app.use('/api/download', downloadRoutes(logMessage, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE, cleanupService.cleanupSessionFiles.bind(cleanupService)));
 
 
 // --- Actual Conversion Logic (called by QueueManager) ---
@@ -404,11 +371,8 @@ wss.on('connection', (ws, req) => {
 server.listen(PORT, () => {
     logMessage('info', `🚀 MarkSwift Server (with Queue System & WebSocket) listening on http://localhost:${PORT}`);
     logMessage('info', `Max concurrent conversion sessions: ${config.queueSettings.maxConcurrentSessions}`);
-    logMessage('info', `Periodic session cleanup interval: ${config.cleanupSettings.periodicScanIntervalMinutes} minutes.`);
-    const orphanedAgeMinutesDisplay = config.cleanupSettings.orphanedSessionAgeMinutes || (config.cleanupSettings.orphanedSessionAgeHours * 60) || 180;
-    logMessage('info', `Orphaned session age for cleanup: ${orphanedAgeMinutesDisplay} minutes.`);
-    setInterval(scanAndCleanupOrphanedSessions, config.cleanupSettings.periodicScanIntervalMinutes * 60 * 1000);
-    setTimeout(scanAndCleanupOrphanedSessions, 5000); // Initial scan
+    // Cleanup service now handles its own logging for interval and age
+    cleanupService.startPeriodicCleanup(); // Start periodic cleanup
 });
 
 // Graceful shutdown

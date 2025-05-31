@@ -52,17 +52,17 @@ The project will be implemented in several phases. Each phase will be completed,
 ---
 
 ### Phase 2: Backend Modularization - Core Services & Controllers
-*   **Status:** Not Started
+*   **Status:** In Progress
 *   **Objective:** Further modularize backend logic into controllers and services.
 *   **Tasks:**
-    *   [ ] Refine `server/controllers/` structure.
-        *   [ ] `uploadController.js`: Logic for handling file uploads.
-        *   [ ] `downloadController.js`: Logic for handling file downloads.
-    *   [ ] Expand `server/services/`.
-        *   [ ] `sessionService.js`: Logic for session ID generation and management (if any beyond simple crypto).
-        *   [ ] `cleanupService.js`: Encapsulate `scanAndCleanupOrphanedSessions` and `cleanupSessionFiles`.
-    *   [ ] Update route files to use controllers.
-    *   [ ] `server/server.js` should become much leaner, primarily setting up middleware and routes.
+    *   [x] Refine `server/controllers/` structure.
+        *   [x] `uploadController.js`: Logic for handling file uploads created.
+        *   [x] `downloadController.js`: Logic for handling file downloads created.
+    *   [x] Expand `server/services/`.
+        *   [ ] `sessionService.js`: Logic for session ID generation and management (deferred, as current crypto usage is simple and handled in `uploadController`).
+        *   [x] `cleanupService.js`: Encapsulated `scanAndCleanupOrphanedSessions` and `cleanupSessionFiles`.
+    *   [x] Update route files (`uploadRoutes.js`, `downloadRoutes.js`) to use controllers.
+    *   [x] `server/server.js` is now leaner, using `CleanupService` and updated route modules.
     *   [ ] **Testing:** Verify all existing functionalities (upload, download, cleanup).
     *   [ ] **User Commit Point**
 
