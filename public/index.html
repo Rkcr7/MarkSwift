@@ -224,7 +224,7 @@
                 </main>
             </div>
 
-            <!-- Live Editor Tab Content - 50/50 SPLIT LAYOUT -->
+            <!-- Live Editor Tab Content - DRAGGABLE SPLIT LAYOUT -->
             <div id="liveEditorTab" class="tab-content hidden h-full">
                 <div class="flex flex-col h-full space-y-1">
                     <!-- Minimal Editor Controls -->
@@ -238,15 +238,18 @@
                                 Sync
                             </label>
                         </div>
-                        <button id="editor-clear-button" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-1 px-2 rounded text-xs flex items-center">
-                            <i class="fas fa-trash-alt mr-1 text-xs"></i>Clear
-                        </button>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-slate-500">Drag to resize</span>
+                            <button id="editor-clear-button" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-1 px-2 rounded text-xs flex items-center">
+                                <i class="fas fa-trash-alt mr-1 text-xs"></i>Clear
+                            </button>
+                        </div>
                     </div>
                     
-                    <!-- Perfect 50/50 Split Pane: Editor | Preview -->
-                    <div class="flex-grow grid grid-cols-2 gap-3 overflow-hidden min-h-0">
-                        <!-- Editor Pane - 50% Width -->
-                        <div class="bg-white rounded border border-slate-200 h-full overflow-hidden">
+                    <!-- Draggable Split Pane Layout -->
+                    <div class="flex-grow split-pane-container overflow-hidden min-h-0">
+                        <!-- Editor Pane - 40% Default Width -->
+                        <div class="split-pane-left bg-white rounded border border-slate-200 overflow-hidden">
                             <textarea id="markdown-input" class="w-full h-full p-4 border-none resize-none focus:ring-0 focus:outline-none text-sm leading-relaxed custom-scrollbar" placeholder="# Welcome to MarkSwift Live Editor
 
 ## Getting Started
@@ -256,14 +259,14 @@ Start typing your Markdown here to see a real-time preview that matches your PDF
 - **Live Preview** - See changes as you type
 - **PDF-accurate styling** - What you see is what you get
 - **Auto-save** - Your content is automatically saved
-- **50/50 Layout** - Perfect balance between editor and preview
+- **Draggable Layout** - Resize editor and preview by dragging the splitter
 
 ### Example Content
 
 **Bold text** and *italic text*
 
 - Bullet point one
-- Bullet point two
+- Bullet point two  
 - Bullet point three
 
 ```javascript
@@ -286,11 +289,16 @@ function hello() {
 
 ---
 
-Happy writing with your expanded editor! 🚀"></textarea>
+Happy writing with your draggable editor! 🚀
+
+**Tip:** Drag the splitter bar to adjust the editor and preview sizes to your preference!"></textarea>
                         </div>
                         
-                        <!-- Preview Pane - 50% Width with Professional Paper Layout -->
-                        <div class="bg-slate-200 rounded border border-slate-300 h-full overflow-auto custom-scrollbar p-4">
+                        <!-- Draggable Splitter -->
+                        <div class="split-pane-splitter" title="Drag to resize editor and preview"></div>
+                        
+                        <!-- Preview Pane - Flexible Width -->
+                        <div class="split-pane-right bg-slate-200 rounded border border-slate-300 overflow-auto custom-scrollbar p-4">
                             <!-- Professional Document Container -->
                             <div id="pdf-preview-container" class="bg-white shadow-xl rounded-lg mx-auto min-h-full border border-slate-300" style="padding: 8mm;">
                                 <!-- Default Empty State -->
@@ -299,7 +307,8 @@ Happy writing with your expanded editor! 🚀"></textarea>
                                         <i class="fas fa-file-text text-5xl mb-6 block text-slate-300"></i>
                                         <h3 class="text-lg font-semibold mb-2 text-slate-600">PDF Preview</h3>
                                         <p class="text-sm mb-1">Your document will appear here</p>
-                                        <p class="text-xs text-slate-400">Start typing in the expanded editor to see the magic ✨</p>
+                                        <p class="text-xs text-slate-400">Start typing in the editor to see the magic ✨</p>
+                                        <p class="text-xs text-slate-300 mt-2">Drag the splitter to resize panels</p>
                                     </div>
                                 </div>
                             </div>
