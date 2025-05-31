@@ -121,15 +121,13 @@ The project will be implemented in several phases. Each phase will be completed,
 ---
 
 ### Phase 6: Live Editor - Frontend UI Shell & Tabs
-*   **Status:** Not Started
+*   **Status:** In Progress
 *   **Objective:** Implement the basic UI structure for the Live Editor (tabs, split-pane).
 *   **Tasks:**
-    *   [ ] Modify `public/index.html` to include a tab navigation structure ("Upload Files", "Live Editor").
-    *   [ ] Create `public/js/modules/tabManager.js` to handle tab switching.
-    *   [ ] Design the split-pane layout for the "Live Editor" tab (Markdown input left, Preview right).
-        *   HTML structure for editor and preview areas.
-        *   Basic CSS for layout (Tailwind CSS).
-    *   [ ] **Testing:** Tabs switch correctly, layout is responsive.
+    *   [x] Modify `public/index.html` to include tab navigation and a shell for the Live Editor (split-pane layout, placeholders for editor controls, editor, preview, and status areas).
+    *   [x] Create `public/js/modules/tabManager.js` to handle tab switching logic.
+    *   [x] Update `public/js/main.js` to initialize `tabManager.js`.
+    *   [ ] **Testing:** Verify that tabs switch correctly, the new "Live Editor" tab displays its basic shell structure, and the "Upload Files" tab still functions as before. Check responsiveness of the new tab layout.
     *   [ ] **User Commit Point**
 
 ---
