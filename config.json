@@ -6,9 +6,9 @@
         "maxFilesPerBatch": 100
     },
     "concurrencyModes": {
-        "normal": 7,
-        "fast": 11,
-        "max": 15
+        "normal": 5,
+        "fast": 9,
+        "max": 13
     },
     "cleanupSettings": {
         "periodicScanIntervalMinutes": 10,

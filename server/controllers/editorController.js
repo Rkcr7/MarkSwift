@@ -22,7 +22,7 @@ const handlePdfConversionFromText = (logMessage, queueManager, config, UPLOADS_D
     logMessage('info', `[${sessionId}] [EditorController] Received new PDF conversion request from text.`);
 
     // Create a temporary .md file from the text
-    const tempFileName = `editor-content-${sessionId}.md`;
+    const tempFileName = `markdown-temp-${sessionId}.md`;
     const sessionUploadPath = path.join(UPLOADS_DIR_BASE, sessionId);
     const tempFilePath = path.join(sessionUploadPath, tempFileName);
 
