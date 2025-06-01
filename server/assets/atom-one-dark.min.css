@@ -1,0 +1,7 @@
+/*!
+  Theme: Atom One Dark
+  Author: Daniel Gamage (http://danielgamage.com)
+  Maintainer: @highlightjs/core-team
+  Version: 1.0.0
+  Website: https://github.com/highlightjs/highlight.js/tree/main/src/styles
+*/pre code.hljs{display:block;overflow-x:auto;padding:1em;background:#282c34;color:#abb2bf}pre code.hljs-comment,pre code.hljs-quote{color:#5c6370;font-style:italic}pre code.hljs-doctag,pre code.hljs-formula,pre code.hljs-keyword{color:#c678dd}pre code.hljs-deletion,pre code.hljs-name,pre code.hljs-regexp,pre code.hljs-selector-class,pre code.hljs-selector-id,pre code.hljs-tag,pre code.hljs-template-variable,pre code.hljs-variable,pre code.hljs-variable.language_{color:#e06c75}pre code.hljs-built_in,pre code.hljs-link,pre code.hljs-literal,pre code.hljs-meta,pre code.hljs-number,pre code.hljs-params,pre code.hljs-type{color:#d19a66}pre code.hljs-attribute{color:#98c379}pre code.hljs-addition,pre code.hljs-bullet,pre code.hljs-string,pre code.hljs-symbol{color:#98c379}pre code.hljs-section,pre code.hljs-title,pre code.hljs-title.function_{color:#61afef}pre code.hljs-emphasis{font-style:italic}pre code.hljs-strong{font-weight:700}

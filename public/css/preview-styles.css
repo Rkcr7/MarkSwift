@@ -1,0 +1,203 @@
+.preview-content { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; 
+    font-size: 16px; 
+    line-height: 1.6; 
+    color: #24292f; 
+    background-color: transparent; 
+    margin: 0; 
+    padding: 0; 
+    max-width: none; 
+    word-wrap: break-word; 
+}
+.preview-content h1, .preview-content h2, .preview-content h3, 
+.preview-content h4, .preview-content h5, .preview-content h6 { 
+    margin-top: 24px; 
+    margin-bottom: 16px; 
+    font-weight: 600; 
+    line-height: 1.25; 
+}
+.preview-content h1 { 
+    font-size: 2em; 
+    border-bottom: 1px solid #d1d9e0; 
+    padding-bottom: 10px; 
+}
+.preview-content h2 { 
+    font-size: 1.5em; 
+    border-bottom: 1px solid #d1d9e0; 
+    padding-bottom: 8px; 
+}
+.preview-content h3 { font-size: 1.25em; } 
+.preview-content h4 { font-size: 1em; } 
+.preview-content h5 { font-size: 0.875em; } 
+.preview-content h6 { font-size: 0.85em; color: #656d76; }
+.preview-content p { 
+    margin-top: 0; 
+    margin-bottom: 16px; 
+}
+.preview-content blockquote { 
+    padding: 0 1em; 
+    color: #656d76; 
+    border-left: 0.25em solid #d1d9e0; 
+    margin: 0 0 16px 0; 
+}
+
+/* IMPROVED LIST STYLING TO MATCH PDF */
+.preview-content ul, .preview-content ol { 
+    margin-top: 0; 
+    margin-bottom: 16px; 
+    padding-left: 30px; /* Increased for better indentation like PDF */
+    list-style-position: outside; /* Proper bullet positioning */
+} 
+
+.preview-content ul {
+    list-style-type: disc; /* Solid bullet points for first level */
+}
+
+.preview-content ul ul {
+    list-style-type: circle; /* Hollow circles for second level */
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.preview-content ul ul ul {
+    list-style-type: square; /* Square bullets for third level */
+}
+
+.preview-content ol {
+    list-style-type: decimal; /* Numbers for ordered lists */
+}
+
+.preview-content ol ol {
+    list-style-type: lower-alpha; /* Letters for nested ordered lists */
+}
+
+.preview-content li { 
+    margin: 4px 0; /* Better spacing between list items */
+    line-height: 1.6; /* Consistent with paragraph line height */
+    padding-left: 4px; /* Small padding for better text alignment */
+}
+
+/* Ensure nested lists have proper spacing */
+.preview-content li > ul,
+.preview-content li > ol {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.preview-content table { 
+    border-spacing: 0; 
+    border-collapse: collapse; 
+    margin-top: 0; 
+    margin-bottom: 16px; 
+    display: table; 
+    width: 100%; 
+    table-layout: fixed; 
+    max-width: 100%; 
+    overflow: auto; 
+}
+.preview-content table th, .preview-content table td { 
+    padding: 6px 13px; 
+    border: 1px solid #d1d9e0; 
+    word-wrap: break-word; 
+}
+.preview-content table th { 
+    background-color: #f6f8fa; 
+    font-weight: 600; 
+}
+
+/* General inline code styling for PaperColor Light theme */
+.preview-content code:not(pre > code) { 
+    padding: 0.2em 0.4em; 
+    background-color: #e0e0e0; /* Slightly darker than PaperColor Light's #eee */
+    color: #333;              /* Darker text for readability */
+    border-radius: 4px; 
+    font-size: 85%; 
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; 
+    overflow-wrap: break-word; 
+    word-break: normal; 
+}
+
+/* Code block container styling for PaperColor Light theme */
+#pdf-preview-container .preview-content pre {
+  background-color: #eee; /* Match PaperColor Light background for the pre container */
+  border: 1px solid #ddd;   /* Standard light border */
+  border-radius: 6px;
+  padding: 0; /* Remove padding from pre, let code.hljs (from theme) handle it */
+  margin-top: 0; 
+  margin-bottom: 16px; 
+  overflow: hidden; 
+  white-space: normal; 
+}
+
+/* Styling for the <code> tag within <pre> when highlighted by highlight.js */
+#pdf-preview-container .preview-content pre code.hljs {
+  /* Styles primarily come from papercolor-light.min.css:
+     display:block; overflow-x:auto; padding:1em; background:#eee; color:#444
+  */
+  border-radius: 0; 
+  margin: 0; 
+  white-space: pre-wrap; 
+  overflow-wrap: break-word; 
+  word-break: normal; 
+}
+
+/* Fallback for pre > code if not highlighted */
+#pdf-preview-container .preview-content pre > code:not(.hljs) {
+    padding: 1em; 
+    background-color: #eee;
+    color: #444;
+    display: block;
+    overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; 
+    font-size: 85%;
+}
+
+.preview-content img { 
+    max-width: 100%; 
+    height: auto; 
+    border-radius: 6px;
+    display: inline-block !important;
+    margin: 2px 4px;
+    vertical-align: middle;
+}
+.preview-content a { 
+    color: #0969da; 
+    text-decoration: none; 
+} 
+.preview-content a:hover { 
+    text-decoration: underline; 
+}
+.preview-content hr {
+    border: none;
+    border-top: 1px solid #d1d9e0;
+    margin: 24px 0;
+}
+/* Ensure first element has no top margin */
+.preview-content > *:first-child {
+    margin-top: 0 !important;
+}
+/* Ensure last element has proper bottom margin */
+.preview-content > *:last-child {
+    margin-bottom: 0 !important;
+}
+/* FIXED: Centered divs with badges - NO SCROLLING */
+.preview-content div[align="center"] {
+    text-align: center;
+    padding: 8px 0;
+    margin: 16px 0;
+    line-height: 1.8;
+    /* Allow natural wrapping, no forced horizontal scrolling */
+}
+/* Shield badges specific styling - NO FORCED WIDTH */
+.preview-content a img[src*="shields.io"],
+.preview-content a img[src*="badge"],
+.preview-content img[src*="shields.io"],
+.preview-content img[src*="badge"] {
+    display: inline !important;
+    margin: 3px 4px !important;
+    vertical-align: middle !important;
+    border-radius: 4px !important;
+    max-width: none !important;
+    width: auto !important;
+    /* Natural wrapping behavior */
+}

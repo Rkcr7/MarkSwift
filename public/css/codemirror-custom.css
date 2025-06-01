@@ -1,0 +1,155 @@
+/* public/css/codemirror-custom.css */
+
+/* --- General CodeMirror Styling (applies to all themes unless overridden) --- */
+.CodeMirror {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Common developer fonts */
+    font-size: 15px; /* Increased for better readability */
+    line-height: 1.7; /* Increased for better spacing */
+    height: 100%; 
+    /* Default text color will be set by the theme, but can be a fallback */
+    /* color: #333;  */
+}
+
+/* Ensure the editor takes full height and width within its parent container */
+.split-pane-left .CodeMirror {
+    height: 100%;
+    width: 100%;
+    border: none; /* Remove default CM border to blend with parent */
+}
+
+/* General cursor and selection, can be overridden by themes */
+.CodeMirror-cursor {
+    border-left: 2px solid #007ACC; /* A noticeable blue cursor */
+}
+.CodeMirror-selected {
+    background: rgba(0, 122, 204, 0.2); 
+}
+.CodeMirror-focused .CodeMirror-selected {
+    background: rgba(0, 122, 204, 0.25);
+}
+
+/* Placeholder text styling */
+.CodeMirror-placeholder {
+  color: #aaa !important; /* Light grey, noticeable on both light/dark themes */
+  font-style: italic;
+}
+
+
+/* --- Theme Specific Overrides & Enhancements --- */
+
+/* 1. Material Light Theme (cm-s-material) Enhancements */
+.cm-s-material.CodeMirror {
+    background-color: #FFFFFF; /* Pure white background for material */
+    color: #263238; /* Default text color for material theme (good contrast) */
+}
+.cm-s-material .CodeMirror-gutters {
+    background: #ECEFF1; /* Slightly darker gutter for material */
+    border-right: 1px solid #CFD8DC; 
+    color: #546E7A; 
+}
+.cm-s-material .CodeMirror-linenumber {
+    color: #78909C; /* Softer line numbers */
+    padding: 0 5px 0 5px;
+}
+.cm-s-material .CodeMirror-cursor {
+    border-left: 2px solid #0277BD; /* Material blue cursor */
+}
+/* Markdown specific syntax highlighting for Material */
+.cm-s-material .cm-header { color: #01579B; font-weight: bold; } /* Darker blue for headers */
+.cm-s-material .cm-strong { color: #2E7D32; font-weight: bold; } /* Darker green for bold */
+.cm-s-material .cm-em { color: #6A1B9A; font-style: italic; } /* Darker purple for emphasis */
+.cm-s-material .cm-link { color: #006064; text-decoration: underline; } /* Dark cyan for links */
+.cm-s-material .cm-url { color: #006064; }
+.cm-s-material .cm-hr { color: #B0BEC5; } 
+.cm-s-material .cm-comment, .cm-s-material .cm-meta { color: #546E7A; font-style: italic; }
+.cm-s-material .cm-keyword, .cm-s-material .cm-atom { color: #AD1457; font-weight: bold; }
+.cm-s-material .cm-number { color: #C62828; }
+.cm-s-material .cm-def { color: #00695C; font-weight: bold; }
+.cm-s-material .cm-variable, .cm-s-material .cm-variable-2, .cm-s-material .cm-variable-3, .cm-s-material .cm-type { color: #283593; }
+.cm-s-material .cm-property { color: #4527A0; }
+.cm-s-material .cm-operator { color: #6A1B9A; }
+.cm-s-material .cm-string, .cm-s-material .cm-string-2 { color: #00695C; }
+.cm-s-material .cm-builtin { color: #EF6C00; font-weight: bold; }
+.cm-s-material .cm-tag { color: #00695C; font-weight: bold; }
+.cm-s-material .cm-attribute { color: #4527A0; }
+.cm-s-material .cm-error { color: #C62828; background-color: rgba(198, 40, 40, 0.1); }
+.cm-s-material .cm-formatting-list { color: #EF6C00; } 
+.cm-s-material .cm-quote { color: #4E342E; font-style: italic; border-left: 3px solid #D7CCC8; padding-left: 8px; margin-left: -11px;}
+
+
+/* 2. Dracula Dark Theme (cm-s-dracula) Enhancements */
+.cm-s-dracula.CodeMirror {
+    background-color: #282A36; /* Dracula's base background */
+    color: #F8F8F2; /* Default text (very light grey/white) */
+}
+.cm-s-dracula .CodeMirror-gutters {
+    background: #21222C; /* Slightly darker gutter for Dracula */
+    border-right: 1px solid #44475A;
+    color: #6272A4; /* Gutter text color */
+}
+.cm-s-dracula .CodeMirror-linenumber {
+    color: #6272A4; /* Line number color */
+    padding: 0 5px 0 5px;
+}
+.cm-s-dracula .CodeMirror-cursor {
+    border-left: 2px solid #F8F8F0; /* Bright cursor for dark theme */
+}
+.cm-s-dracula .CodeMirror-selected {
+    background: rgba(68, 71, 90, 0.99); /* Dracula selection color */
+}
+.cm-s-dracula.CodeMirror-focused .CodeMirror-selected {
+    background: rgba(68, 71, 90, 0.9);
+}
+/* Markdown specific syntax highlighting for Dracula */
+.cm-s-dracula .cm-header { color: #8BE9FD; font-weight: bold; } /* Cyan for headers */
+.cm-s-dracula .cm-strong { color: #50FA7B; font-weight: bold; } /* Green for bold */
+.cm-s-dracula .cm-em { color: #FF79C6; font-style: italic; } /* Pink for emphasis */
+.cm-s-dracula .cm-link { color: #8BE9FD; text-decoration: underline; } /* Cyan for links */
+.cm-s-dracula .cm-url { color: #8BE9FD; }
+.cm-s-dracula .cm-hr { color: #6272A4; } /* Greyish blue for hr */
+.cm-s-dracula .cm-comment, .cm-s-dracula .cm-meta { color: #6272A4; font-style: italic; } /* Greyish blue for comments */
+.cm-s-dracula .cm-keyword, .cm-s-dracula .cm-atom { color: #FF79C6; font-weight: bold; } /* Pink for keywords */
+.cm-s-dracula .cm-number { color: #BD93F9; } /* Purple for numbers */
+.cm-s-dracula .cm-def { color: #50FA7B; font-weight: bold; } /* Green for definitions */
+.cm-s-dracula .cm-variable, .cm-s-dracula .cm-variable-2, .cm-s-dracula .cm-variable-3, .cm-s-dracula .cm-type { color: #F8F8F2; } /* Default text for variables */
+.cm-s-dracula .cm-property { color: #BD93F9; } /* Purple for properties */
+.cm-s-dracula .cm-operator { color: #FF79C6; } /* Pink for operators */
+.cm-s-dracula .cm-string, .cm-s-dracula .cm-string-2 { color: #F1FA8C; } /* Yellow for strings */
+.cm-s-dracula .cm-builtin { color: #FFB86C; font-weight: bold; } /* Orange for builtins */
+.cm-s-dracula .cm-tag { color: #FF79C6; font-weight: bold; } /* Pink for HTML tags */
+.cm-s-dracula .cm-attribute { color: #50FA7B; } /* Green for HTML attributes */
+.cm-s-dracula .cm-error { color: #FF5555; background-color: rgba(255, 85, 85, 0.1); } /* Red for errors */
+.cm-s-dracula .cm-formatting-list { color: #FFB86C; } /* Orange for list markers */
+.cm-s-dracula .cm-quote { color: #F1FA8C; font-style: italic; border-left: 3px solid #6272A4; padding-left: 8px; margin-left: -11px;}
+
+
+/* 3. Neat Light Theme (cm-s-neat) Enhancements (Often good by default, but minor tweaks can help) */
+.cm-s-neat.CodeMirror {
+    background-color: #FFFFFF;
+    color: #333333; /* Default text for Neat */
+}
+.cm-s-neat .CodeMirror-gutters {
+    background: #F7F7F7;
+    border-right: 1px solid #DDDDDD;
+    color: #666666;
+}
+.cm-s-neat .CodeMirror-linenumber {
+    color: #888888;
+    padding: 0 5px 0 5px;
+}
+.cm-s-neat .CodeMirror-cursor {
+    border-left: 2px solid #337AB7; /* Neat's typical blue */
+}
+/* Markdown specific syntax highlighting for Neat (using some of its typical colors) */
+.cm-s-neat .cm-header { color: #337AB7; font-weight: bold; }
+.cm-s-neat .cm-strong { color: #5CB85C; font-weight: bold; }
+.cm-s-neat .cm-em { color: #F0AD4E; font-style: italic; }
+.cm-s-neat .cm-link { color: #5BC0DE; text-decoration: underline; }
+.cm-s-neat .cm-url { color: #5BC0DE; }
+.cm-s-neat .cm-hr { color: #CCCCCC; }
+.cm-s-neat .cm-comment, .cm-s-neat .cm-meta { color: #999999; font-style: italic; }
+.cm-s-neat .cm-keyword, .cm-s-neat .cm-atom { color: #D9534F; font-weight: bold; }
+.cm-s-neat .cm-number { color: #D9534F; }
+.cm-s-neat .cm-string, .cm-s-neat .cm-string-2 { color: #5CB85C; }
+.cm-s-neat .cm-quote { color: #777777; font-style: italic; border-left: 3px solid #EEEEEE; padding-left: 8px; margin-left: -11px;}
+.cm-s-neat .cm-formatting-list { color: #F0AD4E; }
