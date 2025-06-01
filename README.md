@@ -6,53 +6,87 @@
   
   <p><strong><a href="https://markswift-1032065492518.asia-south2.run.app" target="_blank" rel="noopener noreferrer">🚀 Live at MarkSwift 🚀</a></strong></p>
   
-  <!-- Demo GIF -->
-  <img src="public/images/MarkSwift.gif" alt="MarkSwift Demo" width="600" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <!-- Demo GIF for Batch Upload -->
+  <img src="public/images/MarkSwift.gif" alt="MarkSwift Batch Upload Demo" width="600" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <p><strong>See MarkSwift's batch conversion in action!</strong></p>
   
-  <p><strong>See MarkSwift in action!</strong> Upload multiple Markdown files and convert them to PDF with real-time progress tracking.</p>
+  <!-- Live Editor Demo GIF -->
+  <img src="public/images/live-editor.gif" alt="MarkSwift Live Editor Demo" width="600" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <p><strong>Explore the powerful Live Editor!</strong></p>
 </div>
 
 ## Summary
 
-MarkSwift is a web application that allows users to upload multiple Markdown files (.md, .markdown) and convert them into PDF documents. It provides real-time progress updates via WebSockets and offers different concurrency modes for conversion. Processed files can be downloaded as individual PDFs or as a single ZIP archive if multiple files were converted.
+MarkSwift is a versatile web application designed for seamless Markdown to PDF conversion. It offers two primary modes of operation:
+1.  **Batch File Conversion:** Upload multiple Markdown files (`.md`, `.markdown`) for efficient conversion into PDF documents, complete with real-time progress updates.
+2.  **Live Markdown Editor:** An integrated, feature-rich editor allowing you to write, preview, and convert Markdown to PDF, all within a single interface.
 
-## Features
+MarkSwift focuses on producing professionally formatted PDFs, providing a user-friendly experience, and ensuring robust backend processing.
 
-*   **Beautiful PDF Output:** Generates professionally formatted, clean PDFs with proper typography, styling, and layout preservation from your Markdown content.
-*   **Batch Conversion:** Upload and convert multiple Markdown files simultaneously.
-*   **Web Interface:** User-friendly interface for uploading files and selecting conversion mode.
+## Key Features
+
+### 🌟 Live Markdown Editor
+A powerful new way to work with your Markdown documents directly in MarkSwift:
+*   **Interactive Editing:** A dedicated "Live Editor" tab provides a sophisticated environment for creating and modifying Markdown content.
+*   **Real-time Split Preview:** Instantly see your Markdown rendered as HTML in a side-by-side view, updating dynamically as you type.
+*   **Direct PDF Conversion:** Convert the content from the live editor to a high-quality PDF with a single click.
+*   **Synchronized Scrolling:** Optionally sync the scroll position between the Markdown editor (CodeMirror) and the HTML preview pane for a seamless writing and review experience.
+*   **Content Persistence:** Your editor content is automatically saved to your browser's local storage, allowing you to resume your work later.
+*   **Editor Themes:** Customize your CodeMirror editing environment by choosing from multiple themes (Neat Light, Dracula Dark, Material Light), with your preference also saved locally.
+
+### 🎨 Enhanced Code Block Styling
+MarkSwift now renders your code blocks beautifully and consistently:
+*   **Syntax Highlighting:** Code blocks in your Markdown are syntax-highlighted using `highlight.js`.
+*   **PaperColor Light Theme:** Utilizes the "PaperColor Light" theme for clear, readable, and aesthetically pleasing code presentation in both the live preview and the final PDF output.
+*   **Consistent Look & Feel:** Enjoy a uniform and professional appearance for your code snippets across the application.
+    *Example of how a code block might appear (styling applied in-app):*
+    ```javascript
+    // example.js
+    function greet(name) {
+      console.log(`Hello, ${name}!`);
+    }
+    greet('MarkSwift User');
+    ```
+
+### 批量转换 (Batch Conversion)
+*   **Efficient Batch Processing:** Upload and convert multiple Markdown files simultaneously.
+*   **Web Interface:** User-friendly drag-and-drop or file selection interface.
 *   **Real-time Progress & Queue Management:**
     *   Track the conversion status of your files in real-time using WebSockets.
     *   Accurate queue position updates and estimated wait time display.
-    *   Minimum display duration for queue status ensures visibility even for quick jobs.
-    *   Reduced per-file processing messages on the client for a cleaner status view.
 *   **Concurrency Modes:**
-    *   **Normal:** Balances speed and resource usage (default: 4 concurrent processes).
-    *   **Fast:** Prioritizes quicker processing (default: 7 concurrent processes).
-    *   **Max:** Utilizes maximum configured concurrent processes for the fastest possible conversion (default: 10 concurrent processes).
+    *   **Normal:** Balances speed and resource usage.
+    *   **Fast:** Prioritizes quicker processing.
+    *   **Max:** Utilizes maximum configured concurrent processes for the fastest possible conversion.
 *   **Download Options:**
     *   Download a single PDF if only one file is successfully converted.
     *   Download a ZIP archive containing all successfully converted PDFs for batch uploads.
-*   **Session Management:** Each conversion batch is handled in an isolated session with unique identifiers.
-*   **Automatic Cleanup:** Temporary files (uploads, generated PDFs, ZIPs) are automatically cleaned up after download or a configurable timeout period (default: 20 minutes, scanned every 10 minutes).
-*   **File Validation:** Accepts only Markdown files (`.md`, `.markdown`) and has a file size limit (10MB per file).
+
+### ⚙️ General & Backend Features
+*   **Beautiful PDF Output:** Generates professionally formatted, clean PDFs with proper typography and layout preservation.
+*   **Session Management:** Each conversion batch/editor session is handled with unique identifiers.
+*   **Automatic Cleanup:** Temporary files are automatically cleaned up after download or a configurable timeout.
+*   **File Validation:** Accepts only Markdown files and has file size limits.
 *   **Secure by Design:** Uses `crypto` for secure session ID generation and `multer` for robust file upload handling.
-*   **Modern Frontend:** Styled with Tailwind CSS.
+*   **Modern Frontend:** Styled with Tailwind CSS, featuring a responsive and intuitive UI.
+*   **Modular Codebase:** Refactored backend and frontend for improved maintainability and scalability.
 
 ## Functionality Overview
 
-1.  **Upload:** The user selects one or more Markdown files through the web interface and chooses a conversion mode.
-2.  **Session Initiation:** The server receives the files, generates a unique session ID, and immediately responds to the client.
-3.  **WebSocket Connection:** The client-side JavaScript uses this session ID to establish a WebSocket connection with the server.
-4.  **Conversion Process:**
-    *   The server uses the `MarkdownToPDFConverter` (leveraging Puppeteer for accurate rendering) to convert each Markdown file to PDF.
-    *   The number of concurrent conversions is determined by the selected mode.
-5.  **Progress Updates:** The server sends progress updates (e.g., "Preparing files...", "Converting file X of Y...", "Zipping files...") to the client over the WebSocket connection.
-6.  **Completion & Download:**
-    *   Once all files are processed, the server sends a 'complete' message with a download link.
-    *   If one PDF was generated, a direct link to the PDF is provided.
-    *   If multiple PDFs were generated, they are zipped, and a link to the ZIP file is provided.
-7.  **Cleanup:** After the user downloads the file(s), or after a certain period of inactivity, the server automatically deletes the temporary files associated with that session.
+1.  **Batch File Conversion Flow:**
+    *   **Upload:** User selects Markdown files and a conversion mode.
+    *   **Session & WebSocket:** Server initiates a session, client connects via WebSocket.
+    *   **Conversion:** Server converts files using Puppeteer, respecting concurrency mode.
+    *   **Progress:** Real-time updates sent to the client.
+    *   **Download:** Link provided for single PDF or ZIP archive.
+
+2.  **Live Editor Flow:**
+    *   **Navigate:** User selects the "Live Editor" tab.
+    *   **Edit & Preview:** User types/pastes Markdown; HTML preview updates in real-time. Editor content, theme, and sync scroll preferences are saved locally.
+    *   **Convert (Optional):** User clicks the "PDF" button.
+    *   **Progress & Download:** Server processes the editor's content, sends progress via WebSockets, and provides a download link for the generated PDF.
+
+3.  **Cleanup:** Server automatically deletes temporary files post-download or after inactivity.
 
 ## Setup and Running the Project
 
@@ -73,216 +107,95 @@ MarkSwift is a web application that allows users to upload multiple Markdown fil
     ```bash
     npm install
     ```
-    This will install all necessary packages listed in `package.json`, including Express, Puppeteer, Tailwind CSS, etc.
 
 3.  **Build Tailwind CSS:**
-    MarkSwift uses Tailwind CSS. The CSS needs to be built from `public/css/input.css` to `public/css/tailwind.css`.
-    *   For a one-time build:
-        ```bash
-        npm run build:css
-        ```
-    *   The `start` and `dev` scripts automatically handle CSS building.
+    *   For a one-time build: `npm run build:css`
+    *   (Note: `start` and `dev` scripts automatically handle CSS building.)
 
 ### Running the Application
 
-*   **Development Mode:**
-    This mode uses `nodemon` to automatically restart the server on file changes and `concurrently` to watch for CSS changes and rebuild Tailwind CSS.
+*   **Development Mode (recommended for local development):**
+    Uses `nodemon` for server auto-restart and `concurrently` for CSS watching.
     ```bash
     npm run dev
     ```
 
 *   **Production Mode:**
-    This mode first builds the CSS and then starts the server.
+    Builds CSS then starts the server.
     ```bash
     npm run start
     ```
 
-After starting the server, the application will typically be accessible at:
-`http://localhost:3000` (or the port specified by `process.env.PORT`).
+Access the application at: `http://localhost:3000` (or `process.env.PORT`).
 
 ## Project Structure
 
 ```
 .
-├── DEPLOYMENT_DO.md            # Deployment guide for DigitalOcean
-├── DEPLOYMENT_GCP.md           # Deployment guide for Google Cloud Platform
-├── MAINTENANCE.md              # Server maintenance and troubleshooting guide
-├── Dockerfile                  # Docker configuration for containerization
 ├── public/                     # Client-side static assets
 │   ├── css/
-│   │   ├── custom.css          # Custom user styles
+│   │   ├── custom.css
 │   │   ├── input.css           # Tailwind CSS input
+│   │   ├── papercolor-light.min.css # Highlight.js theme
 │   │   └── tailwind.css        # Generated Tailwind CSS
-│   ├── images/
-│   │   ├── favicon.ico         # Website favicon
-│   │   ├── logo.png            # MarkSwift logo
-│   │   └── MarkSwift.gif       # Demo showcase GIF
+│   ├── images/                 # Logos, favicons, demo GIFs
 │   ├── js/
-│   │   └── main.js             # Client-side JavaScript for UI and WebSocket
+│   │   ├── main.js             # Main frontend entry point
+│   │   └── modules/            # Frontend JavaScript modules (fileUploadUI, liveEditor, etc.)
 │   └── index.html              # Main HTML page
-├── scripts/                    # Deployment and utility scripts
-│   ├── deploy.sh
-│   ├── nginx.conf.template
-│   ├── setup-server.sh
-│   └── update-app.sh
 ├── server/                     # Backend server logic
-│   ├── converted-pdfs/         # Temporary storage for generated PDFs (session-based)
-│   ├── uploads/                # Temporary storage for uploaded Markdown files (session-based)
-│   ├── zips/                   # Temporary storage for generated ZIP archives (session-based)
-│   ├── converter.js            # Core Markdown to PDF conversion logic (uses Puppeteer)
-│   └── server.js               # Express server setup, API routes, WebSocket handling
+│   ├── assets/                 # Server-side assets (e.g., highlight.js CSS for PDF)
+│   │   └── papercolor-light.min.css
+│   ├── controllers/            # Request handlers (uploadController, editorController)
+│   ├── routes/                 # API route definitions
+│   ├── services/               # Business logic (conversionService, cleanupService)
+│   ├── websocket/              # WebSocket handling logic
+│   ├── converted-pdfs/, uploads/, zips/ # Temporary storage
+│   ├── converter.js            # Core Markdown to PDF conversion (Puppeteer, highlight.js)
+│   └── server.js               # Express server setup
 ├── .gitignore
-├── config.json                 # Application configuration (auto-generated if not present)
+├── config.json                 # Application configuration
+├── DEVELOPMENT_ROADMAP.md      # Detailed development tasks and progress
+├── Dockerfile
+├── MAINTENANCE.md
 ├── package.json
-├── package-lock.json
-├── tailwind.config.js          # Tailwind CSS configuration
+├── tailwind.config.js
 └── README.md                   # This file
 ```
+*(Other deployment guides like `DEPLOYMENT_DO.md`, `DEPLOYMENT_GCP.md` and `scripts/` also exist.)*
 
 ## API Endpoints
 
-*   `POST /api/convert`:
-    *   Handles multipart/form-data file uploads (field name: `markdownFiles`).
-    *   Accepts `mode` in the form body (`normal`, `fast`, `max`).
-    *   Returns a JSON response with `sessionId`.
-*   `GET /api/download/pdf/:sessionId/:filename`:
-    *   Downloads a single converted PDF file.
-*   `GET /api/download/zip/:sessionId/:filename`:
-    *   Downloads a ZIP archive of multiple converted PDF files.
-*   **WebSocket Endpoint:** `ws://localhost:PORT/?sessionId=<sessionId>`
-    *   Used for real-time progress updates from server to client.
+*   `POST /api/convert`: Handles batch Markdown file uploads.
+    *   Accepts `markdownFiles` (multipart/form-data) and `mode`.
+    *   Returns `{ sessionId }`.
+*   `POST /api/editor/convert-pdf`: Converts Markdown text from the Live Editor.
+    *   Accepts JSON payload: `{ markdownText: "..." }`.
+    *   Returns `{ sessionId, jobId }`.
+*   `GET /api/download/pdf/:sessionId/:filename`: Downloads a single PDF.
+*   `GET /api/download/zip/:sessionId/:filename`: Downloads a ZIP archive.
+*   **WebSocket:** `ws://localhost:PORT/?sessionId=<sessionId>` for real-time progress.
 
 ## Configuration
 
-MarkSwift uses a `config.json` file to manage important settings. This file is automatically created with default values when the server starts if it doesn't exist. It's recommended to include your customized `config.json` in the root of your repository for deployment.
-
-### Configuration File (`config.json`)
-
-The configuration file contains the following settings:
-
-```json
-{
-    "appName": "MarkSwift",
-    "port": 3000,
-    "fileUploadLimits": {
-        "maxFileSizeMB": 10,
-        "maxFilesPerBatch": 100
-    },
-    "concurrencyModes": {
-        "normal": 4,
-        "fast": 7,
-        "max": 10
-    },
-    "cleanupSettings": {
-        "periodicScanIntervalMinutes": 10,
-        "orphanedSessionAgeMinutes": 20,
-        "postDownloadCleanupDelayMs": 180000
-    },
-    "logging": {
-        "level": "info"
-    },
-    "queueSettings": {
-        "maxConcurrentSessions": 2,
-        "maxQueueSize": 50,
-        "queueCheckIntervalMs": 2000,
-        "jobTimeoutMs": 300000,
-        "maxRequestsPerMinute": 10,
-        "defaultAvgTimePerFileMs": 900,
-        "defaultBaseJobOverheadMs": 10000,
-        "maxProcessingHistory": 20,
-        "minimumQueueDisplayTimeMs": 2000
-    }
-}
-```
-
-### Configuration Options
-
-**File Upload Limits:**
-*   `maxFileSizeMB`: Maximum file size per uploaded file (default: 10MB)
-*   `maxFilesPerBatch`: Maximum number of files per upload batch (default: 100)
-
-**Concurrency Modes:**
-*   `normal`: Balanced processing (default: 4 concurrent files)
-*   `fast`: Faster processing (default: 7 concurrent files)
-*   `max`: Maximum speed processing (default: 10 concurrent files)
-
-**Cleanup Settings:**
-*   `periodicScanIntervalMinutes`: How often to scan for orphaned session files (default: 10 minutes).
-*   `orphanedSessionAgeMinutes`: Age threshold in minutes for cleaning up orphaned session files (default: 20 minutes).
-*   `postDownloadCleanupDelayMs`: Grace period in milliseconds before cleaning up files after a user initiates a download (default: 180000ms, i.e., 3 minutes).
-
-**Queue Settings:**
-*   `maxConcurrentSessions`: Maximum number of user sessions that can process conversions simultaneously (default: 2).
-*   `maxQueueSize`: Maximum number of jobs allowed in the queue (default: 50).
-*   `queueCheckIntervalMs`: How often the queue manager checks to process new jobs (default: 2000ms).
-*   `jobTimeoutMs`: (Currently informational) Intended maximum duration for a single job (default: 300000ms).
-*   `maxRequestsPerMinute`: Rate limit for conversion requests per IP (default: 10).
-*   `defaultAvgTimePerFileMs`: Default average time assumed per file for initial wait time estimates (default: 900ms).
-*   `defaultBaseJobOverheadMs`: Default base overhead assumed per job for initial wait time estimates (default: 10000ms).
-*   `maxProcessingHistory`: Number of completed jobs to keep for recalculating average processing times (default: 20).
-*   `minimumQueueDisplayTimeMs`: Minimum time (in ms) a user sees their queue status before processing starts, even if their wait is shorter (default: 2000ms).
-
-**Other Settings:**
-*   `port`: Server port (default: 3000, can be overridden by `PORT` environment variable)
-*   `appName`: Application name used in branding
-*   `logging.level`: Logging level for future logging enhancements
-
-### File Cleanup Strategy
-
-MarkSwift implements a multi-layered cleanup strategy to prevent server storage issues:
-
-1. **Immediate Cleanup:**
-   - Upload files are deleted immediately after processing
-   - Individual PDF files are deleted after being zipped (for multi-file conversions)
-
-2. **Download Cleanup:**
-   - After a user successfully initiates a download, the associated session files are scheduled for cleanup after a configurable delay (default: 3 minutes via `postDownloadCleanupDelayMs`). This allows users a grace period for re-downloads.
-
-3. **Periodic Cleanup:**
-   - Every 10 minutes (configurable via `periodicScanIntervalMinutes`), the server scans for orphaned session files.
-   - Files older than 20 minutes (configurable via `orphanedSessionAgeMinutes`) are automatically deleted.
-   - Runs on server startup and then at regular intervals.
+MarkSwift uses a `config.json` file (auto-generated with defaults if not present). Key settings include file limits, concurrency, cleanup intervals, and queue parameters. *(Refer to the `config.json` section in the previous README version or the file itself for full details, as it's extensive).*
 
 ## Deployment
 
-MarkSwift is designed to be deployed using Docker, making it suitable for various cloud platforms and virtual private servers. We provide detailed guides for deploying to popular platforms:
-
-*   **[DigitalOcean Droplet Deployment Guide](./DEPLOYMENT_DO.md):** Step-by-step instructions for deploying MarkSwift to a DigitalOcean Droplet using Docker, Nginx (as a reverse proxy), and Certbot (for SSL).
-*   **[Google Cloud Platform Deployment Guide](./DEPLOYMENT_GCP.md):** Instructions for deploying to Google Cloud Platform, primarily focusing on Google Cloud Run for serverless container deployment, and also mentioning Google Compute Engine (GCE) as an alternative.
-
-These guides include server setup, application deployment scripts, Nginx configuration, SSL setup, and maintenance tips. The `MAINTENANCE.md` file provides general server upkeep and troubleshooting advice applicable to most Docker-based deployments.
+MarkSwift is Docker-ready. See:
+*   **[DigitalOcean Droplet Deployment Guide](./DEPLOYMENT_DO.md)**
+*   **[Google Cloud Platform Deployment Guide](./DEPLOYMENT_GCP.md)**
+*   **[Maintenance Guide](./MAINTENANCE.md)**
 
 ## Development
 
 ### Scripts
+*   `npm run start`: Production server.
+*   `npm run dev`: Development server with auto-reloads.
+*   `npm run build:css`: One-time CSS build.
 
-*   `npm run start` - Build CSS and start the production server
-*   `npm run dev` - Start development mode with auto-restart and CSS watching
-*   `npm run build:css` - Build Tailwind CSS once
-
-### Puppeteer Configuration for Different Environments
-
-MarkSwift uses Puppeteer for PDF conversion. The configuration for Puppeteer's Chrome/Chromium executable path is handled automatically based on the environment:
-
-*   **Production (Docker/Cloud Run):**
-    *   When `NODE_ENV` is set to `production` (as it is in the `Dockerfile`), the application expects `google-chrome-stable` to be installed at `/usr/bin/google-chrome-stable` within the Docker container.
-    *   The `Dockerfile` includes steps to install `google-chrome-stable` in the `puppeteer_deps` stage.
-    *   The `server/converter.js` file will set Puppeteer's `executablePath` to this location.
-
-*   **Local Development (e.g., Windows, macOS, Linux without global Chrome for Puppeteer):**
-    *   When `NODE_ENV` is not `production` (e.g., during local development using `npm run dev`), `server/converter.js` does *not* set a specific `executablePath`.
-    *   In this scenario, Puppeteer will attempt to:
-        1.  Use a version of Chromium it downloads itself (usually into `node_modules/puppeteer/.local-chromium`).
-        2.  Find a locally installed version of Chrome/Chromium if available and configured in your system's PATH or via Puppeteer environment variables (like `PUPPETEER_EXECUTABLE_PATH`).
-    *   This ensures that local development works out-of-the-box on different operating systems without requiring a globally installed Chrome specifically for Puppeteer, as long as Puppeteer can download its own Chromium version or find a suitable local one.
-
-This conditional configuration allows MarkSwift to run seamlessly in both Dockerized production environments and diverse local development setups.
-
-### Troubleshooting
-
-*   If you encounter issues with Puppeteer installation, try running `npm install puppeteer --force`
-*   On Windows, ensure you have the necessary build tools installed for native dependencies
-*   If the application fails to start, check that port 3000 is available or set the `PORT` environment variable
+### Puppeteer Configuration
+Puppeteer's Chrome/Chromium path is handled automatically for production (Docker) and local development environments. See the "Puppeteer Configuration for Different Environments" section in the previous README version for details if needed.
 
 ## License
 
