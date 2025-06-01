@@ -4,15 +4,24 @@ const puppeteer = require('puppeteer');
 const { marked } = require('marked');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
+const hljs = require('highlight.js');
 
 // Setup DOMPurify for Node.js
 const window = new JSDOM('').window;
 const DOMPurify = createDOMPurify(window);
 
+let highlightJsCss = '';
+try {
+    highlightJsCss = fs.readFileSync(path.join(__dirname, 'assets', 'github.min.css'), 'utf8');
+} catch (err) {
+    console.error("Failed to load highlight.js CSS for PDF conversion:", err);
+    // PDFs might not have highlighted styles if this fails.
+}
+
 class MarkdownToPDFConverter {
-    constructor(sessionId, logMessageCallback, options = {}) { // Added sessionId and logMessageCallback
+    constructor(sessionId, logMessageCallback, options = {}) {
         this.sessionId = sessionId;
-        this.logMessage = logMessageCallback || function(level, msg, data) { console[level](`[CONVERTER_FALLBACK_LOG] ${msg}`, data || ''); }; // Fallback logger
+        this.logMessage = logMessageCallback || function(level, msg, data) { console[level](`[CONVERTER_FALLBACK_LOG] ${msg}`, data || ''); };
         
         this.browser = null;
         this.processedCount = 0;
@@ -22,11 +31,11 @@ class MarkdownToPDFConverter {
         const baseArgs = [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage', // Crucial for Docker/Cloud Run
+            '--disable-dev-shm-usage',
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--disable-gpu' // Often recommended for server environments
+            '--disable-gpu'
         ];
 
         if (process.env.NODE_ENV === 'production') {
@@ -39,25 +48,10 @@ class MarkdownToPDFConverter {
         } else {
             this.logMessage('info', `[${this.sessionId}] Development/local environment detected. Using default Puppeteer executable path.`);
             this.puppeteerLaunchOptions = {
-                headless: true, // Consider 'new' for newer Puppeteer versions if issues arise locally
+                headless: true,
                 args: baseArgs
             };
         }
-        
-        // this.puppeteerLaunchOptions = {
-        //     headless: true,
-        //     executablePath: '/usr/bin/google-chrome-stable', // Specify path to installed Chrome
-        //     args: [
-        //         '--no-sandbox',
-        //         '--disable-setuid-sandbox',
-        //         '--disable-dev-shm-usage', // Crucial for Docker/Cloud Run
-        //         '--disable-accelerated-2d-canvas',
-        //         '--no-first-run',
-        //         '--no-zygote',
-        //         '--disable-gpu' // Often recommended for server environments
-        //     ],
-        //     // timeout: 60000 // Optional: Increase Puppeteer's own launch timeout
-        // };
         this.logMessage('info', `[${this.sessionId}] MarkdownToPDFConverter instance created.`, { options, puppeteerLaunchOptions: this.puppeteerLaunchOptions });
     }
 
@@ -76,7 +70,7 @@ class MarkdownToPDFConverter {
             } catch (error) {
                 this.logMessage('error', `[${this.sessionId}] CRITICAL: Failed to launch Puppeteer browser:`, { message: error.message, stack: error.stack });
                 if (this.sendProgress) this.sendProgress({ type: 'error', message: `Failed to launch browser: ${error.message}` });
-                throw error; // Re-throw to be caught by the caller in server.js
+                throw error;
             }
         } else {
             this.logMessage('info', `[${this.sessionId}] Puppeteer browser already initialized.`);
@@ -84,11 +78,15 @@ class MarkdownToPDFConverter {
     }
 
     async convertMarkdownToHTML(markdownContent) {
-        // this.logMessage('debug', `[${this.sessionId}] Converting Markdown to HTML.`); // Can be verbose
         const options = { headerIds: false, mangle: false };
         const html = marked.parse(markdownContent, options);
         const sanitized = DOMPurify.sanitize(html);
-        // this.logMessage('debug', `[${this.sessionId}] Markdown to HTML conversion complete. Sanitized.`);
+        
+        const tempDoc = new JSDOM(sanitized).window.document;
+        tempDoc.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+        const highlightedAndSanitizedHtml = tempDoc.body.innerHTML;
         
         return `
 <!DOCTYPE html>
@@ -115,21 +113,21 @@ class MarkdownToPDFConverter {
         img { max-width: 100%; height: auto; border-radius: 6px; }
         a { color: #0969da; text-decoration: none; } a:hover { text-decoration: underline; }
         @media print { body { margin: 0; padding: 5mm; } h1, h2, h3, h4, h5, h6 { page-break-after: avoid; } img { page-break-inside: avoid; } table { page-break-inside: avoid; } pre { page-break-inside: avoid; } }
+        ${highlightJsCss}
     </style>
 </head>
-<body> <div class="markdown-body"> ${sanitized} </div> </body>
+<body> <div class="markdown-body"> ${highlightedAndSanitizedHtml} </div> </body>
 </html>`;
     }
 
     async convertFileToPDF(inputFile, outputFile, originalFileName) {
         const startTime = Date.now();
         const currentFileProgress = this.processedCount + 1;
-        const baseProgress = 10 + (this.processedCount / this.totalFiles * 70);
-        let page; // Declare page here to ensure it's in scope for finally block if needed
+        // const baseProgress = 10 + (this.processedCount / this.totalFiles * 70); // Not used directly here
+        let page; 
 
         this.logMessage('info', `[${this.sessionId}] [File ${currentFileProgress}/${this.totalFiles}] Starting conversion: ${originalFileName} -> ${outputFile}`);
-        // if (this.sendProgress) this.sendProgress({ type: 'file_status', message: `Processing file`, currentFile: currentFileProgress, totalFiles: this.totalFiles, progress: baseProgress }); // User requested less verbose client updates
-
+        
         try {
             this.logMessage('debug', `[${this.sessionId}] [File ${currentFileProgress}] Reading content from: ${inputFile}`);
             const markdownContent = await fs.readFile(inputFile, 'utf8');
@@ -141,7 +139,7 @@ class MarkdownToPDFConverter {
             page = await this.browser.newPage();
             this.logMessage('debug', `[${this.sessionId}] [File ${currentFileProgress}] New page created. Setting content for: ${originalFileName}`);
             
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 60000 }); // Added timeout
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 60000 });
             this.logMessage('debug', `[${this.sessionId}] [File ${currentFileProgress}] Content set in page. Generating PDF for: ${originalFileName}`);
             
             await page.pdf({
@@ -150,7 +148,7 @@ class MarkdownToPDFConverter {
                 margin: { top: '5mm', right: '5mm', bottom: '5mm', left: '5mm' },
                 printBackground: true,
                 preferCSSPageSize: true,
-                timeout: 60000 // Added timeout
+                timeout: 60000
             });
             this.logMessage('info', `[${this.sessionId}] [File ${currentFileProgress}] PDF generated successfully: ${outputFile}`);
             
@@ -161,9 +159,9 @@ class MarkdownToPDFConverter {
             return { success: true, input: originalFileName, output: outputFile, duration };
             
         } catch (error) {
-            this.processedCount++; // Increment even on error
-            this.logMessage('error', `[${this.sessionId}] [File ${this.processedCount}/${this.totalFiles}] ❌ Error processing ${originalFileName}:`, { message: error.message, stack: error.stack, inputFile, outputFile });
-            if (this.sendProgress) this.sendProgress({ type: 'file_error', message: `Error processing file: ${originalFileName}`, currentFile: this.processedCount, totalFiles: this.totalFiles, progress: 10 + (this.processedCount / this.totalFiles * 70), originalFileName: originalFileName, error: error.message });
+            this.processedCount++; 
+            this.logMessage('error', `[${this.sessionId}] [File ${this.processedCount > 0 ? this.processedCount : currentFileProgress}/${this.totalFiles}] ❌ Error processing ${originalFileName}:`, { message: error.message, stack: error.stack, inputFile, outputFile });
+            if (this.sendProgress) this.sendProgress({ type: 'file_error', message: `Error processing file: ${originalFileName}`, currentFile: (this.processedCount > 0 ? this.processedCount : currentFileProgress), totalFiles: this.totalFiles, progress: 10 + ((this.processedCount > 0 ? this.processedCount : currentFileProgress) / this.totalFiles * 70), originalFileName: originalFileName, error: error.message });
             return { success: false, input: originalFileName, error: error.message };
         } finally {
             if (page) {
@@ -180,7 +178,7 @@ class MarkdownToPDFConverter {
 
     async processConcurrently(fileTasks, maxConcurrency) {
         const results = [];
-        this.maxConcurrency = Math.max(1, Math.min(maxConcurrency, 10)); // Ensure maxConcurrency from config is respected but also capped
+        this.maxConcurrency = Math.max(1, Math.min(maxConcurrency, 10)); 
         this.logMessage('info', `[${this.sessionId}] Starting concurrent processing. Max concurrency for this batch: ${this.maxConcurrency} files at once.`);
         if (this.sendProgress) this.sendProgress({ type: 'status', message: `Starting batch processing. Concurrency: ${this.maxConcurrency}`, progress: 10 + (this.processedCount / this.totalFiles * 70) });
 
@@ -201,7 +199,6 @@ class MarkdownToPDFConverter {
             
             const currentBatchResults = batchResultsSettled.map(r => {
                 if (r.status === 'fulfilled') return r.value;
-                // Log detailed reason for rejection
                 this.logMessage('warn', `[${this.sessionId}] A file in batch ${batchNumber} failed (promise rejected):`, { reason: r.reason });
                 return { success: false, error: r.reason?.message || 'Unknown error during Promise.allSettled', input: r.reason?.input || 'Unknown file from rejected promise' };
             });
@@ -269,7 +266,7 @@ class MarkdownToPDFConverter {
             } catch (error) {
                 this.logMessage('error', `[${this.sessionId}] Error closing Puppeteer browser:`, { message: error.message, stack: error.stack });
             } finally {
-                this.browser = null; // Important to allow re-init
+                this.browser = null; 
             }
         } else {
             this.logMessage('info', `[${this.sessionId}] No active Puppeteer browser to close during cleanup.`);
