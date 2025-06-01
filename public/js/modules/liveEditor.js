@@ -568,14 +568,20 @@ class LiveEditor {
             if (savedState !== null) {
                 this.isSyncScrollEnabled = JSON.parse(savedState);
                 this.syncScrollCheckbox.checked = this.isSyncScrollEnabled;
+                // Loaded existing state, apply it but don't re-save
+                this.setSyncScrollEnabled(this.isSyncScrollEnabled, true);
+            } else {
+                // No saved state, default to true and save this new default
+                this.isSyncScrollEnabled = true;
+                this.syncScrollCheckbox.checked = true;
+                this.setSyncScrollEnabled(true, false); // Save this new default
             }
-            // Apply the initial state (add/remove listeners)
-            this.setSyncScrollEnabled(this.isSyncScrollEnabled, true); // true to skip saving again
         } catch (error) {
             console.warn('[LiveEditor] Failed to load sync scroll state from localStorage:', error);
-            this.isSyncScrollEnabled = false; // Default to false
-            this.syncScrollCheckbox.checked = false;
-            this.setSyncScrollEnabled(false, true);
+            // Error loading, default to true and save this new default
+            this.isSyncScrollEnabled = true;
+            this.syncScrollCheckbox.checked = true;
+            this.setSyncScrollEnabled(true, false); // Save this new default
         }
     }
 
@@ -611,22 +617,39 @@ class LiveEditor {
             this.cmInstance.on('scroll', this.handleEditorScroll);
             this.previewPane.addEventListener('scroll', this.handlePreviewScroll);
             console.log('[LiveEditor] Sync scroll enabled.');
+
+            // Perform initial sync from editor to preview when enabling
+            // Use a microtask (setTimeout 0) to ensure this runs after current execution context,
+            // allowing flags like isSyncScrollEnabled to be fully set.
+            setTimeout(() => {
+                if (this.isSyncScrollEnabled && !this.isEditorScrolling && !this.isPreviewScrolling) {
+                    this._syncScrollFromEditor(true); // Pass true for initial sync
+                }
+            }, 0);
+
         } else {
             console.log('[LiveEditor] Sync scroll disabled.');
         }
     }
 
-    _syncScrollFromEditor() {
-        if (!this.isSyncScrollEnabled || this.isPreviewScrolling || !this.cmInstance || !this.previewPane) return;
+    _syncScrollFromEditor(isInitialSync = false) {
+        // If it's not an initial sync, and sync scroll is disabled, or preview is scrolling, or elements are missing, return.
+        if (!isInitialSync && (!this.isSyncScrollEnabled || this.isPreviewScrolling || !this.cmInstance || !this.previewPane)) return;
+        // If it IS an initial sync, only check for element presence.
+        if (isInitialSync && (!this.cmInstance || !this.previewPane)) return;
 
-        this.isEditorScrolling = true;
+
+        // For regular scroll events, set the flag. For initial sync, we don't want to block other events.
+        if (!isInitialSync) {
+            this.isEditorScrolling = true;
+        }
 
         const scrollInfo = this.cmInstance.getScrollInfo();
         // Calculate percentage scrolled in editor
         // clientHeight is visible area, scrollHeight is total scrollable height
         const editorScrollableHeight = scrollInfo.height - scrollInfo.clientHeight;
         if (editorScrollableHeight <= 0) { // Not scrollable or fully visible
-            this.isEditorScrolling = false;
+            if (!isInitialSync) this.isEditorScrolling = false;
             return;
         }
         const editorScrollPercent = scrollInfo.top / editorScrollableHeight;
@@ -637,11 +660,13 @@ class LiveEditor {
             this.previewPane.scrollTop = previewScrollableHeight * editorScrollPercent;
         }
         
-        // Use a short timeout to release the flag, allowing the other pane to take over if needed
-        // This helps prevent jitter if both try to scroll simultaneously due to slight miscalculations
-        setTimeout(() => {
-            this.isEditorScrolling = false;
-        }, 50); // Adjust timeout as needed
+        if (!isInitialSync) {
+            // Use a short timeout to release the flag, allowing the other pane to take over if needed
+            // This helps prevent jitter if both try to scroll simultaneously due to slight miscalculations
+            setTimeout(() => {
+                this.isEditorScrolling = false;
+            }, 50); // Adjust timeout as needed
+        }
     }
 
     _syncScrollFromPreview() {
