@@ -271,6 +271,14 @@ class LiveEditor {
         console.log('[LiveEditor] Displaying client-rendered preview HTML');
         if (this.documentContainer) {
             this.documentContainer.innerHTML = html;
+            if (typeof hljs !== 'undefined') {
+                this.documentContainer.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                console.log('[LiveEditor] Applied syntax highlighting to code blocks.');
+            } else {
+                console.warn('[LiveEditor] highlight.js (hljs) not loaded, skipping syntax highlighting.');
+            }
         } else {
             console.error('[LiveEditor] Document container not found during display');
         }
