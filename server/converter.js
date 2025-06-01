@@ -12,7 +12,7 @@ const DOMPurify = createDOMPurify(window);
 
 let highlightJsCss = '';
 try {
-    highlightJsCss = fs.readFileSync(path.join(__dirname, 'assets', 'github.min.css'), 'utf8');
+    highlightJsCss = fs.readFileSync(path.join(__dirname, 'assets', 'atom-one-dark.min.css'), 'utf8');
 } catch (err) {
     console.error("Failed to load highlight.js CSS for PDF conversion:", err);
     // PDFs might not have highlighted styles if this fails.
@@ -106,10 +106,47 @@ class MarkdownToPDFConverter {
         ul, ol { margin-top: 0; margin-bottom: 16px; padding-left: 2em; } li { margin: 0.25em 0; }
         table { border-spacing: 0; border-collapse: collapse; margin-top: 0; margin-bottom: 16px; display: table; width: 100%; table-layout: fixed; max-width: 100%; overflow: auto; }
         table th, table td { padding: 6px 13px; border: 1px solid #d1d9e0; word-wrap: break-word; }
-        table th { background-color: #f6f8fa; font-weight: 600; }
-        code { padding: 0.2em 0.4em; background-color: #f6f8fa; border-radius: 6px; font-size: 85%; font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; overflow-wrap: break-word; word-break: normal; }
-        pre { padding: 16px; overflow: visible; background-color: #f6f8fa; border-radius: 6px; margin-top: 0; margin-bottom: 16px; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; }
-        pre code { padding: 0; background-color: transparent; border-radius: 0; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; }
+        table th { background-color: #f6f8fa; font-weight: 600; } /* This might need adjustment for dark theme if tables are used on dark bg */
+        
+        /* Inline code (general, less specific than preview-styles.css but for PDF context) */
+        code:not(pre > code) { 
+            padding: 0.2em 0.4em; 
+            background-color: #3a3f4b; 
+            color: #abb2bf; 
+            border-radius: 4px; 
+            font-size: 85%; 
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; 
+        }
+
+        /* Code block container */
+        pre { 
+            background-color: #282c34; /* Atom One Dark background */
+            border: 1px solid #3a3f4b;  /* Slightly lighter border */
+            border-radius: 6px;
+            padding: 0; /* Theme (on code.hljs) will provide padding */
+            margin-top: 0; 
+            margin-bottom: 16px; 
+            overflow: hidden; /* Contain child's scroll */
+            white-space: pre-wrap; 
+            word-break: normal; 
+        }
+        /* Base for code inside pre, before .hljs is applied or if it fails */
+        pre code { 
+            padding: 0; /* Reset padding, hljs theme adds its own */
+            background-color: transparent; 
+            color: #abb2bf; /* Default text color for code block */
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 85%; /* Consistent with inline code */
+            white-space: pre-wrap; /* Default wrapping */
+            overflow-wrap: break-word;
+            word-break: normal;
+            display: block; /* Make it block to contain spans properly */
+        }
+        /* Crucial fix for PDF rendering with printBackground:true on dark themes */
+        pre code.hljs span { 
+            background-color: transparent !important; 
+        }
+        
         img { max-width: 100%; height: auto; border-radius: 6px; }
         a { color: #0969da; text-decoration: none; } a:hover { text-decoration: underline; }
         @media print { body { margin: 0; padding: 5mm; } h1, h2, h3, h4, h5, h6 { page-break-after: avoid; } img { page-break-inside: avoid; } table { page-break-inside: avoid; } pre { page-break-inside: avoid; } }

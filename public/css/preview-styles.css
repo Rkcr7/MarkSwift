@@ -104,34 +104,56 @@
     background-color: #f6f8fa; 
     font-weight: 600; 
 }
-.preview-content code { 
+
+/* General inline code styling for Atom One Dark theme */
+.preview-content code:not(pre > code) { 
     padding: 0.2em 0.4em; 
-    background-color: #f6f8fa; 
-    border-radius: 6px; 
+    background-color: #3a3f4b; /* Darker background for inline code */
+    color: #abb2bf; /* Light text for inline code */
+    border-radius: 4px; 
     font-size: 85%; 
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace; 
     overflow-wrap: break-word; 
     word-break: normal; 
 }
-.preview-content pre { 
-    padding: 16px; 
-    overflow: visible; 
-    background-color: #f6f8fa; 
-    border-radius: 6px; 
-    margin-top: 0; 
-    margin-bottom: 16px; 
-    white-space: pre-wrap; 
-    overflow-wrap: break-word; 
-    word-break: normal; 
+
+/* Code block container styling for Atom One Dark theme */
+/* Using #pdf-preview-container for specificity, assuming preview-content is inside it */
+#pdf-preview-container .preview-content pre {
+  background-color: #282c34; /* Match Atom One Dark background for the pre container */
+  border: 1px solid #3a3f4b;  /* A slightly lighter border for definition */
+  border-radius: 6px;
+  padding: 0; /* Remove padding from pre, let code.hljs (from theme) handle it */
+  margin-top: 0; /* Retain original margin behavior */
+  margin-bottom: 16px; 
+  overflow: hidden; /* Contain the code.hljs block's own overflow-x:auto */
+  white-space: normal; /* Allow pre to wrap if its child (code) does not scroll */
+                     /* highlight.js pre code.hljs has overflow-x: auto, so this should be fine */
 }
-.preview-content pre code { 
-    padding: 0; 
-    background-color: transparent; 
-    border-radius: 0; 
-    white-space: pre-wrap; 
-    overflow-wrap: break-word; 
-    word-break: normal; 
+
+/* Styling for the <code> tag within <pre> when highlighted by highlight.js */
+#pdf-preview-container .preview-content pre code.hljs {
+  /* Styles primarily come from atom-one-dark.min.css:
+     display:block; overflow-x:auto; padding:1em; background:#282c34; color:#abb2bf
+  */
+  /* Ensure it fills the pre container correctly and respects border-radius */
+  border-radius: 0; /* Inner element doesn't need radius if pre has overflow:hidden and its own radius */
+  margin: 0; /* Reset any margin on the code element itself */
+  white-space: pre-wrap; /* Match original pre code style for wrapping */
+  overflow-wrap: break-word; /* Match original pre code style */
+  word-break: normal; /* Match original pre code style */
+  /* The theme itself should handle display:block and overflow-x:auto */
 }
+
+/* Fallback for pre > code if not highlighted (though it should be) */
+#pdf-preview-container .preview-content pre > code:not(.hljs) {
+    padding: 1em; /* Add padding if not highlighted, similar to hljs */
+    background-color: #282c34;
+    color: #abb2bf;
+    display: block;
+    overflow-x: auto;
+}
+
 .preview-content img { 
     max-width: 100%; 
     height: auto; 
