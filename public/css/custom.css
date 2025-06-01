@@ -592,3 +592,65 @@
 .split-pane-right::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.7);
 }
+
+/* Mobile FAB and Modal Styles */
+#mobile-file-fab.show {
+    animation: fab-scale-in 0.3s ease-out forwards;
+}
+
+#mobile-file-fab.hide {
+    animation: fab-scale-out 0.3s ease-out forwards;
+}
+
+@keyframes fab-scale-in {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fab-scale-out {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(0.5); opacity: 0; }
+}
+
+#mobile-file-modal.show #modal-content {
+    animation: modal-slide-up 0.3s ease-out forwards;
+}
+
+#mobile-file-modal.hide #modal-content { /* This might not be needed if we just remove 'show' */
+    animation: modal-slide-down 0.3s ease-out forwards;
+}
+
+@keyframes modal-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes modal-slide-down {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+}
+
+/* Ensure backdrop fades in/out with modal visibility */
+#mobile-file-modal .fixed.inset-0.bg-black { /* More specific selector for backdrop */
+    transition: opacity 0.3s ease-out;
+}
+#mobile-file-modal.hidden .fixed.inset-0.bg-black {
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction when hidden */
+}
+#mobile-file-modal:not(.hidden) .fixed.inset-0.bg-black {
+    opacity: 1; /* Tailwind's bg-opacity-50 will apply */
+}
+
+/* Mobile file item styling (can be Tailwind in JS if preferred) */
+.mobile-file-item {
+    /* Basic styling for items in the mobile modal list */
+    padding: 0.75rem; /* 12px */
+    background-color: white;
+    border-radius: 0.5rem; /* 8px */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: background-color 0.2s ease-in-out;
+}
+.mobile-file-item:hover {
+    background-color: #f9fafb; /* gray-50 */
+}

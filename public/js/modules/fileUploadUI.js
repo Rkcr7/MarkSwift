@@ -8,7 +8,11 @@ let dropArea, fileInput, fileListSection, fileList, emptyState, fileCount, conve
 let statusArea, queueStatusMessage, estimatedWaitTimeMessage, statusMessage, progressBarContainer, progressBar;
 let downloadArea, downloadLink;
 // Modal elements
-let mobileFileListTrigger, mobileFileCount, fileListModal, closeModalBtn, modalDoneBtn, modalFileList, modalEmptyState;
+// let mobileFileListTrigger, mobileFileCount, fileListModal, closeModalBtn, modalDoneBtn, modalFileList, modalEmptyState; // Old modal elements
+let mobileFab, mobileFabButton, mobileFabCount; // New FAB elements
+let mobileFileModal, modalBackdrop, modalContent, modalCloseBtn; // New Modal elements
+let newMobileFileList, newMobileEmptyState; // Renamed to avoid conflict if old ones are still somehow referenced before full cleanup
+
 let errorArea, errorMessage;
 let resetButton;
 let originalButtonContent = ''; // To store original convert button text
@@ -24,13 +28,27 @@ function initializeDOMElements() {
     modeRadios = document.querySelectorAll('input[name="conversion-mode"]');
 
     // Mobile modal elements
-    mobileFileListTrigger = document.getElementById('mobile-file-list-trigger');
-    mobileFileCount = document.getElementById('mobile-file-count'); // For mobile trigger
-    fileListModal = document.getElementById('file-list-modal');
-    closeModalBtn = document.getElementById('close-modal-btn');
-    modalDoneBtn = document.getElementById('modal-done-btn');
-    modalFileList = document.getElementById('modal-file-list');
-    modalEmptyState = document.getElementById('modal-empty-state');
+    // mobileFileListTrigger = document.getElementById('mobile-file-list-trigger'); // Old
+    // mobileFileCount = document.getElementById('mobile-file-count'); // Old
+    // fileListModal = document.getElementById('file-list-modal'); // Old
+    // closeModalBtn = document.getElementById('close-modal-btn'); // Old, but new one has same ID
+    // modalDoneBtn = document.getElementById('modal-done-btn'); // Old
+    // modalFileList = document.getElementById('modal-file-list'); // Old, but new one has same ID
+    // modalEmptyState = document.getElementById('modal-empty-state'); // Old, but new one has same ID
+
+    // New FAB and Modal elements
+    mobileFab = document.getElementById('mobile-file-fab');
+    mobileFabButton = document.getElementById('mobile-fab-button');
+    mobileFabCount = document.getElementById('mobile-fab-count'); // This ID is for the span inside the new FAB
+
+    mobileFileModal = document.getElementById('mobile-file-modal');
+    modalBackdrop = document.getElementById('modal-backdrop');
+    modalContent = document.getElementById('modal-content');
+    modalCloseBtn = document.getElementById('modal-close-btn'); // Same ID as old, ensure it's the new one
+    
+    newMobileFileList = document.getElementById('mobile-file-list'); // New list in new modal
+    newMobileEmptyState = document.getElementById('mobile-empty-state'); // New empty state in new modal
+
 
     statusArea = document.getElementById('status-area');
     queueStatusMessage = document.getElementById('queue-status-message');
@@ -119,100 +137,133 @@ function renderFileList() { // This function now primarily updates the desktop l
         }
     }
 
-    // Update mobile trigger count
-    if (mobileFileCount) {
-        mobileFileCount.textContent = fileCountText;
-        if (mobileFileListTrigger) {
-            mobileFileListTrigger.classList.toggle('hidden', selectedFiles.length === 0 && !document.documentElement.classList.contains('lg:hidden')); 
-            // Hide trigger if no files, unless on a screen where desktop list is also hidden (pure mobile view)
-            // This logic might need refinement based on exact lg:hidden behavior desired for the trigger itself
-        }
-    }
+    // Update mobile trigger count (Now FAB count)
+    updateMobileFabUI();
 
-    // If modal is open, refresh its content too
-    if (fileListModal && !fileListModal.classList.contains('hidden')) {
-        renderFileListInModal();
+
+    // If modal is open, refresh its content too (New Modal)
+    if (mobileFileModal && !mobileFileModal.classList.contains('hidden')) {
+        renderNewMobileFileList();
     }
 }
 
-function createFileListItem(file, index, isModal) {
+function createFileListItem(file, index, isModalContext) { // Added isModalContext
     const listItem = document.createElement('li');
-    listItem.className = 'group';
-        const isMarkdown = file.name.endsWith('.md') || file.name.endsWith('.markdown');
-        const fileSize = (file.size / 1024).toFixed(2);
-        
-        listItem.innerHTML = `
-            <div class="bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 group-hover:bg-white/70">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center flex-1 min-w-0">
-                        <div class="w-10 h-10 bg-gradient-to-r ${isMarkdown ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600'} rounded-lg flex items-center justify-center mr-3 shadow-sm">
-                            <i class="fab fa-markdown text-white text-lg"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-medium text-slate-700 truncate" title="${file.name}">${file.name}</div>
-                            <div class="text-sm text-slate-500">${fileSize} KB</div>
-                        </div>
-                    </div>
-                    <button class="remove-file-btn ml-4 w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-lg flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100" title="Remove file">
-                        <i class="fas fa-trash text-sm"></i>
-                    </button>
+    // Use Tailwind classes for mobile items, or specific .mobile-file-item if defined in CSS
+    listItem.className = 'mobile-file-item bg-white p-3 rounded-lg shadow flex items-center justify-between space-x-3'; // Example styling
+    
+    const isMarkdown = file.name.endsWith('.md') || file.name.endsWith('.markdown');
+    const fileSize = (file.size / 1024).toFixed(2);
+    
+    // Simplified innerHTML for mobile, adjust as needed based on desired look from changelog
+    listItem.innerHTML = `
+        <div class="flex items-center flex-1 min-w-0">
+            <div class="w-10 h-10 bg-gradient-to-r ${isMarkdown ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600'} rounded-lg flex items-center justify-center mr-3 shadow-sm flex-shrink-0">
+                <i class="fab fa-markdown text-white text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="font-medium text-slate-700 truncate text-sm" title="${file.name}">
+                    ${file.name}
                 </div>
-            </div>`;
-        listItem.querySelector('.remove-file-btn').onclick = (e) => {
-            e.stopPropagation();
-            removeFileFromList(index, isModal); // Pass context
-        };
+                <div class="text-xs text-slate-500">
+                    ${fileSize} KB
+                </div>
+            </div>
+        </div>
+        <button class="remove-file-btn ml-3 w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0" title="Remove file" data-index="${index}">
+            <i class="fas fa-trash text-sm"></i>
+        </button>
+    `;
+    
+    listItem.querySelector('.remove-file-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeFileFromList(index); // No need for isModalContext here if removeFileFromList handles both
+    });
     return listItem;
 }
 
-function renderFileListInModal() {
-    if (!modalFileList || !modalEmptyState) return;
+// New function for FAB
+function updateMobileFabUI() {
+    if (!mobileFab || !mobileFabCount) return;
+    
+    if (selectedFiles.length > 0) {
+        mobileFabCount.textContent = `${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''}`;
+        mobileFab.classList.remove('hidden');
+        mobileFab.classList.add('show'); // For animation
+        mobileFab.classList.remove('hide');
+    } else {
+        mobileFab.classList.add('hide');
+        mobileFab.classList.remove('show');
+        // Wait for animation to finish before truly hiding
+        setTimeout(() => {
+            if (selectedFiles.length === 0) { // Check again in case files were added back quickly
+                mobileFab.classList.add('hidden');
+            }
+        }, 300); // Match fab-scale-out animation duration
+    }
+}
+
+// New function to render files in the new mobile modal
+function renderNewMobileFileList() {
+    if (!newMobileFileList || !newMobileEmptyState) {
+        console.error("New mobile list or empty state elements not found for rendering.");
+        return;
+    }
+
+    newMobileFileList.innerHTML = ''; // Clear existing items
 
     if (selectedFiles.length === 0) {
-        modalFileList.classList.add('hidden');
-        modalEmptyState.classList.remove('hidden');
-        modalEmptyState.classList.add('flex'); // Ensure it's flex for centering
+        newMobileFileList.style.display = 'none';
+        newMobileEmptyState.style.display = 'flex'; // Use flex for centering
     } else {
-        modalFileList.classList.remove('hidden');
-        modalEmptyState.classList.add('hidden');
-        modalEmptyState.classList.remove('flex');
-        modalFileList.innerHTML = '';
+        newMobileFileList.style.display = 'block'; // Or 'flex' if items are flex column
+        newMobileEmptyState.style.display = 'none';
         selectedFiles.forEach((file, index) => {
-            const listItem = createFileListItem(file, index, true); // true for in modal
-            modalFileList.appendChild(listItem);
+            const listItem = createFileListItem(file, index, true); // true for modal context
+            newMobileFileList.appendChild(listItem);
         });
     }
 }
 
-function openFileListModal() {
-    if (!fileListModal) return;
-    renderFileListInModal();
-    fileListModal.classList.remove('hidden');
-    setTimeout(() => { // For transition
-        fileListModal.classList.remove('opacity-0');
-        fileListModal.querySelector('.bg-white').classList.remove('scale-95');
-    }, 10);
-    document.body.classList.add('overflow-hidden'); // Prevent body scroll
+// New function to open the new mobile modal
+function openNewMobileModal() {
+    if (!mobileFileModal || !modalContent) return;
+    
+    renderNewMobileFileList(); // Populate list before showing
+    mobileFileModal.classList.remove('hidden');
+    
+    // Add 'show' class to trigger backdrop fade-in (if CSS is set up for it)
+    // and prepare content for slide-up
+    mobileFileModal.classList.add('show'); 
+
+    // Trigger slide-up animation for modal content
+    setTimeout(() => { // Timeout ensures display:block is applied before transform
+        modalContent.classList.remove('translate-y-full');
+        // modalContent.classList.add('modal-slide-up'); // If using CSS animation class
+    }, 10); // Small delay
+    document.body.classList.add('overflow-hidden'); 
 }
 
-function closeFileListModal() {
-    if (!fileListModal) return;
-    fileListModal.classList.add('opacity-0');
-    fileListModal.querySelector('.bg-white').classList.add('scale-95');
+// New function to close the new mobile modal
+function closeNewMobileModal() {
+    if (!mobileFileModal || !modalContent) return;
+
+    modalContent.classList.add('translate-y-full');
+    // modalContent.classList.remove('modal-slide-up');
+    // modalContent.classList.add('modal-slide-down'); // If using CSS animation class
+    
     setTimeout(() => {
-        fileListModal.classList.add('hidden');
-    }, 300); // Match transition duration
+        mobileFileModal.classList.add('hidden');
+        mobileFileModal.classList.remove('show'); // Hide backdrop
+        // modalContent.classList.remove('modal-slide-down'); // Clean up animation class
+    }, 300); // Match transition duration from HTML/CSS
     document.body.classList.remove('overflow-hidden');
 }
 
-
-function removeFileFromList(index, isModalContext) {
-    // Determine which list to animate based on context, though only desktop list has animation
-    // For simplicity, we'll just remove and re-render.
-    // If specific animation is needed for modal items, that would be an addition.
-    
+function removeFileFromList(index) { // Removed isModalContext, function will update all relevant views
     selectedFiles.splice(index, 1);
-    renderFileList(); // This will re-render desktop list, mobile count, and modal if open
+    renderFileList(); // This updates desktop list and calls updateMobileFabUI
+                      // and renderNewMobileFileList if modal is open.
     updateConvertButtonUIState();
 }
 
@@ -455,19 +506,26 @@ function init() {
     addDragAndDropListeners();
     addFileInputListener();
     addGlobalEventListeners();
-    // Modal Listeners
-    if (mobileFileListTrigger) {
-        mobileFileListTrigger.addEventListener('click', openFileListModal);
+    // New Mobile Modal Listeners
+    if (mobileFabButton) {
+        mobileFabButton.addEventListener('click', openNewMobileModal);
     }
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', closeFileListModal);
+    if (modalCloseBtn) { // Ensure this is the new modal's close button
+        modalCloseBtn.addEventListener('click', closeNewMobileModal);
     }
-    if (modalDoneBtn) { // Assuming "Done" button just closes the modal
-        modalDoneBtn.addEventListener('click', closeFileListModal);
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', closeNewMobileModal);
     }
+    // Add Escape key listener for the new modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileFileModal && !mobileFileModal.classList.contains('hidden')) {
+            closeNewMobileModal();
+        }
+    });
 
     updateConvertButtonUIState(); // Initial state
-    renderFileList(); // Initial render (empty for both desktop list and mobile trigger)
+    renderFileList(); // Initial render 
+    updateMobileFabUI(); // Initialize FAB state
 
     // Add CSS for animations (idempotent)
     const styleId = 'fileUploadUI-animations';

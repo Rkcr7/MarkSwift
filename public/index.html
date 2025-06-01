@@ -205,20 +205,6 @@
         
                     <!-- Right Column - Expanded -->
                     <div class="w-full lg:w-2/3 flex flex-col overflow-hidden py-1 min-h-0">
-                        <!-- Mobile Trigger for File List Modal -->
-                        <div id="mobile-file-list-trigger" class="lg:hidden bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 p-3 mb-4 cursor-pointer hover:bg-slate-50 transition-colors">
-                            <div class="flex items-center justify-between">
-                                <h2 class="text-base font-bold text-slate-700 flex items-center">
-                                    <i class="fas fa-files mr-2 text-blue-600"></i>
-                                    Selected Files
-                                </h2>
-                                <div id="mobile-file-count" class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                                    0 files
-                                </div>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-1">Tap to view and manage files.</p>
-                        </div>
-
                         <!-- Desktop File List Section -->
                         <section id="file-list-section" class="hidden lg:flex flex-grow flex-col overflow-hidden bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 p-4">
                             <div class="flex items-center justify-between mb-3 flex-shrink-0">
@@ -384,36 +370,48 @@ Happy writing with your draggable editor! 🚀
         </div>
     </div>
 
-    <!-- File List Modal -->
-    <div id="file-list-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden p-4 transition-opacity duration-300 ease-in-out opacity-0">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col transform transition-all duration-300 ease-in-out scale-95">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between p-4 border-b border-slate-200">
-                <h3 class="text-lg font-semibold text-slate-800">Selected Files</h3>
-                <button id="close-modal-btn" class="text-slate-500 hover:text-slate-700 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <!-- Modal Body / File List -->
-            <div class="p-4 flex-grow overflow-y-auto">
-                <ul id="modal-file-list" class="space-y-2 custom-scrollbar">
-                    <!-- File items will be added here by JavaScript -->
-                </ul>
-                <div id="modal-empty-state" class="hidden flex-grow flex items-center justify-center text-center py-10">
-                    <div class="text-slate-400">
-                        <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-file-upload text-2xl text-slate-300"></i>
-                        </div>
-                        <p class="text-base font-medium mb-2">No files selected</p>
-                        <p class="text-sm">Upload some Markdown files to get started</p>
-                    </div>
+    <!-- Mobile Floating Action Button for Selected Files -->
+    <div id="mobile-file-fab" class="hidden md:hidden fixed bottom-4 right-4 z-50">
+        <button id="mobile-fab-button" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full shadow-xl flex items-center space-x-2 text-sm font-medium hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <i class="fas fa-file-alt"></i>
+            <span id="mobile-fab-count">0 files</span>
+        </button>
+    </div>
+
+    <!-- Mobile Modal for File List (Bottom Slide-up) -->
+    <div id="mobile-file-modal" class="hidden fixed inset-0 z-[60] md:hidden"> <!-- Increased z-index -->
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" id="modal-backdrop"></div>
+        
+        <!-- Modal Content -->
+        <div id="modal-content" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 ease-out" style="height: 70vh;">
+            <div class="flex flex-col h-full">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0">
+                    <h3 class="text-lg font-bold text-slate-700 flex items-center">
+                        <i class="fas fa-files mr-2 text-blue-600"></i>
+                        Selected Files
+                    </h3>
+                    <button id="modal-close-btn" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors duration-200">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-            <!-- Modal Footer (Optional - e.g., for a "Done" button if needed) -->
-            <div class="p-3 bg-slate-50 border-t border-slate-200 text-right rounded-b-xl">
-                <button id="modal-done-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-sm">
-                    Done
-                </button>
+                
+                <!-- Modal File List Area -->
+                <div class="flex-1 overflow-hidden relative p-4 pt-2">
+                    <div id="mobile-empty-state" class="absolute inset-0 p-4 flex items-center justify-center text-center" style="display: none;">
+                        <div class="text-slate-400">
+                            <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-file-upload text-2xl text-slate-300"></i>
+                            </div>
+                            <p class="text-base font-medium mb-2">No files selected</p>
+                            <p class="text-sm">Upload some Markdown files to get started</p>
+                        </div>
+                    </div>
+                    <ul id="mobile-file-list" class="absolute inset-0 p-4 pr-2 space-y-3 overflow-y-auto custom-scrollbar" style="display: none;">
+                        <!-- Mobile file items will be added here by JavaScript -->
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
