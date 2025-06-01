@@ -9,13 +9,14 @@ class SplitPane {
         this.splitter = null;
         this.isDragging = false;
         this.startX = 0;
-        this.startLeftWidth = 0;
-        this.containerWidth = 0;
+        this.startY = 0;
+        this.startPaneSize = 0; // Used for width or height
+        this.containerDimension = 0; // Used for container width or height
+        this.isVertical = false; // True if panes are stacked vertically
         
-        // Constraints
-        this.minLeftWidth = 300; // Minimum editor width (300px)
-        this.minRightWidth = 300; // Minimum preview width (300px)
-        this.maxLeftWidth = 70; // Maximum editor width (70% of container)
+        // Constraints (can be re-interpreted for vertical)
+        this.minPaneSize = 100; // Minimum pane width or height (e.g., 100px)
+        this.maxPanePercent = 90; // Maximum percentage for the first pane (e.g., 90%)
         this.defaultRatio = 0.45; // Default 45/55 split
         
         this.init();
@@ -47,16 +48,32 @@ class SplitPane {
     
     attachEventListeners() {
         // Mouse events
-        this.splitter.addEventListener('mousedown', (e) => this.startDrag(e));
-        document.addEventListener('mousemove', (e) => this.onDrag(e));
+        this.splitter.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.startDrag(e);
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (this.isDragging) {
+                e.preventDefault();
+            }
+            this.onDrag(e);
+        });
         document.addEventListener('mouseup', () => this.endDrag());
         
         // Touch events for mobile
-        this.splitter.addEventListener('touchstart', (e) => this.startDrag(e.touches[0]));
-        document.addEventListener('touchmove', (e) => this.onDrag(e.touches[0]));
+        this.splitter.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.startDrag(e.touches[0]);
+        }, { passive: false });
+        document.addEventListener('touchmove', (e) => {
+            if (this.isDragging) {
+                e.preventDefault();
+            }
+            this.onDrag(e.touches[0]);
+        }, { passive: false });
         document.addEventListener('touchend', () => this.endDrag());
         
-        // Prevent default drag behavior
+        // Prevent default drag behavior for the splitter element itself
         this.splitter.addEventListener('dragstart', (e) => e.preventDefault());
         
         // Handle window resize
@@ -65,9 +82,24 @@ class SplitPane {
     
     startDrag(event) {
         this.isDragging = true;
-        this.startX = event.clientX;
-        this.containerWidth = this.container.offsetWidth;
-        this.startLeftWidth = this.leftPane.offsetWidth;
+        
+        // Determine orientation based on splitter dimensions or container flex-direction
+        // A simple check: if splitter width is much larger than its height, it's horizontal (acting as row resizer)
+        if (this.splitter.offsetWidth > this.splitter.offsetHeight * 2) { // Heuristic for horizontal splitter
+            this.isVertical = true; // Panes are stacked, splitter is horizontal, drag is vertical
+        } else {
+            this.isVertical = false; // Panes are side-by-side, splitter is vertical, drag is horizontal
+        }
+
+        if (this.isVertical) {
+            this.startY = event.clientY;
+            this.startPaneSize = this.leftPane.offsetHeight; // Top pane's height
+            this.containerDimension = this.container.offsetHeight;
+        } else {
+            this.startX = event.clientX;
+            this.startPaneSize = this.leftPane.offsetWidth; // Left pane's width
+            this.containerDimension = this.container.offsetWidth;
+        }
         
         // Add dragging class for visual feedback
         this.splitter.classList.add('dragging');
@@ -75,37 +107,46 @@ class SplitPane {
         // Prevent text selection during drag
         document.body.classList.add('no-select');
         
-        // Prevent default to avoid text selection
-        event.preventDefault();
+        // event.preventDefault(); // Removed: Handled in listener
         
         this.logMessage('info', '[SplitPane] Started dragging');
     }
     
-    onDrag(event) {
-        if (!this.isDragging) return;
-        
-        const currentX = event.clientX;
-        const deltaX = currentX - this.startX;
-        const newLeftWidth = this.startLeftWidth + deltaX;
+    onDrag(event) { // event here is either MouseEvent or Touch object
+        if (!this.isDragging || this.containerDimension === 0) return;
+
+        let newPaneSize;
+        if (this.isVertical) {
+            const currentY = event.clientY;
+            const deltaY = currentY - this.startY;
+            newPaneSize = this.startPaneSize + deltaY;
+        } else {
+            const currentX = event.clientX;
+            const deltaX = currentX - this.startX;
+            newPaneSize = this.startPaneSize + deltaX;
+        }
         
         // Calculate constraints
-        const maxLeftWidthPx = (this.containerWidth * this.maxLeftWidth) / 100;
-        const minRightWidthRequired = this.containerWidth - this.minRightWidth;
+        const maxPanePx = (this.containerDimension * this.maxPanePercent) / 100;
+        // Ensure the second pane (right or bottom) also has minPaneSize
+        const minOtherPaneRequired = this.containerDimension - this.minPaneSize; 
         
         // Apply constraints
-        let constrainedLeftWidth = Math.max(this.minLeftWidth, newLeftWidth);
-        constrainedLeftWidth = Math.min(constrainedLeftWidth, maxLeftWidthPx);
-        constrainedLeftWidth = Math.min(constrainedLeftWidth, minRightWidthRequired);
+        let constrainedPaneSize = Math.max(this.minPaneSize, newPaneSize);
+        constrainedPaneSize = Math.min(constrainedPaneSize, maxPanePx);
+        constrainedPaneSize = Math.min(constrainedPaneSize, minOtherPaneRequired);
         
         // Calculate percentage for CSS
-        const leftWidthPercent = (constrainedLeftWidth / this.containerWidth) * 100;
+        const panePercent = (constrainedPaneSize / this.containerDimension) * 100;
         
-        // Apply the new width
-        this.leftPane.style.width = `${leftWidthPercent}%`;
-        
-        // The right pane will automatically adjust due to flex: 1
-        
-        event.preventDefault();
+        // Apply the new size
+        if (this.isVertical) {
+            this.leftPane.style.height = `${panePercent}%`;
+            // Right pane (actually bottom pane) will adjust due to flex: 1 on its parent or specific height styles
+        } else {
+            this.leftPane.style.width = `${panePercent}%`;
+            // Right pane will automatically adjust due to flex: 1
+        }
     }
     
     endDrag() {
@@ -113,99 +154,152 @@ class SplitPane {
         
         this.isDragging = false;
         
-        // Remove dragging class
         this.splitter.classList.remove('dragging');
-        
-        // Re-enable text selection
         document.body.classList.remove('no-select');
         
-        // Save the current layout preference
         this.saveLayoutPreference();
         
         this.logMessage('info', '[SplitPane] Finished dragging');
     }
     
     handleResize() {
-        // Ensure constraints are maintained on window resize
         if (!this.container || !this.leftPane) return;
-        
-        const currentLeftWidth = this.leftPane.offsetWidth;
-        const newContainerWidth = this.container.offsetWidth;
-        const currentLeftPercent = (currentLeftWidth / newContainerWidth) * 100;
-        
-        // Check if current width violates constraints
-        const maxLeftWidthPercent = this.maxLeftWidth;
-        const minLeftWidthPercent = (this.minLeftWidth / newContainerWidth) * 100;
-        const minRightWidthPercent = (this.minRightWidth / newContainerWidth) * 100;
-        const maxAllowedLeftPercent = 100 - minRightWidthPercent;
-        
-        let newLeftPercent = currentLeftPercent;
-        
-        if (currentLeftPercent < minLeftWidthPercent) {
-            newLeftPercent = minLeftWidthPercent;
-        } else if (currentLeftPercent > maxLeftWidthPercent) {
-            newLeftPercent = maxLeftWidthPercent;
-        } else if (currentLeftPercent > maxAllowedLeftPercent) {
-            newLeftPercent = maxAllowedLeftPercent;
+
+        // Re-determine orientation as it might change on resize (e.g. CSS media queries)
+        if (this.splitter.offsetWidth > this.splitter.offsetHeight * 2) {
+            this.isVertical = true;
+        } else {
+            this.isVertical = false;
+        }
+
+        let currentPaneSize, containerDimension, styleProperty;
+
+        if (this.isVertical) {
+            currentPaneSize = this.leftPane.offsetHeight;
+            containerDimension = this.container.offsetHeight;
+            styleProperty = 'height';
+        } else {
+            currentPaneSize = this.leftPane.offsetWidth;
+            containerDimension = this.container.offsetWidth;
+            styleProperty = 'width';
         }
         
-        if (newLeftPercent !== currentLeftPercent) {
-            this.leftPane.style.width = `${newLeftPercent}%`;
+        if (containerDimension === 0) return; // Avoid division by zero if container not rendered
+
+        const currentPercent = (currentPaneSize / containerDimension) * 100;
+        
+        const maxAllowedPercent = this.maxPanePercent;
+        const minPixelPercent = (this.minPaneSize / containerDimension) * 100;
+        // Ensure the "other" pane (right or bottom) also respects minPaneSize
+        const maxConstrainedByOtherPane = 100 - ((this.minPaneSize / containerDimension) * 100);
+
+        let newPercent = currentPercent;
+
+        if (currentPercent < minPixelPercent) {
+            newPercent = minPixelPercent;
+        } else if (currentPercent > maxAllowedPercent) {
+            newPercent = maxAllowedPercent;
+        }
+        // This constraint must be applied after the maxAllowedPercent
+        if (newPercent > maxConstrainedByOtherPane) {
+             newPercent = maxConstrainedByOtherPane;
+        }
+        
+        // Ensure newPercent is not NaN or Infinity if containerDimension was briefly 0
+        if (isFinite(newPercent) && newPercent !== currentPercent) {
+             this.leftPane.style[styleProperty] = `${newPercent}%`;
         }
     }
     
     saveLayoutPreference() {
-        // Save the current split ratio to localStorage
+        if (!this.container || !this.leftPane || this.containerDimension === 0) return;
+        // Only save preference for horizontal layout for now, or adapt to save orientation-specific
+        if (this.isVertical) {
+            // Optionally save vertical preference or reset
+            // For now, let's log but not save, to avoid 100%/0% issues from logs
+            const paneSize = this.leftPane.offsetHeight;
+            const ratio = paneSize / this.containerDimension;
+            this.logMessage('info', `[SplitPane] Vertical layout ratio (not saved): ${Math.round(ratio * 100)}%/${Math.round((1 - ratio) * 100)}%`);
+            return; 
+        }
+
         try {
-            const leftWidth = this.leftPane.offsetWidth;
-            const containerWidth = this.container.offsetWidth;
-            const ratio = leftWidth / containerWidth;
+            const paneSize = this.leftPane.offsetWidth; // Horizontal
+            const ratio = paneSize / this.containerDimension;
             
             localStorage.setItem('markswift-split-ratio', ratio.toString());
-            this.logMessage('info', `[SplitPane] Saved layout preference: ${Math.round(ratio * 100)}%/${Math.round((1 - ratio) * 100)}%`);
+            this.logMessage('info', `[SplitPane] Saved horizontal layout preference: ${Math.round(ratio * 100)}%/${Math.round((1 - ratio) * 100)}%`);
         } catch (error) {
             this.logMessage('warn', '[SplitPane] Could not save layout preference:', error);
         }
     }
     
     loadLayoutPreference() {
-        // Load and apply saved split ratio from localStorage
-        try {
-            const savedRatio = localStorage.getItem('markswift-split-ratio');
-            if (savedRatio && this.container && this.leftPane) {
-                const ratio = parseFloat(savedRatio);
-                
-                // Validate the ratio is reasonable
-                if (ratio >= 0.2 && ratio <= 0.8) {
+        // Only load for horizontal layout initially
+        if (this.splitter.offsetWidth <= this.splitter.offsetHeight * 2) { // If horizontal
+            try {
+                const savedRatio = localStorage.getItem('markswift-split-ratio');
+                if (savedRatio && this.container && this.leftPane) {
+                    const ratio = parseFloat(savedRatio);
                     const containerWidth = this.container.offsetWidth;
-                    const leftWidthPx = containerWidth * ratio;
-                    
-                    // Check constraints
-                    const maxLeftWidthPx = (containerWidth * this.maxLeftWidth) / 100;
-                    const minRightWidthRequired = containerWidth - this.minRightWidth;
-                    
-                    let constrainedLeftWidth = Math.max(this.minLeftWidth, leftWidthPx);
-                    constrainedLeftWidth = Math.min(constrainedLeftWidth, maxLeftWidthPx);
-                    constrainedLeftWidth = Math.min(constrainedLeftWidth, minRightWidthRequired);
-                    
-                    const leftWidthPercent = (constrainedLeftWidth / containerWidth) * 100;
-                    this.leftPane.style.width = `${leftWidthPercent}%`;
-                    
-                    this.logMessage('info', `[SplitPane] Loaded layout preference: ${Math.round(leftWidthPercent)}%/${Math.round(100 - leftWidthPercent)}%`);
+
+                    // Adjust ratio validation to match new wider range
+                    if (ratio >= 0.1 && ratio <= 0.9 && containerWidth > 0) { 
+                        const targetPaneSizePx = containerWidth * ratio;
+                        
+                        const maxPanePx = (containerWidth * this.maxPanePercent) / 100;
+                        const minOtherPaneRequired = containerWidth - this.minPaneSize;
+                        
+                        let constrainedPaneSize = Math.max(this.minPaneSize, targetPaneSizePx);
+                        constrainedPaneSize = Math.min(constrainedPaneSize, maxPanePx);
+                        constrainedPaneSize = Math.min(constrainedPaneSize, minOtherPaneRequired);
+                        
+                        const panePercent = (constrainedPaneSize / containerWidth) * 100;
+                        if(isFinite(panePercent)) {
+                            this.leftPane.style.width = `${panePercent}%`;
+                            this.logMessage('info', `[SplitPane] Loaded horizontal layout preference: ${Math.round(panePercent)}%/${Math.round(100 - panePercent)}%`);
+                        }
+                    }
                 }
+            } catch (error) {
+                this.logMessage('warn', '[SplitPane] Could not load layout preference:', error);
             }
-        } catch (error) {
-            this.logMessage('warn', '[SplitPane] Could not load layout preference:', error);
-        }
-    }
+        } else {
+            // For vertical layout, set a default like 50% if no specific logic is added
+            if (this.leftPane && this.container && this.container.offsetHeight > 0) {
+                 // Check if CSS already set a height, if not, apply 50%
+                // Ensure style.height is checked properly, or rely on CSS to set initial 50%
+                if (!this.leftPane.style.height || this.leftPane.style.height === '') { 
+                    this.leftPane.style.height = '50%'; 
+                }
+                this.logMessage('info', '[SplitPane] Vertical layout detected, using CSS/default height.');
+            }
+        } // This closes the main else block for vertical layout check
+    } // This closes the loadLayoutPreference method properly
     
-    // Reset to default 45/55 split
+    // Reset to default 45/55 split (horizontal) or 50/50 (vertical)
     resetToDefault() {
-        if (this.leftPane) {
-            this.leftPane.style.width = '45%';
-            this.saveLayoutPreference();
-            this.logMessage('info', '[SplitPane] Reset to default 45/55 layout');
+        if (!this.leftPane || !this.container) return;
+
+        // Determine current orientation to reset correctly
+        // This check should be consistent with how isVertical is set elsewhere (e.g., in startDrag or handleResize)
+        const currentFlexDirection = window.getComputedStyle(this.container).flexDirection;
+        const isCurrentlyVertical = currentFlexDirection === 'column';
+
+        if (isCurrentlyVertical) {
+            this.leftPane.style.height = '50%'; // Default for vertical
+            this.leftPane.style.width = ''; // Clear width if it was set
+            // For vertical, we are not saving preference yet, so no localStorage interaction here.
+            this.logMessage('info', '[SplitPane] Reset to default 50%/50% vertical layout');
+        } else {
+            this.leftPane.style.width = `${this.defaultRatio * 100}%`; // Use defaultRatio for horizontal
+            this.leftPane.style.height = ''; // Clear height if it was set
+            this.saveLayoutPreference(); // This will save the horizontal preference
+            this.logMessage('info', `[SplitPane] Reset to default horizontal layout: ${this.defaultRatio * 100}%`);
         }
+        // Trigger a resize or re-check constraints after reset to ensure UI updates.
+        // A small delay might be needed if CSS transitions are involved.
+        setTimeout(() => this.handleResize(), 0);
     }
     
     // Set specific ratio (0.0 to 1.0)

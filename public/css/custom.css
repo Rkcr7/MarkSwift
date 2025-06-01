@@ -198,8 +198,19 @@
 
 .split-pane-splitter:hover::before {
     background: rgba(255, 255, 255, 0.9);
-    height: 60px;
+    /* Height/width will be adjusted by orientation specific styles if needed */
 }
+
+/* Default (vertical splitter, horizontal drag) hover for pseudo-element */
+.split-pane-splitter:not(.horizontal-splitter):hover::before {
+    height: 60px; 
+}
+
+/* Horizontal splitter (vertical drag) hover for pseudo-element */
+.split-pane-splitter.horizontal-splitter:hover::before {
+    width: 60px;
+}
+
 
 .split-pane-splitter.dragging {
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
@@ -320,21 +331,23 @@
     }
     
     .split-pane-left {
-        width: 100% !important;
+        width: 100% !important; /* Full width when stacked */
         max-width: 100% !important;
-        height: 50%;
+        height: 50%; /* Default 50% height, JS will adjust */
+        /* min-height will be controlled by JS minPaneSize */
     }
     
     .split-pane-splitter {
-        width: 100%;
-        height: 8px;
+        width: 100%; /* Full width when horizontal */
+        height: 8px; /* Height of the horizontal splitter */
         cursor: row-resize;
         margin: 2px 0;
     }
     
+    /* Adjust pseudo-element for horizontal splitter */
     .split-pane-splitter::before {
-        width: 40px;
-        height: 3px;
+        width: 40px; /* Make it wider for horizontal splitter */
+        height: 3px; /* Make it thinner */
     }
     
     .split-pane-right {
