@@ -7,6 +7,8 @@ let selectedFiles = [];
 let dropArea, fileInput, fileListSection, fileList, emptyState, fileCount, convertButton, modeRadios;
 let statusArea, queueStatusMessage, estimatedWaitTimeMessage, statusMessage, progressBarContainer, progressBar;
 let downloadArea, downloadLink;
+// Modal elements
+let mobileFileListTrigger, mobileFileCount, fileListModal, closeModalBtn, modalDoneBtn, modalFileList, modalEmptyState;
 let errorArea, errorMessage;
 let resetButton;
 let originalButtonContent = ''; // To store original convert button text
@@ -17,9 +19,18 @@ function initializeDOMElements() {
     fileListSection = document.getElementById('file-list-section');
     fileList = document.getElementById('file-list');
     emptyState = document.getElementById('empty-state');
-    fileCount = document.getElementById('file-count');
+    fileCount = document.getElementById('file-count'); // For desktop
     convertButton = document.getElementById('convert-button');
     modeRadios = document.querySelectorAll('input[name="conversion-mode"]');
+
+    // Mobile modal elements
+    mobileFileListTrigger = document.getElementById('mobile-file-list-trigger');
+    mobileFileCount = document.getElementById('mobile-file-count'); // For mobile trigger
+    fileListModal = document.getElementById('file-list-modal');
+    closeModalBtn = document.getElementById('close-modal-btn');
+    modalDoneBtn = document.getElementById('modal-done-btn');
+    modalFileList = document.getElementById('modal-file-list');
+    modalEmptyState = document.getElementById('modal-empty-state');
 
     statusArea = document.getElementById('status-area');
     queueStatusMessage = document.getElementById('queue-status-message');
@@ -86,25 +97,47 @@ function handleFileSelection(files) {
     clearAllMessages();
 }
 
-function renderFileList() {
-    if (!fileList || !emptyState || !fileCount) return;
+function renderFileList() { // This function now primarily updates the desktop list and the mobile trigger count
+    const fileCountText = `${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''}`;
 
-    if (selectedFiles.length === 0) {
-        fileList.classList.add('hidden');
-        emptyState.classList.remove('hidden');
-        fileCount.classList.add('hidden');
-        return;
+    // Update desktop list
+    if (fileList && emptyState && fileCount) {
+        if (selectedFiles.length === 0) {
+            fileList.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            fileCount.classList.add('hidden');
+        } else {
+            fileList.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            fileCount.classList.remove('hidden');
+            fileCount.textContent = fileCountText;
+            fileList.innerHTML = ''; // Clear only desktop list
+            selectedFiles.forEach((file, index) => {
+                const listItem = createFileListItem(file, index, false); // false for not in modal
+                fileList.appendChild(listItem);
+            });
+        }
     }
 
-    fileList.classList.remove('hidden');
-    emptyState.classList.add('hidden');
-    fileCount.classList.remove('hidden');
-    fileCount.textContent = `${selectedFiles.length} file${selectedFiles.length !== 1 ? 's' : ''}`;
-    fileList.innerHTML = '';
-    
-    selectedFiles.forEach((file, index) => {
-        const listItem = document.createElement('li');
-        listItem.className = 'group';
+    // Update mobile trigger count
+    if (mobileFileCount) {
+        mobileFileCount.textContent = fileCountText;
+        if (mobileFileListTrigger) {
+            mobileFileListTrigger.classList.toggle('hidden', selectedFiles.length === 0 && !document.documentElement.classList.contains('lg:hidden')); 
+            // Hide trigger if no files, unless on a screen where desktop list is also hidden (pure mobile view)
+            // This logic might need refinement based on exact lg:hidden behavior desired for the trigger itself
+        }
+    }
+
+    // If modal is open, refresh its content too
+    if (fileListModal && !fileListModal.classList.contains('hidden')) {
+        renderFileListInModal();
+    }
+}
+
+function createFileListItem(file, index, isModal) {
+    const listItem = document.createElement('li');
+    listItem.className = 'group';
         const isMarkdown = file.name.endsWith('.md') || file.name.endsWith('.markdown');
         const fileSize = (file.size / 1024).toFixed(2);
         
@@ -127,23 +160,60 @@ function renderFileList() {
             </div>`;
         listItem.querySelector('.remove-file-btn').onclick = (e) => {
             e.stopPropagation();
-            removeFileFromList(index);
+            removeFileFromList(index, isModal); // Pass context
         };
-        fileList.appendChild(listItem);
-    });
+    return listItem;
 }
 
-function removeFileFromList(index) {
-    const listItem = fileList.children[index];
-    if (listItem) {
-        listItem.style.transform = 'translateX(100%)';
-        listItem.style.opacity = '0';
-        setTimeout(() => {
-            selectedFiles.splice(index, 1);
-            renderFileList();
-            updateConvertButtonUIState();
-        }, 200);
+function renderFileListInModal() {
+    if (!modalFileList || !modalEmptyState) return;
+
+    if (selectedFiles.length === 0) {
+        modalFileList.classList.add('hidden');
+        modalEmptyState.classList.remove('hidden');
+        modalEmptyState.classList.add('flex'); // Ensure it's flex for centering
+    } else {
+        modalFileList.classList.remove('hidden');
+        modalEmptyState.classList.add('hidden');
+        modalEmptyState.classList.remove('flex');
+        modalFileList.innerHTML = '';
+        selectedFiles.forEach((file, index) => {
+            const listItem = createFileListItem(file, index, true); // true for in modal
+            modalFileList.appendChild(listItem);
+        });
     }
+}
+
+function openFileListModal() {
+    if (!fileListModal) return;
+    renderFileListInModal();
+    fileListModal.classList.remove('hidden');
+    setTimeout(() => { // For transition
+        fileListModal.classList.remove('opacity-0');
+        fileListModal.querySelector('.bg-white').classList.remove('scale-95');
+    }, 10);
+    document.body.classList.add('overflow-hidden'); // Prevent body scroll
+}
+
+function closeFileListModal() {
+    if (!fileListModal) return;
+    fileListModal.classList.add('opacity-0');
+    fileListModal.querySelector('.bg-white').classList.add('scale-95');
+    setTimeout(() => {
+        fileListModal.classList.add('hidden');
+    }, 300); // Match transition duration
+    document.body.classList.remove('overflow-hidden');
+}
+
+
+function removeFileFromList(index, isModalContext) {
+    // Determine which list to animate based on context, though only desktop list has animation
+    // For simplicity, we'll just remove and re-render.
+    // If specific animation is needed for modal items, that would be an addition.
+    
+    selectedFiles.splice(index, 1);
+    renderFileList(); // This will re-render desktop list, mobile count, and modal if open
+    updateConvertButtonUIState();
 }
 
 function updateConvertButtonUIState(isWorking = false) {
@@ -385,8 +455,19 @@ function init() {
     addDragAndDropListeners();
     addFileInputListener();
     addGlobalEventListeners();
+    // Modal Listeners
+    if (mobileFileListTrigger) {
+        mobileFileListTrigger.addEventListener('click', openFileListModal);
+    }
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeFileListModal);
+    }
+    if (modalDoneBtn) { // Assuming "Done" button just closes the modal
+        modalDoneBtn.addEventListener('click', closeFileListModal);
+    }
+
     updateConvertButtonUIState(); // Initial state
-    renderFileList(); // Initial render (empty)
+    renderFileList(); // Initial render (empty for both desktop list and mobile trigger)
 
     // Add CSS for animations (idempotent)
     const styleId = 'fileUploadUI-animations';
