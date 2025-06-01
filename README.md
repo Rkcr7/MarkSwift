@@ -48,7 +48,7 @@ MarkSwift now renders your code blocks beautifully and consistently:
     greet('MarkSwift User');
     ```
 
-### 批量转换 (Batch Conversion)
+### (Batch Conversion)
 *   **Efficient Batch Processing:** Upload and convert multiple Markdown files simultaneously.
 *   **Web Interface:** User-friendly drag-and-drop or file selection interface.
 *   **Real-time Progress & Queue Management:**
@@ -155,7 +155,6 @@ Access the application at: `http://localhost:3000` (or `process.env.PORT`).
 │   └── server.js               # Express server setup
 ├── .gitignore
 ├── config.json                 # Application configuration
-├── DEVELOPMENT_ROADMAP.md      # Detailed development tasks and progress
 ├── Dockerfile
 ├── MAINTENANCE.md
 ├── package.json
