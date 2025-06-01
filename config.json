@@ -6,14 +6,14 @@
         "maxFilesPerBatch": 100
     },
     "concurrencyModes": {
-        "normal": 4,
-        "fast": 7,
-        "max": 10
+        "normal": 7,
+        "fast": 11,
+        "max": 15
     },
     "cleanupSettings": {
         "periodicScanIntervalMinutes": 10,
         "orphanedSessionAgeMinutes": 15,
-        "postDownloadCleanupDelayMs": 10000
+        "postDownloadCleanupDelayMs": 100000
     },
     "logging": {
         "level": "info"
