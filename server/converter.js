@@ -95,8 +95,9 @@ class MarkdownToPDFConverter {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown PDF</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Emoji&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #24292f; background-color: #ffffff; margin: 0; padding: 5mm; max-width: none; word-wrap: break-word; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #24292f; background-color: #ffffff; margin: 0; padding: 5mm; max-width: none; word-wrap: break-word; }
         h1, h2, h3, h4, h5, h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
         h1 { font-size: 2em; border-bottom: 1px solid #d1d9e0; padding-bottom: 10px; }
         h2 { font-size: 1.5em; border-bottom: 1px solid #d1d9e0; padding-bottom: 8px; }
