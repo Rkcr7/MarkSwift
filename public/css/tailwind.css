@@ -2036,6 +2036,10 @@ video {
     padding-bottom: 0.375rem;
   }
 
+  .lg\:pr-8 {
+    padding-right: 2rem;
+  }
+
   .lg\:text-sm {
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -2074,6 +2078,10 @@ video {
     padding-bottom: 0.25rem;
   }
 
+  .xl\:pr-12 {
+    padding-right: 3rem;
+  }
+
   .xl\:text-lg {
     font-size: 1.125rem;
     line-height: 1.75rem;
@@ -2092,5 +2100,9 @@ video {
 
   .\32xl\:w-64 {
     width: 16rem;
+  }
+
+  .\32xl\:pr-16 {
+    padding-right: 4rem;
   }
 }
