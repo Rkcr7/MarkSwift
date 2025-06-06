@@ -4,7 +4,7 @@
   <img src="public/images/logo.png" alt="MarkSwift Logo" width="120" height="120">
   <p><em>Swiftly convert your Markdown files to PDF</em></p>
   
-  <p><strong><a href="https://markswift-1032065492518.asia-south2.run.app" target="_blank" rel="noopener noreferrer">🚀 Live at MarkSwift 🚀</a></strong></p>
+  <p><strong><a href="https://markswift.ninja/" target="_blank" rel="noopener noreferrer">🚀 Live at MarkSwift 🚀</a></strong></p>
   
   <!-- Demo GIF for Batch Upload -->
   <img src="public/images/MarkSwift.gif" alt="MarkSwift Batch Upload Demo" width="600" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
