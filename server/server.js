@@ -121,6 +121,14 @@ fs.ensureDirSync(ZIPS_DIR_BASE);
 logMessage('info', "Base directories ensured.", { uploads: UPLOADS_DIR_BASE, pdfs: CONVERTED_PDFS_DIR_BASE, zips: ZIPS_DIR_BASE });
 
 app.use(express.json());
+
+// SEO Improvement for Single Page Application (SPA)
+// This server serves a single index.html file, which is typical for an SPA.
+// For better SEO, search engine crawlers need to see the fully rendered HTML content,
+// not just the initial empty page that gets populated by JavaScript.
+// Consider using a pre-rendering service like Prerender.io (https://prerender.io/)
+// or implementing Server-Side Rendering (SSR) if this application grows more complex.
+// A pre-rendering service is often the easiest way to make an SPA crawlable.
 app.use(express.static(path.join(__dirname, '../public')));
 
 const storage = multer.diskStorage({
@@ -223,7 +231,7 @@ async function processConversionJob(job) {
         await converter.cleanup();
         logMessage('info', `[${sessionId}] [Job ${job.id}] Converter instance cleaned up.`);
 
-        // Uploaded files (original .md) are usually cleaned up by multer or should be cleaned here if not.
+        // Uploaded files (original .md) are usually cleaned up by multer or should be cleaned here if not handled by converter.
         // For now, assuming they are in sessionUploadPath and might need cleanup if not handled by converter.
         // The converter.processUploadedFiles takes paths, so original files in UPLOADS_DIR_BASE/sessionId are read.
         // Let's explicitly clean up the sessionUploadPath after successful processing.

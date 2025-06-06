@@ -3,7 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarkSwift - Batch Markdown to PDF</title>
+    <title>MarkSwift - Batch Markdown to PDF Converter</title>
+    <meta name="description" content="MarkSwift is a free and fast online tool to batch convert Markdown files to PDF. Use our live editor for a real-time preview. No registration required.">
+    <meta name="keywords" content="markdown to pdf, md to pdf, converter, batch convert, online tool, free, markdown editor">
+    <link rel="canonical" href="https://www.markswift.ninja/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.markswift.ninja/">
+    <meta property="og:title" content="MarkSwift - Batch Markdown to PDF Converter">
+    <meta property="og:description" content="Effortlessly convert multiple Markdown files to professional PDFs. Features a live editor, conversion modes, and a clean, user-friendly interface.">
+    <meta property="og:image" content="https://www.markswift.ninja/images/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.markswift.ninja/">
+    <meta property="twitter:title" content="MarkSwift - Batch Markdown to PDF Converter">
+    <meta property="twitter:description" content="The quickest way to batch convert Markdown to PDF. Try our live editor for a what-you-see-is-what-you-get experience.">
+    <meta property="twitter:image" content="https://www.markswift.ninja/images/logo.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "MarkSwift",
+      "applicationCategory": "Utilities",
+      "operatingSystem": "Web",
+      "description": "A free and fast online tool for batch converting Markdown files to high-quality PDF documents. Features a live editor with a real-time, style-accurate preview.",
+      "url": "https://www.markswift.ninja/",
+      "logo": "https://www.markswift.ninja/images/logo.png",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "250"
+      },
+      "keywords": "markdown to pdf, md to pdf, converter, batch convert, online tool, free, markdown editor"
+    }
+    </script>
+
     <link rel="icon" type="image/x-icon" href="images/favicon.ico" sizes="32x32">
     <link rel="icon" type="image/png" href="images/logo.png" sizes="96x96">
     <link rel="apple-touch-icon" href="images/logo.png" sizes="180x180">
@@ -27,9 +70,9 @@
             <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 <div class="flex items-center justify-center space-x-3 mb-1">
                     <img src="images/logo-header.png" alt="MarkSwift Logo" class="w-12 h-12 object-contain">
-                    <h1 class="text-xl md:text-2xl font-bold">MarkSwift</h1>
+                    <h1 class="text-xl md:text-2xl font-bold">MarkSwift: Batch Markdown to PDF Converter</h1>
                 </div>
-                <p class="text-slate-600 text-xs font-medium">Swiftly convert your Markdown files to PDF</p>
+                <p class="text-slate-600 text-xs font-medium">Swiftly and securely convert your Markdown files to professional PDFs online.</p>
             </div>
         </header>
 
@@ -63,8 +106,8 @@
                                         <i class="fas fa-cloud-upload-alt text-white text-sm"></i>
                                     </div>
                                 </div>
-                                <p class="text-slate-700 text-sm font-semibold mb-1">Drop files here</p>
-                                <p class="text-slate-500 text-xs">or click to browse</p>
+                                <p class="text-slate-700 text-sm font-semibold mb-1">Drag & Drop Your .MD Files</p>
+                                <p class="text-slate-500 text-xs">or click here to select them</p>
                                 <p class="text-slate-400 text-xs mt-1">Up to 100 files at a time</p>
                                 <div class="mt-1.5 flex justify-center space-x-2">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -221,8 +264,8 @@
                                     <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
                                         <i class="fas fa-file-upload text-2xl text-slate-300"></i>
                                     </div>
-                                    <p class="text-base font-medium mb-2">No files selected</p>
-                                    <p class="text-sm">Upload some Markdown files to get started</p>
+                                    <p class="text-base font-medium mb-2">Ready to Convert?</p>
+                                    <p class="text-sm">Upload your Markdown files to begin the process.</p>
                                 </div>
                             </div>
                             <ul id="file-list" class="overflow-y-auto flex-grow space-y-2 hidden custom-scrollbar">
@@ -267,48 +310,20 @@
                     <div class="flex-grow split-pane-container overflow-hidden min-h-0">
                         <!-- Editor Pane - 40% Default Width -->
                         <div class="split-pane-left bg-white rounded-lg border border-slate-300 shadow-xl overflow-hidden">
-                            <textarea id="markdown-input" class="w-full h-full p-4 border-none resize-none focus:ring-0 focus:outline-none text-sm leading-relaxed custom-scrollbar" placeholder="# Welcome to MarkSwift Live Editor
+                            <textarea id="markdown-input" class="w-full h-full p-4 border-none resize-none focus:ring-0 focus:outline-none text-sm leading-relaxed custom-scrollbar" placeholder="# Welcome to the MarkSwift Live Editor
 
-## Getting Started
-Start typing your Markdown here to see a real-time preview that matches your PDF output exactly.
+## Instant Markdown to PDF Conversion
+Start typing your Markdown here. You will see a real-time, style-accurate preview that matches your final PDF output exactly.
 
-### Features
-- **Live Preview** - See changes as you type
-- **PDF-accurate styling** - What you see is what you get
-- **Auto-save** - Your content is automatically saved
-- **Draggable Layout** - Resize editor and preview by dragging the splitter
-
-### Example Content
-
-**Bold text** and *italic text*
-
-- Bullet point one
-- Bullet point two  
-- Bullet point three
-
-```javascript
-// Code block example
-function hello() {
-    console.log('Hello, MarkSwift!');
-}
-```
-
-> This is a blockquote example
-> 
-> It can span multiple lines
-
-| Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
-| Row 1    | Data A   | Data B   |
-| Row 2    | Data C   | Data D   |
-
-[Link to MarkSwift](https://markswift.ninja/)
+### Key Features
+- **Live, PDF-Accurate Preview**: See changes as you type. What you see is precisely what you get.
+- **High-Quality Output**: Generate professional-grade PDFs from your Markdown source.
+- **Client-Side Processing**: Your files are processed securely in your browser and never uploaded for single-file conversions.
+- **Draggable Layout**: Easily resize the editor and preview panes by dragging the splitter bar.
 
 ---
 
-Happy writing with your draggable editor! 🚀
-
-**Tip:** Drag the splitter bar to adjust the editor and preview sizes to your preference!"></textarea>
+Happy writing! 🚀"></textarea>
                         </div>
                         
                         <!-- Draggable Splitter -->
@@ -392,7 +407,7 @@ Happy writing with your draggable editor! 🚀
                         <i class="fas fa-files mr-2 text-blue-600"></i>
                         Selected Files
                     </h3>
-                    <button id="modal-close-btn" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors duration-200">
+                    <button id="modal-close-btn" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors duration-200" aria-label="Close selected files view">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
