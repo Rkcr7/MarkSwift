@@ -214,6 +214,40 @@ app.use('/api/download', downloadRoutes(logMessage, config, CONVERTED_PDFS_DIR_B
 app.use('/api/editor', editorRoutes(logMessage, queueManager, config, UPLOADS_DIR_BASE));
 
 
+/**
+ * Name the archive after what is actually inside it.
+ *
+ * The old name was `converted_markdown_<sessionId>.zip`, which put a 32-char
+ * internal session id into the user's Downloads folder and told them nothing
+ * about the contents. The archive already lives in a per-session directory, so
+ * the id was never needed for uniqueness.
+ *
+ * Shape: `<first-document>-and-<n>-more.zip`, e.g.
+ *   WikiPath_Full_Spec-and-49-more.zip
+ * Anchoring on a filename the user chose themselves is what makes it
+ * recognisable when several batches sit in the same folder.
+ */
+function buildArchiveName(pdfPaths) {
+    const FALLBACK = `markswift-${pdfPaths.length}-pdfs.zip`;
+    const MAX_STEM = 48;
+
+    const first = pdfPaths[0];
+    if (!first) return FALLBACK;
+
+    // Strip the extension, then reduce to characters that are safe in a
+    // filename on every OS and safe in a URL path segment.
+    let stem = path.basename(first, '.pdf')
+        .replace(/[^A-Za-z0-9._-]+/g, '-')  // spaces, slashes, unicode -> dash
+        .replace(/-{2,}/g, '-')             // collapse runs
+        .replace(/^[-._]+|[-._]+$/g, '');   // no leading/trailing punctuation
+
+    if (!stem) return FALLBACK;
+    if (stem.length > MAX_STEM) stem = stem.slice(0, MAX_STEM).replace(/[-._]+$/, '');
+
+    const others = pdfPaths.length - 1;
+    return others > 0 ? `${stem}-and-${others}-more.zip` : `${stem}.zip`;
+}
+
 // --- Actual Conversion Logic (called by QueueManager) ---
 // This function `processConversionJob` is a callback for queueManager, so it stays here for now.
 // It could be moved to a service in a later phase.
@@ -287,7 +321,7 @@ async function processConversionJob(job) {
             jobStatus = 'completed';
         } else {
             logMessage('info', `[${sessionId}] [Job ${job.id}] Multiple PDFs (${successfulPdfs.length}) converted. Starting ZIP creation.`);
-            const zipFileName = `converted_markdown_${sessionId}.zip`;
+            const zipFileName = buildArchiveName(successfulPdfs);
             const zipFilePath = path.join(sessionZipPath, zipFileName);
             const output = fs.createWriteStream(zipFilePath);
             const archive = archiver('zip', { zlib: { level: 9 } });
