@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.markswift.ninja/sitemap.xml 
+# Session-scoped download URLs are single-use and get cleaned up server-side,
+# so there is nothing there worth indexing.
+Disallow: /api/
+
+Sitemap: https://markswift.ritikcr7.rest/sitemap.xml

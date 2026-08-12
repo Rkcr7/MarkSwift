@@ -153,3 +153,40 @@
 .cm-s-neat .cm-string, .cm-s-neat .cm-string-2 { color: #5CB85C; }
 .cm-s-neat .cm-quote { color: #777777; font-style: italic; border-left: 3px solid #EEEEEE; padding-left: 8px; margin-left: -11px;}
 .cm-s-neat .cm-formatting-list { color: #F0AD4E; }
+
+/* --- App-theme integration ---------------------------------------------- */
+/* The editor pane sits inside a panel owned by the design system, so its
+   chrome (not its syntax colours, which belong to the chosen CodeMirror theme)
+   follows the app tokens. */
+
+.split-pane-left .CodeMirror {
+    background-color: var(--surface-raised);
+    color: var(--text);
+    border-radius: var(--radius-lg);
+}
+
+.split-pane-left .CodeMirror-gutters {
+    background-color: var(--surface-raised);
+    border-right: 1px solid var(--border);
+}
+
+.split-pane-left .CodeMirror-linenumber {
+    color: var(--text-muted);
+}
+
+.CodeMirror-cursor {
+    border-left: 2px solid var(--accent);
+}
+
+.CodeMirror-selected {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.CodeMirror-focused .CodeMirror-selected {
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.CodeMirror-placeholder {
+    color: var(--text-muted) !important;
+    font-style: normal;
+}

@@ -72,7 +72,15 @@ try {
 }
 
 const app = express();
+
+// This app runs behind a reverse proxy (Traefik/nginx) in every deployed setup.
+// Without this, req.ip is the *proxy's* address for every request, which means
+// the rate limiter sees all traffic as one client and throttles everybody the
+// moment a single user gets busy. `1` = trust exactly one proxy hop.
+app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS || 1));
+
 const PORT = process.env.PORT || config.port;
+const STARTED_AT = Date.now();
 const httpServer = require('http').createServer(app); // Renamed to httpServer for clarity
 
 // --- WebSocket Handler Import ---
@@ -121,6 +129,21 @@ fs.ensureDirSync(ZIPS_DIR_BASE);
 logMessage('info', "Base directories ensured.", { uploads: UPLOADS_DIR_BASE, pdfs: CONVERTED_PDFS_DIR_BASE, zips: ZIPS_DIR_BASE });
 
 app.use(express.json());
+
+// --- Health check ---
+// Registered before the static handler so orchestrators get a cheap, dependency
+// free answer. Container HEALTHCHECK and Coolify both poll this.
+app.get('/healthz', (req, res) => {
+    const stats = queueManager.getQueueStatus ? queueManager.getQueueStatus() : {};
+    res.status(200).json({
+        status: 'ok',
+        app: config.appName,
+        version: process.env.npm_package_version || null,
+        uptimeSeconds: Math.floor((Date.now() - STARTED_AT) / 1000),
+        queueLength: stats.queueLength ?? 0,
+        activeConversions: stats.activeConversations ?? 0
+    });
+});
 
 // SEO Improvement for Single Page Application (SPA)
 // This server serves a single index.html file, which is typical for an SPA.
@@ -175,8 +198,15 @@ const cleanupService = new CleanupService(logMessage, config, UPLOADS_DIR_BASE, 
 // const conversionService = new ConversionService(logMessage, config, queueManager, webSocketHandler.sendMessageToSession.bind(webSocketHandler), UPLOADS_DIR_BASE, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE); // Pass correct WS send method
 
 
+// --- Setup Rate Limiter ---
+// This MUST be registered before the routes it protects. It previously sat below
+// the route registrations, which meant uploadRoutes handled /api/convert and
+// returned before the limiter was ever reached — i.e. the endpoint that spawns a
+// headless Chrome per request was effectively unthrottled.
+const convertApiLimiter = rateLimitMiddleware(logMessage, config);
+app.use('/api/convert', convertApiLimiter);
+
 // --- Setup Routes ---
-// Note: The rate limiter is applied before the uploadRoutes, so it still protects /api/convert
 app.use('/api', uploadRoutes(logMessage, config, queueManager, UPLOADS_DIR_BASE));
 // Pass the bound method from cleanupService instance and the config object
 app.use('/api/download', downloadRoutes(logMessage, config, CONVERTED_PDFS_DIR_BASE, ZIPS_DIR_BASE, cleanupService.cleanupSessionFiles.bind(cleanupService)));
@@ -309,15 +339,6 @@ async function processConversionJob(job) {
 
 // Set the callback for QueueManager to process jobs
 queueManager.setOnProcessJobCallback(processConversionJob);
-
-
-// --- Setup Rate Limiter ---
-// The '/api/convert' path is handled within uploadRoutes, which is mounted under '/api'
-// So, applying the limiter to '/api/convert' should still work.
-// Alternatively, pass the limiter to uploadRoutes to apply it specifically there.
-// For now, keeping it here as it was.
-const convertApiLimiter = rateLimitMiddleware(logMessage, config);
-app.use('/api/convert', convertApiLimiter);
 
 
 // Global error handler - must be the last piece of middleware
