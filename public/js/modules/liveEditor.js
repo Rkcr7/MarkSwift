@@ -249,9 +249,10 @@ class LiveEditor {
             }
 
             console.log('[LiveEditor] Converting Markdown on client-side...');
-            // Same options as backend's previewService.js
-            const markedOptions = { headerIds: false, mangle: false };
-            const rawHtml = marked.parse(markdownText, markedOptions);
+            // Kept in step with the server-side converter. `headerIds` and `mangle`
+            // were removed from marked in v8 (they live in separate extensions now),
+            // so passing them here no longer does anything.
+            const rawHtml = marked.parse(markdownText);
             
             // Sanitize HTML (ensure DOMPurify is available globally or imported)
             const sanitizedHtml = DOMPurify.sanitize(rawHtml);
