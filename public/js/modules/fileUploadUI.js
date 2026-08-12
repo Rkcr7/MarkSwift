@@ -83,28 +83,14 @@ function initializeModeSelection() {
 }
 
 function updateModeVisuals() {
-    const modeCards = document.querySelectorAll('.conversion-mode-card');
-    modeCards.forEach(card => {
-        const radio = card.querySelector('input[type="radio"]');
-        const cardDiv = card.querySelector('div'); // The main div inside the label
-        const indicator = card.querySelector('.mode-indicator div');
-
-        if (!radio || !cardDiv || !indicator) return;
-
-        if (radio.checked) {
-            cardDiv.classList.add('ring-2', 'ring-offset-2');
-            indicator.classList.remove('opacity-0');
-            indicator.classList.add('opacity-100');
-            
-            cardDiv.classList.remove('ring-green-400', 'ring-orange-400', 'ring-red-400'); // Clear previous
-            if (radio.value === 'normal') cardDiv.classList.add('ring-green-400');
-            else if (radio.value === 'fast') cardDiv.classList.add('ring-orange-400');
-            else if (radio.value === 'max') cardDiv.classList.add('ring-red-400');
-        } else {
-            cardDiv.classList.remove('ring-2', 'ring-offset-2', 'ring-green-400', 'ring-orange-400', 'ring-red-400');
-            indicator.classList.add('opacity-0');
-            indicator.classList.remove('opacity-100');
-        }
+    // The selected segment is marked with a single class and styled in CSS.
+    // This previously applied a per-mode ring colour (green / orange / red),
+    // which implied a safety gradient across three options that only differ in
+    // how many files are converted at once.
+    document.querySelectorAll('.conversion-mode-card').forEach(option => {
+        const radio = option.querySelector('input[type="radio"]');
+        if (!radio) return;
+        option.classList.toggle('is-selected', radio.checked);
     });
 }
 
@@ -150,29 +136,26 @@ function renderFileList() { // This function now primarily updates the desktop l
 function createFileListItem(file, index, isModalContext) { // Added isModalContext
     const listItem = document.createElement('li');
     // Use Tailwind classes for mobile items, or specific .mobile-file-item if defined in CSS
-    listItem.className = 'mobile-file-item bg-white dark:bg-slate-700 p-3 rounded-lg shadow flex items-center justify-between space-x-3';
+    listItem.className = isModalContext ? 'mobile-file-item' : 'file-row';
 
-    const isMarkdown = file.name.endsWith('.md') || file.name.endsWith('.markdown');
-    const fileSize = (file.size / 1024).toFixed(2);
-    const iconGradient = isMarkdown ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600';
+    const fileSize = (file.size / 1024).toFixed(1);
 
     // The static chrome is safe to build as markup. The filename is NOT — it is
     // attacker-controllable in the sense that a file named
     // `"><img src=x onerror=...>.md` used to execute when interpolated into
     // innerHTML here. Filenames are therefore set via textContent/setAttribute
     // below, which cannot introduce markup.
+    //
+    // The 40px gradient tile that used to sit on every row is gone: a list of
+    // Markdown files does not need each entry to announce that it is Markdown.
     listItem.innerHTML = `
-        <div class="flex items-center flex-1 min-w-0">
-            <div class="w-10 h-10 bg-gradient-to-r ${iconGradient} rounded-lg flex items-center justify-center mr-3 shadow-sm flex-shrink-0">
-                <i class="fab fa-markdown text-white text-lg" aria-hidden="true"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-                <div class="js-file-name font-medium text-slate-700 dark:text-slate-100 truncate text-sm"></div>
-                <div class="js-file-size text-xs text-slate-500 dark:text-slate-400"></div>
-            </div>
+        <div class="flex items-baseline gap-2 min-w-0 flex-1">
+            <span class="js-file-name file-row-name"></span>
+            <span class="js-file-size file-row-meta flex-shrink-0"></span>
         </div>
-        <button class="remove-file-btn ml-3 w-8 h-8 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0" title="Remove file" data-index="${index}">
-            <i class="fas fa-trash text-sm" aria-hidden="true"></i>
+        <button class="remove-file-btn file-remove" title="Remove file" data-index="${index}">
+            <i class="fas fa-xmark text-xs" aria-hidden="true"></i>
+            <span class="sr-only">Remove file</span>
         </button>
     `;
 
@@ -451,10 +434,9 @@ async function handleConvertClick() {
 
 function handleResetClick() {
     wsClient.closeConnection();
-    if (resetButton) {
-        resetButton.style.transform = 'rotate(180deg)';
-        setTimeout(() => { resetButton.style.transform = 'rotate(0deg)'; }, 300);
-    }
+    // The reset button used to spin 180 degrees on click. Decorative motion on a
+    // destructive-ish action draws the eye to the control instead of to the
+    // list that just emptied.
     selectedFiles = [];
     renderFileList();
     updateConvertButtonUIState();
@@ -469,21 +451,23 @@ function handleResetClick() {
 
 function addDragAndDropListeners() {
     if (!dropArea) return;
+
+    // One state class, styled in CSS. This used to toggle hardcoded colour
+    // utilities plus a scale-up on the zone and a looping bounce animation on
+    // the icon, so the drop target grew and jumped during a drag - motion
+    // competing with the thing the user is actually aiming at.
+    const setDragState = (active) => dropArea.classList.toggle('is-dragover', active);
+
     dropArea.addEventListener('dragover', (event) => {
         event.preventDefault();
-        dropArea.classList.add('border-blue-500', 'bg-blue-50/70', 'scale-105');
-        dropArea.querySelector('.fa-cloud-upload-alt')?.classList.add('animate-bounce');
+        setDragState(true);
     });
     dropArea.addEventListener('dragleave', (event) => {
-        if (!dropArea.contains(event.relatedTarget)) {
-            dropArea.classList.remove('border-blue-500', 'bg-blue-50/70', 'scale-105');
-            dropArea.querySelector('.fa-cloud-upload-alt')?.classList.remove('animate-bounce');
-        }
+        if (!dropArea.contains(event.relatedTarget)) setDragState(false);
     });
     dropArea.addEventListener('drop', (event) => {
         event.preventDefault();
-        dropArea.classList.remove('border-blue-500', 'bg-blue-50/70', 'scale-105');
-        dropArea.querySelector('.fa-cloud-upload-alt')?.classList.remove('animate-bounce');
+        setDragState(false);
         const files = Array.from(event.dataTransfer.files).filter(f => f.name.endsWith('.md') || f.name.endsWith('.markdown'));
         handleFileSelection(files);
     });

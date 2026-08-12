@@ -10,14 +10,8 @@
 
 const STORAGE_KEY = 'markswift-theme';
 
-function readStoredTheme() {
-    try {
-        return localStorage.getItem(STORAGE_KEY);
-    } catch (e) {
-        // Storage can throw in private browsing or when cookies are blocked.
-        return null;
-    }
-}
+// Fired on <document> whenever the theme changes, with detail.dark.
+export const THEME_EVENT = 'markswift:themechange';
 
 function storeTheme(theme) {
     try {
@@ -46,7 +40,13 @@ function syncButton(button, icon) {
 }
 
 function applyTheme(theme) {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    const dark = theme === 'dark';
+    document.documentElement.classList.toggle('dark', dark);
+
+    // Broadcast rather than reaching into other modules. The live editor uses
+    // this to keep CodeMirror's theme in step, since a light code pane inside a
+    // dark shell is the harshest thing on the screen.
+    document.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: { dark } }));
 }
 
 export function initThemeToggle() {
@@ -67,20 +67,10 @@ export function initThemeToggle() {
         syncButton(button, icon);
     });
 
-    // Follow the OS only while the user has not picked a theme themselves. Once
-    // they click the toggle we stop overriding their choice.
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const onSystemChange = (event) => {
-        if (readStoredTheme()) return;
-        applyTheme(event.matches ? 'dark' : 'light');
-        syncButton(button, icon);
-    };
-
-    if (typeof media.addEventListener === 'function') {
-        media.addEventListener('change', onSystemChange);
-    } else if (typeof media.addListener === 'function') {
-        media.addListener(onSystemChange); // Safari < 14
-    }
+    // The OS preference is intentionally not followed. Light is the product's
+    // default because the preview pane renders a white printed page, so light
+    // is the theme where the chrome and the document agree. Dark is opt-in and
+    // sticky once chosen.
 }
 
 export default { initThemeToggle };

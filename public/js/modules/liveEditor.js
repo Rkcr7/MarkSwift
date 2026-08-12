@@ -44,6 +44,10 @@ class LiveEditor {
             return;
         }
 
+        // Keep CodeMirror's theme in step with the app theme (no-op once the
+        // user picks an editor theme of their own).
+        document.addEventListener('markswift:themechange', () => this.syncThemeWithApp());
+
         // Get DOM elements with correct IDs from our HTML
         this.markdownTextarea = document.getElementById('markdown-input'); // Keep ref to original
         this.documentContainer = document.getElementById('pdf-preview-container');
@@ -285,34 +289,33 @@ class LiveEditor {
         }
     }
 
+    // These two render *inside* the preview paper, which is white in both
+    // themes, so they use explicit paper-safe colours rather than theme tokens.
     showEmptyPreview() {
-        if (this.documentContainer) {
-            this.documentContainer.innerHTML = `
-                <div class="flex items-center justify-center h-96 text-slate-400">
-                    <div class="text-center">
-                        <i class="fas fa-file-text text-5xl mb-6 block text-slate-300"></i>
-                        <h3 class="text-lg font-semibold mb-2 text-slate-600">PDF Preview</h3>
-                        <p class="text-sm mb-1">Your document will appear here</p>
-                        <p class="text-xs text-slate-400">Start typing in the editor to see the magic ✨</p>
-                    </div>
-                </div>
-            `;
-        }
+        if (!this.documentContainer) return;
+        this.documentContainer.innerHTML = `
+            <div class="empty-state h-80">
+                <i class="fas fa-file-lines text-2xl mb-1" style="color: #d1d9e0;" aria-hidden="true"></i>
+                <p class="empty-state-title" style="color: #57606a;">Preview</p>
+                <p class="empty-state-hint" style="color: #8c959f;">Your typeset document appears here as you write.</p>
+            </div>
+        `;
     }
 
     showPreviewError(errorMessage) {
-        if (this.documentContainer) {
-            this.documentContainer.innerHTML = `
-                <div class="flex items-center justify-center h-96 text-red-500">
-                    <div class="text-center">
-                        <i class="fas fa-exclamation-triangle text-5xl mb-6 block"></i>
-                        <h3 class="text-lg font-semibold mb-2 text-red-600">Preview Error</h3>
-                        <p class="text-sm mb-1">${errorMessage}</p>
-                        <p class="text-xs mt-2 text-slate-500">Check the console for more details</p>
-                    </div>
-                </div>
-            `;
-        }
+        if (!this.documentContainer) return;
+
+        // errorMessage can carry parser output derived from what the user typed,
+        // so it is inserted as text, not markup.
+        this.documentContainer.innerHTML = `
+            <div class="empty-state h-80">
+                <i class="fas fa-triangle-exclamation text-2xl mb-1" style="color: #a13d2d;" aria-hidden="true"></i>
+                <p class="empty-state-title" style="color: #a13d2d;">Could not render preview</p>
+                <p class="js-preview-error empty-state-hint" style="color: #57606a;"></p>
+            </div>
+        `;
+        const target = this.documentContainer.querySelector('.js-preview-error');
+        if (target) target.textContent = errorMessage;
     }
 
     clearEditor() {
@@ -388,21 +391,48 @@ class LiveEditor {
         }
     }
 
+    // Editor theme that matches the app theme, used until the user picks one.
+    static themeForAppTheme() {
+        return document.documentElement.classList.contains('dark') ? 'dracula' : 'neat';
+    }
+
     loadTheme() {
         try {
             const savedTheme = localStorage.getItem('markswift-editor-theme');
             if (savedTheme) {
+                // An explicit choice always wins, in either app theme.
                 this.currentTheme = savedTheme;
-                console.log(`[LiveEditor] Loaded theme from localStorage: ${savedTheme}`);
+            } else {
+                // Otherwise track the app theme. Leaving this on the 'neat'
+                // default meant the editor pane stayed bright white inside an
+                // otherwise dark UI, which is the single harshest thing on the
+                // screen in dark mode.
+                this.currentTheme = LiveEditor.themeForAppTheme();
             }
-            // If themeSelector exists, update its value. This is also done after CM init.
             if (this.themeSelector) {
                 this.themeSelector.value = this.currentTheme;
             }
         } catch (error) {
             console.warn('[LiveEditor] Failed to load theme from localStorage:', error);
-            this.currentTheme = 'neat'; // Fallback to default, now 'neat'
+            this.currentTheme = LiveEditor.themeForAppTheme();
         }
+    }
+
+    // Called when the app theme changes. Only follows along while the user has
+    // not chosen an editor theme themselves.
+    syncThemeWithApp() {
+        let userChose = null;
+        try {
+            userChose = localStorage.getItem('markswift-editor-theme');
+        } catch (e) { /* storage blocked; treat as no explicit choice */ }
+        if (userChose) return;
+
+        const next = LiveEditor.themeForAppTheme();
+        if (next === this.currentTheme) return;
+
+        this.currentTheme = next;
+        if (this.cmInstance) this.cmInstance.setOption('theme', next);
+        if (this.themeSelector) this.themeSelector.value = next;
     }
 
     onTabActivated() {

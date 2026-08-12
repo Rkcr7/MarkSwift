@@ -9,11 +9,16 @@ function initTabs() {
         return;
     }
 
-    // Function to deactivate all tabs and content
+    // Appearance is CSS's job. This module only records which tab is active by
+    // toggling `active-tab`; `.tab-button` and `.tab-button.active-tab` in
+    // custom.css decide what that looks like. It used to add and remove
+    // hardcoded colour utilities (text-blue-600, text-slate-500, ...), which
+    // meant the active tab could not follow the light/dark theme and the design
+    // was split across two files.
     function deactivateAll() {
         tabButtons.forEach(button => {
-            button.classList.remove('active-tab', 'text-blue-600', 'border-blue-600');
-            button.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-400', 'border-transparent');
+            button.classList.remove('active-tab');
+            button.setAttribute('aria-selected', 'false');
         });
         tabContents.forEach(content => {
             content.classList.remove('active-content');
@@ -26,9 +31,9 @@ function initTabs() {
         deactivateAll();
 
         // Activate button
-        button.classList.add('active-tab', 'text-blue-600', 'border-blue-600');
-        button.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-400', 'border-transparent');
-        
+        button.classList.add('active-tab');
+        button.setAttribute('aria-selected', 'true');
+
         // Activate content
         const targetContent = document.querySelector(targetContentId);
         if (targetContent) {
@@ -74,7 +79,6 @@ function initTabs() {
             activateTab(tabButtons[0], firstButtonTarget);
         }
     }
-    console.log("TabManager initialized.");
 }
 
 export { initTabs };
