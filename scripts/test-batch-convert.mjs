@@ -70,9 +70,10 @@ async function main() {
     if (!sessionId) fail('response did not include a sessionId');
     console.log(`  queued as ${sessionId}`);
 
-    // A single file comes back as a bare PDF, more than one as a ZIP.
+    // A single file comes back as a bare PDF, more than one as a ZIP named
+    // after the first document (see buildArchiveName in server.js).
     const isBatch = N > 1;
-    const name = isBatch ? `converted_markdown_${sessionId}.zip` : 'doc-1.pdf';
+    const name = isBatch ? `doc-1-and-${N - 1}-more.zip` : 'doc-1.pdf';
     const url = `${BASE}/api/download/${isBatch ? 'zip' : 'pdf'}/${sessionId}/${encodeURIComponent(name)}`;
 
     let body = null;
