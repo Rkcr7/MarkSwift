@@ -3,7 +3,20 @@
 <div align="center">
   <img src="public/images/logo.png" alt="MarkSwift Logo" width="120" height="120">
   <p><em>Swiftly convert your Markdown files to PDF</em></p>
-  
+
+  <p>
+    <a href="https://markswift.ritikcr7.rest"><img src="https://img.shields.io/badge/Live_Demo-markswift.ritikcr7.rest-2563eb?style=for-the-badge&logo=firefox&logoColor=white" alt="Live demo"></a>
+  </p>
+
+  <h3><a href="https://markswift.ritikcr7.rest">Try it live at markswift.ritikcr7.rest</a></h3>
+  <p><em>No sign up, no upload limits per account, and files are removed from the server after download.</em></p>
+
+  <p>
+    <img src="https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white" alt="Node 22+">
+    <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
+    <img src="https://img.shields.io/badge/vulnerabilities-0-success" alt="0 known vulnerabilities">
+  </p>
+
   
   <!-- Demo GIF for Batch Upload -->
   <img src="public/images/MarkSwift.gif" alt="MarkSwift Batch Upload Demo" width="600" style="border-radius: 8px; margin: 20px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
