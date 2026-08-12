@@ -6,23 +6,49 @@
     <title>MarkSwift - Batch Markdown to PDF Converter</title>
     <meta name="description" content="MarkSwift is a free and fast online tool to batch convert Markdown files to PDF. Use our live editor for a real-time preview. No registration required.">
     <meta name="keywords" content="markdown to pdf, md to pdf, converter, batch convert, online tool, free, markdown editor">
-    <link rel="canonical" href="https://www.markswift.ninja/">
+    <meta name="theme-color" content="#4f46e5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+    <link rel="canonical" href="https://markswift.ritikcr7.rest/">
+
+    <!--
+      Apply the saved theme before first paint. Running this inline in <head>
+      (rather than from main.js, which is a deferred module) is what stops the
+      light background from flashing on load for dark-mode users.
+    -->
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('markswift-theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) { /* private mode / storage blocked — light theme is fine */ }
+        })();
+    </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.markswift.ninja/">
+    <meta property="og:url" content="https://markswift.ritikcr7.rest/">
     <meta property="og:title" content="MarkSwift - Batch Markdown to PDF Converter">
     <meta property="og:description" content="Effortlessly convert multiple Markdown files to professional PDFs. Features a live editor, conversion modes, and a clean, user-friendly interface.">
-    <meta property="og:image" content="https://www.markswift.ninja/images/logo.png">
+    <meta property="og:image" content="https://markswift.ritikcr7.rest/images/logo.png">
+    <meta property="og:image:alt" content="MarkSwift logo">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://www.markswift.ninja/">
+    <meta property="twitter:url" content="https://markswift.ritikcr7.rest/">
     <meta property="twitter:title" content="MarkSwift - Batch Markdown to PDF Converter">
     <meta property="twitter:description" content="The quickest way to batch convert Markdown to PDF. Try our live editor for a what-you-see-is-what-you-get experience.">
-    <meta property="twitter:image" content="https://www.markswift.ninja/images/logo.png">
+    <meta property="twitter:image" content="https://markswift.ritikcr7.rest/images/logo.png">
 
-    <!-- Structured Data -->
+    <!--
+      Structured Data.
+      Note: this block previously carried an aggregateRating of 4.8 from 250
+      reviews. No such reviews exist, and Google treats fabricated review markup
+      as a manual-action-worthy violation, so it has been removed rather than
+      restated with different numbers.
+    -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -31,17 +57,12 @@
       "applicationCategory": "Utilities",
       "operatingSystem": "Web",
       "description": "A free and fast online tool for batch converting Markdown files to high-quality PDF documents. Features a live editor with a real-time, style-accurate preview.",
-      "url": "https://www.markswift.ninja/",
-      "logo": "https://www.markswift.ninja/images/logo.png",
+      "url": "https://markswift.ritikcr7.rest/",
+      "logo": "https://markswift.ritikcr7.rest/images/logo.png",
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "reviewCount": "250"
       },
       "keywords": "markdown to pdf, md to pdf, converter, batch convert, online tool, free, markdown editor"
     }
@@ -50,9 +71,14 @@
     <link rel="icon" type="image/x-icon" href="images/favicon.ico" sizes="32x32">
     <link rel="icon" type="image/png" href="images/logo.png" sizes="96x96">
     <link rel="apple-touch-icon" href="images/logo.png" sizes="180x180">
+
+    <!-- Warm up the CDN connection before the stylesheets below request it. -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
     <link href="css/tailwind.css" rel="stylesheet">
     <link href="css/custom.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <!-- CodeMirror CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material.min.css">
@@ -62,29 +88,38 @@
     <link href="css/preview-styles.css" rel="stylesheet"> <!-- Added link to preview styles -->
     <link rel="stylesheet" href="css/papercolor-light.min.css"> <!-- Using local PaperColor Light theme -->
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans leading-normal tracking-normal h-full overflow-hidden flex flex-col">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 font-sans leading-normal tracking-normal h-full overflow-hidden flex flex-col transition-colors duration-300">
+
+    <a href="#fileUploadTab" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-blue-600 focus:text-white focus:shadow-lg">Skip to main content</a>
 
     <div class="container mx-auto p-2 md:p-3 w-full flex-grow flex flex-col overflow-hidden">
         <!-- Compact Header -->
         <header class="mb-2 text-center flex-shrink-0 relative">
-            <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 dark:from-blue-400 dark:via-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
                 <div class="flex items-center justify-center space-x-3 mb-1">
-                    <img src="images/logo-header.png" alt="MarkSwift Logo" class="w-12 h-12 object-contain">
+                    <img src="images/logo-header.png" alt="MarkSwift Logo" class="w-12 h-12 object-contain" width="48" height="48">
                     <h1 class="text-xl md:text-2xl font-bold">MarkSwift: Batch Markdown to PDF Converter</h1>
                 </div>
-                <p class="text-slate-600 text-xs font-medium">Swiftly and securely convert your Markdown files to professional PDFs online.</p>
+                <p class="text-slate-600 dark:text-slate-400 text-xs font-medium">Swiftly and securely convert your Markdown files to professional PDFs online.</p>
             </div>
+
+            <!-- Theme toggle -->
+            <button id="theme-toggle" type="button"
+                class="absolute top-0 right-0 w-9 h-9 rounded-lg bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm hover:shadow-md hover:bg-white dark:hover:bg-slate-800 transition-all duration-200 flex items-center justify-center"
+                aria-label="Toggle dark mode" title="Toggle dark mode">
+                <i id="theme-toggle-icon" class="fas fa-moon text-sm" aria-hidden="true"></i>
+            </button>
         </header>
 
         <!-- Tab Navigation -->
-        <div class="mb-2 border-b border-slate-300 flex-shrink-0 lg:ml-8 xl:ml-12 2xl:ml-16">
+        <div class="mb-2 border-b border-slate-300 dark:border-slate-700 flex-shrink-0 lg:ml-8 xl:ml-12 2xl:ml-16">
             <nav class="flex space-x-0.5 sm:space-x-1 -mb-px" aria-label="Tabs">
-                <button data-tab-target="#fileUploadTab" class="tab-button active-tab group inline-flex items-center py-2 px-2 sm:px-3 border-b-2 font-medium text-sm text-blue-600 border-blue-600">
-                    <i class="fas fa-upload mr-1 sm:mr-2"></i>
+                <button data-tab-target="#fileUploadTab" class="tab-button active-tab group inline-flex items-center py-2 px-2 sm:px-3 border-b-2 font-medium text-sm text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400">
+                    <i class="fas fa-upload mr-1 sm:mr-2" aria-hidden="true"></i>
                     Upload Files
                 </button>
-                <button data-tab-target="#liveEditorTab" class="tab-button group inline-flex items-center py-2 px-2 sm:px-3 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-400 border-transparent">
-                    <i class="fas fa-edit mr-1 sm:mr-2"></i>
+                <button data-tab-target="#liveEditorTab" class="tab-button group inline-flex items-center py-2 px-2 sm:px-3 border-b-2 font-medium text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-400 border-transparent">
+                    <i class="fas fa-edit mr-1 sm:mr-2" aria-hidden="true"></i>
                     Live Editor
                 </button>
             </nav>
@@ -98,173 +133,175 @@
                     <!-- Left Column - Compact -->
                     <div class="w-full lg:w-[30%] lg:flex-none flex flex-col space-y-1.5 py-1 min-h-0 overflow-y-auto custom-scrollbar">
                         <!-- Compact Drag and Drop Area -->
-                        <section id="drop-area" class="relative bg-white/70 backdrop-blur-sm border-2 border-dashed border-slate-300 rounded-xl p-2 text-center hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
+                        <section id="drop-area" class="relative bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-2 text-center hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-slate-800 cursor-pointer flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
                             <input type="file" id="file-input" multiple accept=".md,.markdown" class="hidden">
                             <label for="file-input" class="cursor-pointer">
                                 <div class="mb-1.5">
                                     <div class="w-8 h-8 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                        <i class="fas fa-cloud-upload-alt text-white text-sm"></i>
+                                        <i class="fas fa-cloud-upload-alt text-white text-sm" aria-hidden="true"></i>
                                     </div>
                                 </div>
-                                <p class="text-slate-700 text-sm font-semibold mb-1">Drag & Drop Your .MD Files</p>
-                                <p class="text-slate-500 text-xs">or click here to select them</p>
-                                <p class="text-slate-400 text-xs mt-1">Up to 100 files at a time</p>
+                                <p class="text-slate-700 dark:text-slate-200 text-sm font-semibold mb-1">Drag &amp; Drop Your .MD Files</p>
+                                <p class="text-slate-500 dark:text-slate-400 text-xs">or click here to select them</p>
+                                <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Up to 100 files at a time</p>
                                 <div class="mt-1.5 flex justify-center space-x-2">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <i class="fab fa-markdown mr-1 text-xs"></i> .md
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
+                                        <i class="fab fa-markdown mr-1 text-xs" aria-hidden="true"></i> .md
                                     </span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                        <i class="fab fa-markdown mr-1 text-xs"></i> .markdown
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300">
+                                        <i class="fab fa-markdown mr-1 text-xs" aria-hidden="true"></i> .markdown
                                     </span>
                                 </div>
                             </label>
                         </section>
-        
+
                         <!-- Compact Mode Selection -->
-                        <section id="mode-selection" class="bg-white/70 backdrop-blur-sm p-2 rounded-xl shadow-lg flex-shrink-0">
-                            <h2 class="text-sm font-bold text-slate-700 mb-1.5 flex items-center">
-                                <i class="fas fa-settings mr-2 text-blue-600 text-xs"></i>
+                        <section id="mode-selection" class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm p-2 rounded-xl shadow-lg flex-shrink-0">
+                            <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1.5 flex items-center">
+                                <!-- was `fa-settings`, which is not a Font Awesome icon and rendered blank -->
+                                <i class="fas fa-gear mr-2 text-blue-600 dark:text-blue-400 text-xs" aria-hidden="true"></i>
                                 Mode
                             </h2>
                             <div class="grid grid-cols-1 gap-1.5">
                                 <label class="conversion-mode-card relative cursor-pointer group">
                                     <input type="radio" name="conversion-mode" value="normal" class="hidden" checked>
-                                    <div class="flex items-center p-1.5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg hover:border-green-300 transition-all duration-200 group-hover:shadow-md">
+                                    <div class="flex items-center p-1.5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40 border-2 border-green-200 dark:border-green-800 rounded-lg hover:border-green-300 dark:hover:border-green-700 transition-all duration-200 group-hover:shadow-md">
                                         <div class="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center mr-2 shadow-md">
-                                            <i class="fas fa-walking text-white text-xs"></i>
+                                            <i class="fas fa-walking text-white text-xs" aria-hidden="true"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <div class="font-semibold text-slate-700 text-sm">Normal</div>
-                                            <div class="text-xs text-slate-500">Concurrency: 5</div>
+                                            <div class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Normal</div>
+                                            <div class="text-xs text-slate-500 dark:text-slate-400">Balanced speed</div>
                                         </div>
-                                        <div class="mode-indicator w-4 h-4 border-2 border-green-300 rounded-full flex items-center justify-center">
+                                        <div class="mode-indicator w-4 h-4 border-2 border-green-300 dark:border-green-700 rounded-full flex items-center justify-center">
                                             <div class="w-2 h-2 bg-green-500 rounded-full opacity-0 transition-opacity duration-200"></div>
                                         </div>
                                     </div>
                                 </label>
-        
+
                                 <label class="conversion-mode-card relative cursor-pointer group">
                                     <input type="radio" name="conversion-mode" value="fast" class="hidden">
-                                    <div class="flex items-center p-1.5 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg hover:border-orange-300 transition-all duration-200 group-hover:shadow-md">
+                                    <div class="flex items-center p-1.5 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950/40 dark:to-yellow-950/40 border-2 border-orange-200 dark:border-orange-800 rounded-lg hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-200 group-hover:shadow-md">
                                         <div class="w-6 h-6 bg-orange-500 rounded-md flex items-center justify-center mr-2 shadow-md">
-                                            <i class="fas fa-running text-white text-xs"></i>
+                                            <i class="fas fa-running text-white text-xs" aria-hidden="true"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <div class="font-semibold text-slate-700 text-sm">Fast</div>
-                                            <div class="text-xs text-slate-500">Concurrency: 9</div>
+                                            <div class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Fast</div>
+                                            <div class="text-xs text-slate-500 dark:text-slate-400">More files at once</div>
                                         </div>
-                                        <div class="mode-indicator w-4 h-4 border-2 border-orange-300 rounded-full flex items-center justify-center">
+                                        <div class="mode-indicator w-4 h-4 border-2 border-orange-300 dark:border-orange-700 rounded-full flex items-center justify-center">
                                             <div class="w-2 h-2 bg-orange-500 rounded-full opacity-0 transition-opacity duration-200"></div>
                                         </div>
                                     </div>
                                 </label>
-        
+
                                 <label class="conversion-mode-card relative cursor-pointer group">
                                     <input type="radio" name="conversion-mode" value="max" class="hidden">
-                                    <div class="flex items-center p-1.5 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-lg hover:border-red-300 transition-all duration-200 group-hover:shadow-md">
+                                    <div class="flex items-center p-1.5 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/40 dark:to-pink-950/40 border-2 border-red-200 dark:border-red-800 rounded-lg hover:border-red-300 dark:hover:border-red-700 transition-all duration-200 group-hover:shadow-md">
                                         <div class="w-6 h-6 bg-red-500 rounded-md flex items-center justify-center mr-2 shadow-md">
-                                            <i class="fas fa-bolt text-white text-xs"></i>
+                                            <i class="fas fa-bolt text-white text-xs" aria-hidden="true"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <div class="font-semibold text-slate-700 text-sm">Maximum</div>
-                                            <div class="text-xs text-slate-500">Concurrency: 13</div>
+                                            <div class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Maximum</div>
+                                            <div class="text-xs text-slate-500 dark:text-slate-400">Fastest, heaviest load</div>
                                         </div>
-                                        <div class="mode-indicator w-4 h-4 border-2 border-red-300 rounded-full flex items-center justify-center">
+                                        <div class="mode-indicator w-4 h-4 border-2 border-red-300 dark:border-red-700 rounded-full flex items-center justify-center">
                                             <div class="w-2 h-2 bg-red-500 rounded-full opacity-0 transition-opacity duration-200"></div>
                                         </div>
                                     </div>
                                 </label>
                             </div>
                         </section>
-        
+
                         <!-- Compact Action Buttons -->
                         <section class="flex-shrink-0">
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
                                 <button id="convert-button" class="relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-1.5 px-2 rounded-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group" disabled>
                                     <span class="relative z-10 flex items-center justify-center text-xs sm:text-sm">
-                                        <i class="fas fa-magic mr-1 sm:mr-1.5 text-xs"></i>
+                                        <i class="fas fa-magic mr-1 sm:mr-1.5 text-xs" aria-hidden="true"></i>
                                         Convert
                                     </span>
                                     <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 </button>
-                                
+
                                 <button id="reset-button" class="relative overflow-hidden bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-1.5 px-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group">
                                     <span class="relative z-10 flex items-center justify-center text-xs sm:text-sm">
-                                        <i class="fas fa-redo mr-1 sm:mr-1.5 text-xs"></i>
+                                        <i class="fas fa-redo mr-1 sm:mr-1.5 text-xs" aria-hidden="true"></i>
                                         Reset
                                     </span>
                                     <div class="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 </button>
                             </div>
                         </section>
-        
+
                         <!-- Compact Progress/Status Area -->
-                        <section id="status-area" class="hidden flex-shrink-0">
-                            <div class="bg-white/70 backdrop-blur-sm p-1.5 lg:p-2 rounded-xl shadow-lg border border-blue-200">
-                                <p id="queue-status-message" class="text-blue-600 font-semibold text-xs lg:text-sm mb-1 text-center hidden"></p>
-                                <p id="estimated-wait-time" class="text-slate-500 text-xs mb-1 lg:mb-1.5 text-center hidden"></p>
+                        <section id="status-area" class="hidden flex-shrink-0" aria-live="polite">
+                            <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm p-1.5 lg:p-2 rounded-xl shadow-lg border border-blue-200 dark:border-blue-900">
+                                <p id="queue-status-message" class="text-blue-600 dark:text-blue-400 font-semibold text-xs lg:text-sm mb-1 text-center hidden"></p>
+                                <p id="estimated-wait-time" class="text-slate-500 dark:text-slate-400 text-xs mb-1 lg:mb-1.5 text-center hidden"></p>
                                 <div class="flex items-center mb-1">
                                     <div id="status-icon-container" class="w-5 h-5 lg:w-6 lg:h-6 bg-blue-500 rounded-md flex items-center justify-center mr-1.5 lg:mr-2">
-                                        <i id="status-icon" class="fas fa-cog fa-spin text-white text-xs"></i>
+                                        <i id="status-icon" class="fas fa-cog fa-spin text-white text-xs" aria-hidden="true"></i>
                                     </div>
-                                    <p id="status-message" class="text-slate-700 font-medium text-xs lg:text-sm"></p>
+                                    <p id="status-message" class="text-slate-700 dark:text-slate-200 font-medium text-xs lg:text-sm"></p>
                                 </div>
                                 <div id="progress-bar-container" class="hidden">
-                                    <div class="w-full bg-slate-200 rounded-full h-1.5 lg:h-2 overflow-hidden">
+                                    <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 lg:h-2 overflow-hidden">
                                         <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 lg:h-2 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
                                     </div>
                                 </div>
                             </div>
                         </section>
-        
+
                         <!-- Compact Download Area -->
-                        <section id="download-area" class="hidden flex-shrink-0">
-                            <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-1.5 lg:p-2 rounded-xl shadow-lg border border-green-200">
+                        <section id="download-area" class="hidden flex-shrink-0" aria-live="polite">
+                            <div class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40 p-1.5 lg:p-2 rounded-xl shadow-lg border border-green-200 dark:border-green-800">
                                 <div class="text-center">
                                     <div class="w-7 h-7 lg:w-8 lg:h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-1 lg:mb-1.5">
-                                        <i class="fas fa-check text-white text-xs lg:text-sm"></i>
+                                        <i class="fas fa-check text-white text-xs lg:text-sm" aria-hidden="true"></i>
                                     </div>
-                                    <p class="text-green-800 font-medium mb-1.5 lg:mb-2 text-xs lg:text-sm custom-1360-text">Complete!</p>
+                                    <p class="text-green-800 dark:text-green-300 font-medium mb-1.5 lg:mb-2 text-xs lg:text-sm custom-1360-text">Complete!</p>
                                     <a id="download-link" href="#" class="inline-flex items-center bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-1.5 px-2.5 text-xs lg:py-1.5 lg:px-3 lg:text-xs xl:text-sm rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 custom-1360-button">
-                                        <i class="fas fa-download mr-1 lg:mr-1.5 text-xs custom-1360-icon"></i>
+                                        <i class="fas fa-download mr-1 lg:mr-1.5 text-xs custom-1360-icon" aria-hidden="true"></i>
                                         Download
                                     </a>
                                 </div>
                             </div>
                         </section>
-        
+
                         <!-- Compact Error Display Area -->
-                        <section id="error-area" class="hidden flex-shrink-0">
-                            <div class="bg-gradient-to-r from-red-50 to-pink-50 p-1.5 lg:p-2 rounded-xl shadow-lg border border-red-200">
+                        <section id="error-area" class="hidden flex-shrink-0" role="alert">
+                            <div class="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/40 dark:to-pink-950/40 p-1.5 lg:p-2 rounded-xl shadow-lg border border-red-200 dark:border-red-800">
                                 <div class="flex items-center">
                                     <div class="w-5 h-5 lg:w-6 lg:h-6 bg-red-500 rounded-md flex items-center justify-center mr-1.5 lg:mr-2">
-                                        <i class="fas fa-exclamation-triangle text-white text-xs"></i>
+                                        <i class="fas fa-exclamation-triangle text-white text-xs" aria-hidden="true"></i>
                                     </div>
-                                    <p id="error-message" class="text-red-700 font-medium text-xs lg:text-sm"></p>
+                                    <p id="error-message" class="text-red-700 dark:text-red-300 font-medium text-xs lg:text-sm"></p>
                                 </div>
                             </div>
                         </section>
                     </div>
-        
+
                     <!-- Right Column - Expanded -->
                     <div class="w-full lg:w-[70%] lg:pr-8 xl:pr-12 2xl:pr-16 flex flex-col overflow-hidden py-1 min-h-0">
                         <!-- Desktop File List Section -->
-                        <section id="file-list-section" class="hidden lg:flex flex-grow flex-col overflow-hidden bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 p-3 xl:p-4">
+                        <section id="file-list-section" class="hidden lg:flex flex-grow flex-col overflow-hidden bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-3 xl:p-4">
                             <div class="flex items-center justify-between mb-2 xl:mb-3 flex-shrink-0">
-                                <h2 class="text-base xl:text-lg font-bold text-slate-700 flex items-center">
-                                    <i class="fas fa-files mr-2 text-blue-600"></i>
+                                <h2 class="text-base xl:text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center">
+                                    <!-- was `fa-files`, which is not a Font Awesome icon and rendered blank -->
+                                    <i class="fas fa-file-lines mr-2 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
                                     Selected Files
                                 </h2>
-                                <div id="file-count" class="hidden bg-blue-100 text-blue-800 text-xs xl:text-sm font-medium px-2.5 py-0.5 xl:px-3 xl:py-1 rounded-full">
+                                <div id="file-count" class="hidden bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 text-xs xl:text-sm font-medium px-2.5 py-0.5 xl:px-3 xl:py-1 rounded-full">
                                     0 files
                                 </div>
                             </div>
                             <div id="empty-state" class="flex-grow flex items-center justify-center text-center">
-                                <div class="text-slate-400">
-                                    <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-file-upload text-2xl text-slate-300"></i>
+                                <div class="text-slate-400 dark:text-slate-500">
+                                    <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-file-upload text-2xl text-slate-300 dark:text-slate-500" aria-hidden="true"></i>
                                     </div>
-                                    <p class="text-base font-medium mb-2">Ready to Convert?</p>
+                                    <p class="text-base font-medium mb-2 text-slate-500 dark:text-slate-400">Ready to Convert?</p>
                                     <p class="text-sm">Upload your Markdown files to begin the process.</p>
                                 </div>
                             </div>
@@ -280,18 +317,18 @@
             <div id="liveEditorTab" class="tab-content hidden h-full">
                 <div class="flex flex-col h-full space-y-1">
                     <!-- Minimal Editor Controls -->
-                    <div class="flex-shrink-0 bg-white/80 backdrop-blur-sm p-1.5 rounded-lg shadow-sm flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex-shrink-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-1.5 rounded-lg shadow-sm flex flex-wrap items-center justify-between gap-2">
                         <div class="flex items-center space-x-2 flex-wrap gap-y-1">
                             <button id="editor-convert-pdf-button" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-2 rounded text-xs flex items-center">
-                                <i class="fas fa-file-pdf mr-1 text-xs"></i>PDF
+                                <i class="fas fa-file-pdf mr-1 text-xs" aria-hidden="true"></i>PDF
                             </button>
-                            <label class="flex items-center text-xs text-slate-700 cursor-pointer">
+                            <label class="flex items-center text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
                                 <input type="checkbox" id="sync-scroll-checkbox" class="form-checkbox h-3 w-3 text-blue-600 rounded mr-1">
                                 Sync
                             </label>
                             <div class="flex items-center space-x-1">
-                                <label for="theme-selector" class="text-xs text-slate-600">Theme:</label>
-                                <select id="theme-selector" class="form-select text-xs py-0.5 px-1.5 rounded border-slate-300 focus:ring-blue-500 focus:border-blue-500 shadow-sm" style="min-width: 100px;">
+                                <label for="theme-selector" class="text-xs text-slate-600 dark:text-slate-400">Theme:</label>
+                                <select id="theme-selector" class="form-select text-xs py-0.5 px-1.5 rounded border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 focus:ring-blue-500 focus:border-blue-500 shadow-sm" style="min-width: 100px;">
                                     <option value="neat">Neat Light</option>
                                     <option value="dracula">Dracula Dark</option>
                                     <option value="material">Material Light</option>
@@ -299,18 +336,18 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-                            <span class="text-xs text-slate-500 hidden sm:inline">Drag to resize</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 hidden sm:inline">Drag to resize</span>
                             <button id="editor-clear-button" class="bg-slate-500 hover:bg-slate-600 text-white font-semibold py-1 px-2 rounded text-xs flex items-center">
-                                <i class="fas fa-trash-alt mr-1 text-xs"></i>Clear
+                                <i class="fas fa-trash-alt mr-1 text-xs" aria-hidden="true"></i>Clear
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Draggable Split Pane Layout -->
                     <div class="flex-grow split-pane-container overflow-hidden min-h-0">
                         <!-- Editor Pane - 40% Default Width -->
-                        <div class="split-pane-left bg-white rounded-lg border border-slate-300 shadow-xl overflow-hidden">
-                            <textarea id="markdown-input" class="w-full h-full p-4 border-none resize-none focus:ring-0 focus:outline-none text-sm leading-relaxed custom-scrollbar" placeholder="# Welcome to the MarkSwift Live Editor
+                        <div class="split-pane-left bg-white dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-700 shadow-xl overflow-hidden">
+                            <textarea id="markdown-input" class="w-full h-full p-4 border-none resize-none focus:ring-0 focus:outline-none text-sm leading-relaxed custom-scrollbar dark:bg-slate-800 dark:text-slate-100" placeholder="# Welcome to the MarkSwift Live Editor
 
 ## Instant Markdown to PDF Conversion
 Start typing your Markdown here. You will see a real-time, style-accurate preview that matches your final PDF output exactly.
@@ -325,18 +362,23 @@ Start typing your Markdown here. You will see a real-time, style-accurate previe
 
 Happy writing! 🚀"></textarea>
                         </div>
-                        
+
                         <!-- Draggable Splitter -->
                         <div class="split-pane-splitter" title="Drag to resize editor and preview"></div>
-                        
+
                         <!-- Preview Pane - Flexible Width -->
-                        <div class="split-pane-right bg-slate-200 rounded border border-slate-300 overflow-auto custom-scrollbar p-0">
+                        <div class="split-pane-right bg-slate-200 dark:bg-slate-900 rounded border border-slate-300 dark:border-slate-700 overflow-auto custom-scrollbar p-0">
                             <!-- Professional Document Container -->
-                            <div id="pdf-preview-container" class="bg-white shadow-xl rounded-lg mx-auto min-h-full border border-slate-300" style="padding: 8mm;">
+                            <!--
+                              Deliberately stays white in dark mode: this pane is a preview of the
+                              printed PDF, and the PDF is always on white paper. Tinting it would
+                              make the preview stop matching the output.
+                            -->
+                            <div id="pdf-preview-container" class="bg-white shadow-xl rounded-lg mx-auto min-h-full border border-slate-300 dark:border-slate-600" style="padding: 8mm;">
                                 <!-- Default Empty State -->
                                 <div class="flex items-center justify-center h-96 text-slate-400">
                                     <div class="text-center">
-                                        <i class="fas fa-file-text text-5xl mb-6 block text-slate-300"></i>
+                                        <i class="fas fa-file-lines text-5xl mb-6 block text-slate-300" aria-hidden="true"></i>
                                         <h3 class="text-lg font-semibold mb-2 text-slate-600">PDF Preview</h3>
                                         <p class="text-sm mb-1">Your document will appear here</p>
                                         <p class="text-xs text-slate-400">Start typing in the editor to see the magic ✨</p>
@@ -346,38 +388,38 @@ Happy writing! 🚀"></textarea>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Minimal Status Areas (only shown when needed) -->
-                    <div id="editor-status-area" class="hidden flex-shrink-0 bg-blue-50 p-1.5 rounded text-xs border border-blue-200 flex items-center justify-between">
+                    <div id="editor-status-area" class="hidden flex-shrink-0 bg-blue-50 dark:bg-blue-950/50 p-1.5 rounded text-xs border border-blue-200 dark:border-blue-900 flex items-center justify-between" aria-live="polite">
                         <div class="flex-grow">
-                            <p id="editor-status-message" class="text-blue-700 font-medium"></p>
+                            <p id="editor-status-message" class="text-blue-700 dark:text-blue-300 font-medium"></p>
                             <div id="editor-progress-bar-container" class="hidden mt-1">
-                                <div class="w-full bg-blue-200 rounded-full h-1">
+                                <div class="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-1">
                                     <div id="editor-progress-bar" class="bg-blue-600 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
                                 </div>
                             </div>
                         </div>
-                        <button id="close-editor-status-button" class="ml-2 text-blue-700 hover:text-blue-900 focus:outline-none">
-                            <i class="fas fa-times"></i>
+                        <button id="close-editor-status-button" class="ml-2 text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 focus:outline-none" aria-label="Dismiss status message">
+                            <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                     </div>
-                    
-                    <div id="editor-error-area" class="hidden flex-shrink-0 bg-red-50 p-1.5 rounded text-xs border border-red-200 flex items-center justify-between">
-                        <p id="editor-error-message" class="text-red-700 font-medium flex-grow"></p>
-                        <button id="close-editor-error-button" class="ml-2 text-red-700 hover:text-red-900 focus:outline-none">
-                            <i class="fas fa-times"></i>
+
+                    <div id="editor-error-area" class="hidden flex-shrink-0 bg-red-50 dark:bg-red-950/50 p-1.5 rounded text-xs border border-red-200 dark:border-red-900 flex items-center justify-between" role="alert">
+                        <p id="editor-error-message" class="text-red-700 dark:text-red-300 font-medium flex-grow"></p>
+                        <button id="close-editor-error-button" class="ml-2 text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 focus:outline-none" aria-label="Dismiss error message">
+                            <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                     </div>
-                    
-                    <div id="editor-download-area" class="hidden flex-shrink-0 bg-green-50 p-1.5 rounded text-xs border border-green-200 flex items-center justify-between">
+
+                    <div id="editor-download-area" class="hidden flex-shrink-0 bg-green-50 dark:bg-green-950/50 p-1.5 rounded text-xs border border-green-200 dark:border-green-900 flex items-center justify-between" aria-live="polite">
                         <div class="flex-grow text-center">
-                            <p class="text-green-800 font-medium mb-1">PDF Ready!</p>
+                            <p class="text-green-800 dark:text-green-300 font-medium mb-1">PDF Ready!</p>
                             <a id="editor-download-link" href="#" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">
-                                <i class="fas fa-download mr-1"></i>Download
+                                <i class="fas fa-download mr-1" aria-hidden="true"></i>Download
                             </a>
                         </div>
-                        <button id="close-editor-download-button" class="ml-2 text-green-700 hover:text-green-900 focus:outline-none">
-                            <i class="fas fa-times"></i>
+                        <button id="close-editor-download-button" class="ml-2 text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 focus:outline-none" aria-label="Dismiss download panel">
+                            <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
@@ -387,37 +429,38 @@ Happy writing! 🚀"></textarea>
 
     <!-- Mobile Floating Action Button for Selected Files -->
     <div id="mobile-file-fab" class="hidden md:hidden fixed bottom-4 right-4 z-50">
-        <button id="mobile-fab-button" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full shadow-xl flex items-center space-x-2 text-sm font-medium hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            <i class="fas fa-file-alt"></i>
+        <button id="mobile-fab-button" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-full shadow-xl flex items-center space-x-2 text-sm font-medium hover:shadow-2xl transition-all duration-300 transform hover:scale-105" aria-label="View selected files">
+            <i class="fas fa-file-alt" aria-hidden="true"></i>
             <span id="mobile-fab-count">0 files</span>
         </button>
     </div>
 
     <!-- Mobile Modal for File List (Bottom Slide-up) -->
-    <div id="mobile-file-modal" class="hidden fixed inset-0 z-[60] md:hidden"> <!-- Increased z-index -->
+    <div id="mobile-file-modal" class="hidden fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true" aria-label="Selected files"> <!-- Increased z-index -->
         <!-- Backdrop -->
         <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" id="modal-backdrop"></div>
-        
+
         <!-- Modal Content -->
-        <div id="modal-content" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 ease-out" style="height: 70vh;">
+        <div id="modal-content" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 ease-out" style="height: 70vh;">
             <div class="flex flex-col h-full">
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between p-4 border-b border-slate-200 flex-shrink-0">
-                    <h3 class="text-lg font-bold text-slate-700 flex items-center">
-                        <i class="fas fa-files mr-2 text-blue-600"></i>
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+                    <h3 class="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center">
+                        <!-- was `fa-files`, which is not a Font Awesome icon and rendered blank -->
+                        <i class="fas fa-file-lines mr-2 text-blue-600 dark:text-blue-400" aria-hidden="true"></i>
                         Selected Files
                     </h3>
-                    <button id="modal-close-btn" class="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors duration-200" aria-label="Close selected files view">
-                        <i class="fas fa-times"></i>
+                    <button id="modal-close-btn" class="w-8 h-8 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full flex items-center justify-center text-gray-600 dark:text-slate-300 hover:text-gray-800 dark:hover:text-white transition-colors duration-200" aria-label="Close selected files view">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
-                
+
                 <!-- Modal File List Area -->
                 <div class="flex-1 overflow-hidden relative p-4 pt-2">
                     <div id="mobile-empty-state" class="absolute inset-0 p-4 flex items-center justify-center text-center" style="display: none;">
-                        <div class="text-slate-400">
-                            <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-file-upload text-2xl text-slate-300"></i>
+                        <div class="text-slate-400 dark:text-slate-500">
+                            <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                                <i class="fas fa-file-upload text-2xl text-slate-300 dark:text-slate-500" aria-hidden="true"></i>
                             </div>
                             <p class="text-base font-medium mb-2">No files selected</p>
                             <p class="text-sm">Upload some Markdown files to get started</p>
@@ -435,9 +478,11 @@ Happy writing! 🚀"></textarea>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
     <!-- Marked.js and DOMPurify JS -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.10/purify.min.js"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- marked v8+ ships its UMD build under lib/; the old root-level marked.min.js no longer exists -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@18.0.9/lib/marked.umd.min.js"></script>
+    <!-- DOMPurify 3.x: the 2.3.10 build previously pinned here has known sanitizer bypasses -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
