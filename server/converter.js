@@ -39,10 +39,14 @@ class MarkdownToPDFConverter {
         ];
 
         if (process.env.NODE_ENV === 'production') {
-            this.logMessage('info', `[${this.sessionId}] Production environment detected. Setting executablePath for Puppeteer.`);
+            // Path is overridable so the image can move Chrome (or swap in
+            // chromium) without a code change. Falls back to the Debian package
+            // location that the Dockerfile installs.
+            const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable';
+            this.logMessage('info', `[${this.sessionId}] Production environment detected. Using Chrome at ${executablePath}.`);
             this.puppeteerLaunchOptions = {
                 headless: true,
-                executablePath: '/usr/bin/google-chrome-stable',
+                executablePath,
                 args: baseArgs
             };
         } else {
@@ -78,8 +82,9 @@ class MarkdownToPDFConverter {
     }
 
     async convertMarkdownToHTML(markdownContent) {
-        const options = { headerIds: false, mangle: false };
-        const html = marked.parse(markdownContent, options);
+        // marked v8 dropped the `headerIds` / `mangle` options; they now live in
+        // separate extensions. Default parsing already matches what we want here.
+        const html = marked.parse(markdownContent);
         const sanitized = DOMPurify.sanitize(html);
         
         const tempDoc = new JSDOM(sanitized).window.document;
@@ -95,7 +100,12 @@ class MarkdownToPDFConverter {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown PDF</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Noto+Emoji&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <!--
+      Fonts resolve from the OS font cache, not the network. The Noto families
+      below ship in the container image (fonts-noto-core / fonts-noto-color-emoji).
+      This template used to pull them from a remote webfont host, which put a live
+      internet round-trip on the critical path of every single conversion.
+    -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #24292f; background-color: #ffffff; margin: 0; padding: 5mm; max-width: none; word-wrap: break-word; }
         h1, h2, h3, h4, h5, h6 { margin-top: 24px; margin-bottom: 16px; font-weight: 600; line-height: 1.25; }
@@ -177,7 +187,11 @@ class MarkdownToPDFConverter {
             page = await this.browser.newPage();
             this.logMessage('debug', `[${this.sessionId}] [File ${currentFileProgress}] New page created. Setting content for: ${originalFileName}`);
             
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 60000 });
+            // 'load' waits for sub-resources (e.g. remote images in the markdown) but
+            // skips the extra 500ms quiet-period that 'networkidle0' imposes on every
+            // page. With webfonts served locally there is no longer any request that
+            // needs the idle window.
+            await page.setContent(htmlContent, { waitUntil: 'load', timeout: 60000 });
             this.logMessage('debug', `[${this.sessionId}] [File ${currentFileProgress}] Content set in page. Generating PDF for: ${originalFileName}`);
             
             await page.pdf({
