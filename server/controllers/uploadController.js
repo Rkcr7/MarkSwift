@@ -11,10 +11,17 @@ const assignSessionId = (logMessage) => (req, res, next) => {
     next();
 };
 
+const VALID_MODES = new Set(['normal', 'fast', 'max']);
+
 const handleConvertUpload = (logMessage, queueManager) => (req, res) => {
     const sessionId = req.sessionId;
     const files = req.files;
-    const mode = req.body.mode || 'normal';
+
+    // Express 5 leaves req.body undefined when no body parser matched the
+    // request, where Express 4 defaulted it to {}. Reading `.mode` off it
+    // directly threw a TypeError and turned every malformed POST into a 500.
+    const requestedMode = req.body?.mode;
+    const mode = VALID_MODES.has(requestedMode) ? requestedMode : 'normal';
 
     logMessage('info', `[${sessionId}] Controller: Handling /api/convert. Files: ${files ? files.length : 0}, Mode: ${mode}`);
 

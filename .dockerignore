@@ -1,0 +1,37 @@
+# Everything here stays out of the build context. Without this file the whole
+# .git history and the two multi-MB demo GIFs were shipped to the daemon on
+# every single build.
+
+.git
+.gitignore
+.github
+
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime working directories — recreated by the container on boot.
+server/uploads
+server/converted-pdfs
+server/zips
+
+# Docs and deploy scripts are not needed inside the image.
+*.md
+!README.md
+scripts/
+DEPLOYMENT_DO.md
+DEPLOYMENT_GCP.md
+MAINTENANCE.md
+
+# Demo assets are large and only used in the README.
+public/images/*.gif
+
+Dockerfile
+.dockerignore
+.env
+.env.*
+*.log
+.DS_Store
+.vscode
+.idea

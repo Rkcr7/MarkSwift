@@ -2,22 +2,18 @@
 import { init as initFileUploadUI } from './modules/fileUploadUI.js';
 import { initTabs } from './modules/tabManager.js';
 import { liveEditor } from './modules/liveEditor.js';
+import { initThemeToggle } from './modules/themeToggle.js';
 import SplitPane from './modules/splitPane.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM fully loaded and parsed. Initializing UI modules...");
-    
-    // Initialize tab manager first
+    // Theme first: it only wires up the toggle button (the theme itself is
+    // already applied by the inline script in <head>), and doing it up front
+    // means the button is never briefly out of sync with the page.
+    initThemeToggle();
+
     initTabs();
-    
-    // Initialize file upload UI
     initFileUploadUI();
-    
-    // Initialize live editor
     liveEditor.init();
-    
-    // Split pane is auto-initialized by its module
-    console.log("Split pane module loaded for draggable layout");
-    
-    console.log("All modules initialized successfully.");
+
+    // Split pane is auto-initialized by its module on import.
 });
