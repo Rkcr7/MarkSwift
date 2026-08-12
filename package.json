@@ -11,7 +11,8 @@
     "start_docker": "node server/server.js",
     "dev": "concurrently \"npm run build:css -- --watch\" \"nodemon server/server.js\"",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.css --minify",
-    "audit:ci": "npm audit --audit-level=high"
+    "audit:ci": "npm audit --audit-level=high",
+    "test:batch": "node scripts/test-batch-convert.mjs"
   },
   "keywords": [
     "markdown",
@@ -23,7 +24,7 @@
   "author": "Rkcr7",
   "license": "MIT",
   "dependencies": {
-    "archiver": "^8.0.0",
+    "archiver": "^7.0.1",
     "dompurify": "^3.4.13",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
