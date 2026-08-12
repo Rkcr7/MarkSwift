@@ -150,31 +150,37 @@ function renderFileList() { // This function now primarily updates the desktop l
 function createFileListItem(file, index, isModalContext) { // Added isModalContext
     const listItem = document.createElement('li');
     // Use Tailwind classes for mobile items, or specific .mobile-file-item if defined in CSS
-    listItem.className = 'mobile-file-item bg-white p-3 rounded-lg shadow flex items-center justify-between space-x-3'; // Example styling
-    
+    listItem.className = 'mobile-file-item bg-white dark:bg-slate-700 p-3 rounded-lg shadow flex items-center justify-between space-x-3';
+
     const isMarkdown = file.name.endsWith('.md') || file.name.endsWith('.markdown');
     const fileSize = (file.size / 1024).toFixed(2);
-    
-    // Simplified innerHTML for mobile, adjust as needed based on desired look from changelog
+    const iconGradient = isMarkdown ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600';
+
+    // The static chrome is safe to build as markup. The filename is NOT — it is
+    // attacker-controllable in the sense that a file named
+    // `"><img src=x onerror=...>.md` used to execute when interpolated into
+    // innerHTML here. Filenames are therefore set via textContent/setAttribute
+    // below, which cannot introduce markup.
     listItem.innerHTML = `
         <div class="flex items-center flex-1 min-w-0">
-            <div class="w-10 h-10 bg-gradient-to-r ${isMarkdown ? 'from-blue-500 to-blue-600' : 'from-purple-500 to-purple-600'} rounded-lg flex items-center justify-center mr-3 shadow-sm flex-shrink-0">
-                <i class="fab fa-markdown text-white text-lg"></i>
+            <div class="w-10 h-10 bg-gradient-to-r ${iconGradient} rounded-lg flex items-center justify-center mr-3 shadow-sm flex-shrink-0">
+                <i class="fab fa-markdown text-white text-lg" aria-hidden="true"></i>
             </div>
             <div class="flex-1 min-w-0">
-                <div class="font-medium text-slate-700 truncate text-sm" title="${file.name}">
-                    ${file.name}
-                </div>
-                <div class="text-xs text-slate-500">
-                    ${fileSize} KB
-                </div>
+                <div class="js-file-name font-medium text-slate-700 dark:text-slate-100 truncate text-sm"></div>
+                <div class="js-file-size text-xs text-slate-500 dark:text-slate-400"></div>
             </div>
         </div>
-        <button class="remove-file-btn ml-3 w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0" title="Remove file" data-index="${index}">
-            <i class="fas fa-trash text-sm"></i>
+        <button class="remove-file-btn ml-3 w-8 h-8 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0" title="Remove file" data-index="${index}">
+            <i class="fas fa-trash text-sm" aria-hidden="true"></i>
         </button>
     `;
-    
+
+    const nameEl = listItem.querySelector('.js-file-name');
+    nameEl.textContent = file.name;
+    nameEl.setAttribute('title', file.name);
+    listItem.querySelector('.js-file-size').textContent = `${fileSize} KB`;
+
     listItem.querySelector('.remove-file-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         removeFileFromList(index); // No need for isModalContext here if removeFileFromList handles both
